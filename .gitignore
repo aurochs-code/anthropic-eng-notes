@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.astro/
+site/screenshots/
+.env
+.env.*
+*.log
+.DS_Store
+strip_banner.py

@@ -1,0 +1,19 @@
+{
+  "name": "anthropic-eng-notes-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "screenshots": "node scripts/screenshots.mjs"
+  },
+  "dependencies": {
+    "astro": "^5.18.2",
+    "mermaid": "^12.2.0",
+    "unist-util-visit": "^5.1.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1"
+  }
+}

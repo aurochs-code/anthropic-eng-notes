@@ -1,0 +1,28 @@
+---
+import Base from '../layouts/Base.astro';
+import { MODULES } from '../content.config';
+import { getSortedNotes, url } from '../lib/notes';
+const notes = await getSortedNotes();
+const groups = Object.entries(MODULES).map(([k, name]) => ({ k, name, items: notes.filter((n) => n.data.moduleKey === k) }));
+---
+<Base title="Anthropic 工程博客 · 中文学习笔记">
+  <h1>学习路线</h1>
+  <p class="en">共 26 篇规划，已完成 {notes.length} 篇。按模块 A–F 分组，序号为全站推荐阅读顺序。</p>
+  {groups.map((g) => (
+    <section class="module">
+      <h2>模块 {g.k} · {g.name}</h2>
+      {g.items.length === 0 ? <p class="empty">笔记撰写中…</p> : (
+        <ol class="route">
+          {g.items.map((n) => (
+            <li>
+              <span class="num">{String(n.data.order).padStart(2, '0')}</span>
+              <a href={url(`notes/${n.data.slug}/`)}>{n.data.title_zh}</a>
+              <span class="meta" style="display:inline"> · {n.data.reading_time} 分钟</span>
+              <p class="sum">{n.data.title_en}</p>
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
+  ))}
+</Base>

@@ -1,0 +1,43 @@
+# 部署到 GitHub Pages 项目页（站点源码在 site/ 子目录）。
+# 目前仅允许手动触发（workflow_dispatch）；确认发布后可恢复 push 触发。
+name: Deploy to GitHub Pages
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    env:
+      # 项目页路径：/<仓库名>；可在仓库 Settings → Variables 设置 BASE_PATH 覆盖
+      BASE_PATH: ${{ vars.BASE_PATH || format('/{0}', github.event.repository.name) }}
+      SITE_URL: https://${{ github.repository_owner }}.github.io
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
