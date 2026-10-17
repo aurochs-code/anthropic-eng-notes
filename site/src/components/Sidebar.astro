@@ -3,9 +3,12 @@
 import { MODULES } from '../content.config';
 import { getSortedNotes, url } from '../lib/notes';
 import { getSortedResources, resSlug } from '../lib/resources';
+import { getSortedPapers, dd } from '../lib/papers';
 const here = Astro.url.pathname;
 const notes = await getSortedNotes();
 const resources = await getSortedResources();
+const papers = await getSortedPapers();
+const inPapers = here.startsWith(url('/papers/'));
 const cur = (p: string) => (here === url(p) ? 'page' : undefined);
 const groups = Object.entries(MODULES).map(([k, name]) => ({ k, name, items: notes.filter((n) => n.data.moduleKey === k) }));
 const inRes = here.startsWith(url('/resources/'));
@@ -16,6 +19,7 @@ const curNote = notes.find((n) => here === url(`notes/${n.data.slug}/`));
   <ul class="side-top">
     <li><a href={url('/')} aria-current={cur('/')}>笔记目录</a></li>
     <li><a href={url('/path/')} aria-current={cur('/path/')}>学习路线</a></li>
+    <li><a href={url('/papers/')} aria-current={cur('/papers/')}>论文笔记</a></li>
     <li><a href={url('/resources/')} aria-current={cur('/resources/')}>资源导读</a></li>
     <li><a href={url('/tags/')} aria-current={here.startsWith(url('/tags/')) ? 'page' : undefined}>标签</a></li>
   </ul>
@@ -29,6 +33,16 @@ const curNote = notes.find((n) => here === url(`notes/${n.data.slug}/`));
       </ul>
     </details>
   ))}
+  {papers.length > 0 && (
+    <details class="side-group" open={inPapers} data-papers>
+      <summary>论文笔记（{papers.length}）</summary>
+      <ul>
+        {papers.map((p) => (
+          <li><a href={url(`papers/${p.data.slug}/`)} aria-current={cur(`papers/${p.data.slug}/`)} data-paper-link={p.data.slug}><span class="side-num">D{dd(p.data.day)}</span>{p.data.title_zh}</a></li>
+        ))}
+      </ul>
+    </details>
+  )}
   {resources.length > 0 && (
     <details class="side-group" open={inRes}>
       <summary>资源导读（{resources.length}）</summary>

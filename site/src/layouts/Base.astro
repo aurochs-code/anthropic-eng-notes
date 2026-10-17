@@ -50,8 +50,8 @@ const hasToc = tocList.length > 0;
     </button>
     <a class="brand" href={url('/')}><span class="brand-long">Anthropic 工程博客 · 中文学习笔记</span><span class="brand-short">Anthropic 工程笔记</span></a>
     <nav class="top" aria-label="主导航">
-      {[['/', '笔记'], ['/path/', '学习路线'], ['/resources/', '资源'], ['/tags/', '标签']].map(([p, label]) => (
-        <a href={url(p)} aria-current={Astro.url.pathname === url(p) ? 'page' : undefined}>{label}</a>
+      {[['/', '笔记'], ['/path/', '学习路线'], ['/papers/', '论文'], ['/resources/', '资源'], ['/tags/', '标签']].map(([p, label]) => (
+        <a href={url(p)} aria-current={Astro.url.pathname === url(p) || (p === '/papers/' && Astro.url.pathname.startsWith(url('/papers/'))) ? 'page' : undefined}>{label}</a>
       ))}
     </nav>
     <div class="header-tools">

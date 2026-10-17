@@ -3,8 +3,17 @@ import Base from '../layouts/Base.astro';
 import { getLearningPath, getTracks, resSlug, progressId } from '../lib/resources';
 import { url, getSortedNotes } from '../lib/notes';
 import { stageName } from '../data/stages';
+import { getSortedPapers, dd } from '../lib/papers';
 const stages = await getLearningPath();
 const tracks = await getTracks();
+const papers = await getSortedPapers();
+// 原理支线（r-30u30）条目按 part 里的段号（P1–P6）匹配论文笔记；P6 条目同时收「补完」段
+const papersOf = (it: (typeof tracks)[number]['items'][number]) => {
+  if (it.res.data.slug !== 'r-30u30') return [];
+  const segs = [...it.part.matchAll(/P([1-6])/g)].map((m) => `P${m[1]}`);
+  if (/补完/.test(it.part)) segs.push('补完');
+  return papers.filter((p) => segs.includes(p.data.segment));
+};
 const noteBySlug = new Map((await getSortedNotes()).map((n) => [n.data.slug, n]));
 const trackNote = (t: (typeof tracks)[number]) =>
   `从${stageName(t.startsAfter)}阶段结束后开始，与${t.parallelWith.map(stageName).join('和')}并行`;
@@ -72,6 +81,7 @@ const total = stages.reduce((n, s) => n + counted(s), 0);
               <span class="badge track">原理</span>
               <a href={url(`resources/${resSlug(it.res)}/`)}>{it.res.data.title_zh}</a>
               {it.part && <span class="part"> · {it.part}</span>}
+              {papersOf(it).length > 0 && <span class="part track-papers" data-track-papers={papersOf(it).length}> · 站内论文笔记：{papersOf(it).map((p, j) => <>{j > 0 && '、'}<a href={url(`papers/${p.data.slug}/`)} data-paper-link={p.data.slug}>Day {dd(p.data.day)} {p.data.title_zh}</a></>)}</span>}
               {(n || it.stage) && <span class="part track-when"> · 对应主线{it.stage ? `${stageName(it.stage)}阶段` : ''}{n && <>，读完笔记 <a href={url(`notes/${n.data.slug}/`)}>#{n.data.order} {n.data.title_zh}</a> 后</>}</span>}
             </li>
           );

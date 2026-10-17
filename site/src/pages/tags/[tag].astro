@@ -12,10 +12,10 @@ export async function getStaticPaths() {
 }
 const { t } = Astro.props;
 ---
-<Base title={`标签：${t.tag} · 学习笔记`} description={`标签「${t.tag}」下的 ${t.notes.length} 篇笔记、${t.resources.length} 个资源导读。`} searchable={false}>
+<Base title={`标签：${t.tag} · 学习笔记`} description={`标签「${t.tag}」下的 ${t.notes.length} 篇笔记、${t.papers.length} 篇论文笔记、${t.resources.length} 个资源导读。`} searchable={false}>
   <nav class="breadcrumb" aria-label="位置"><a href={url('/tags/')}>标签</a><span aria-hidden="true">›</span><span>{t.tag}</span></nav>
   <h1>标签：{t.tag}</h1>
-  <p class="en">{t.notes.length} 篇笔记 · {t.resources.length} 个资源导读</p>
+  <p class="en">{t.notes.length} 篇笔记 · {t.papers.length} 篇论文笔记 · {t.resources.length} 个资源导读</p>
   {t.notes.length > 0 && (
     <section class="module" data-tag-notes={t.notes.length}>
       <h2>笔记（{t.notes.length}）</h2>
@@ -27,6 +27,22 @@ const { t } = Astro.props;
             <span class="meta" style="display:inline"> · 模块 {n.data.moduleKey} {MODULES[n.data.moduleKey]} · {n.data.reading_time} 分钟</span>
             <p class="sum zh">{n.data.summary}</p>
             <TagList tags={n.data.tags} />
+          </li>
+        ))}
+      </ol>
+    </section>
+  )}
+  {t.papers.length > 0 && (
+    <section class="module" data-tag-papers={t.papers.length}>
+      <h2>论文笔记（{t.papers.length}）</h2>
+      <ol class="route">
+        {t.papers.map((p) => (
+          <li>
+            <span class="num">D{String(p.data.day).padStart(2, '0')}</span>
+            <a href={url(`papers/${p.data.slug}/`)} data-paper-link={p.data.slug}>{p.data.title_zh}</a>
+            <span class="meta" style="display:inline"> · {p.data.segment} · {p.data.reading_time} 分钟</span>
+            <p class="sum zh">{p.data.summary}</p>
+            <TagList tags={p.data.tags} />
           </li>
         ))}
       </ol>

@@ -4,12 +4,12 @@ import { getTags } from '../../lib/tags';
 import { url } from '../../lib/notes';
 const tags = await getTags();
 ---
-<Base title="标签 · 学习笔记" description={`按标签浏览笔记与资源导读，共 ${tags.length} 个标签。`} searchable={false}>
+<Base title="标签 · 学习笔记" description={`按标签浏览笔记、论文笔记与资源导读，共 ${tags.length} 个标签。`} searchable={false}>
   <h1>标签</h1>
-  <p class="en">共 {tags.length} 个标签，按使用次数排列；数字为笔记 + 资源数。</p>
+  <p class="en">共 {tags.length} 个标签，按使用次数排列；数字为笔记 + 资源 + 论文笔记数。</p>
   <ul class="tag-cloud" data-tag-count={tags.length}>
     {tags.map((t) => (
-      <li><a href={url(`tags/${t.slug}/`)}>{t.tag}<span class="tag-n">{t.notes.length + t.resources.length}</span></a></li>
+      <li><a href={url(`tags/${t.slug}/`)}>{t.tag}<span class="tag-n">{t.notes.length + t.resources.length + t.papers.length}</span></a></li>
     ))}
   </ul>
 </Base>

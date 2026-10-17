@@ -1,0 +1,51 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Toc from '../../components/Toc.astro';
+import TagList from '../../components/TagList.astro';
+import Backlinks from '../../components/Backlinks.astro';
+import { getSortedPapers, SEGMENTS, dd, unitOf } from '../../lib/papers';
+import { fmtDate, url } from '../../lib/notes';
+
+export async function getStaticPaths() {
+  const papers = await getSortedPapers();
+  return papers.map((paper, i) => ({ params: { slug: paper.data.slug }, props: { paper, prev: papers[i - 1], next: papers[i + 1] } }));
+}
+const { paper, prev, next } = Astro.props;
+const d = paper.data;
+const { Content, headings } = await render(paper);
+const u = unitOf(paper);
+const segName = (SEGMENTS as Record<string, string>)[d.segment];
+---
+<Base title={`${d.title_zh} · 论文笔记`} description={d.summary} ogType="article" headings={headings} readProgress={true}>
+  <article>
+    <nav class="breadcrumb" aria-label="位置" data-pagefind-ignore>
+      <a href={url('/papers/')}>论文笔记</a><span aria-hidden="true">›</span><a href={url(`/papers/#seg-${d.segment}`)}>{d.segment === '补完' ? '补完' : `${d.segment} · ${segName}`}</a><span aria-hidden="true">›</span><span>Day {dd(d.day)}</span>
+      <a class="crumb-step" href={url('/path/#track-theory')}>原理支线</a>
+    </nav>
+    <h1>{d.title_zh}</h1>
+    <p class="en">{d.title_en}</p>
+    <div class="meta">
+      <span>Day {dd(d.day)} · {d.segment}</span>
+      <span>原论文发布：{fmtDate(d.published)}</span>
+      {d.venue && <span>发表：{d.venue}</span>}
+      <span>阅读约 {d.reading_time} 分钟</span>
+      <a href={d.source_url} target="_blank" rel="noopener" data-source-link>原论文链接 ↗</a>
+      <a href={u.url} target="_blank" rel="noopener" data-unit-link={u.unit}>30u30 单元 ↗</a>
+    </div>
+    <TagList tags={d.tags} />
+    <dl class="facts">
+      <dt>作者</dt><dd>{d.authors_en.join(', ')}</dd>
+      {d.source_version && <><dt>依据版本</dt><dd>{d.source_version}</dd></>}
+      <dt>30u30 单元</dt><dd><a href={u.url} target="_blank" rel="noopener">{u.unit}</a>（讲解、实现与练习请到原仓库查看，本站不翻译、不改编，见<a href={url('/resources/r-30u30/')}>导读</a>）</dd>
+    </dl>
+    {d.source_note && <div class="note-box">⚠️ {d.source_note}</div>}
+    <Toc headings={headings} variant="inline" />
+    <Content />
+  </article>
+  <Backlinks slug={d.slug} />
+  <nav class="pager" aria-label="按 Day 翻页" data-pager="day" data-pagefind-ignore>
+    {prev ? <a class="prev" href={url(`papers/${prev.data.slug}/`)}><small>← 上一篇 Day {dd(prev.data.day)}</small>{prev.data.title_zh}</a> : <span />}
+    {next ? <a class="next" href={url(`papers/${next.data.slug}/`)}><small>下一篇 Day {dd(next.data.day)} →</small>{next.data.title_zh}</a> : <span />}
+  </nav>
+</Base>

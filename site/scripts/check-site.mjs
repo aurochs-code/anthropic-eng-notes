@@ -4,12 +4,15 @@
 // 主线 4 阶段 36 步（步数由资源数据推算，可用 EXPECT_STEPS 覆盖）、并行支线（track: theory）、
 // 移动端 390px 无横向溢出、meta description/favicon/回到顶部、标题锚点、代码块复制按钮；
 // B2：侧栏、三处目录、两种翻页与面包屑、布局断点、目录高亮、抽屉、Pagefind 搜索、暗色切换与 mermaid 重渲染、图表放大；
-// B3：标签页、反向链接、路线勾选与阶段完成度、笔记标记已读联动、阅读进度条。
+// B3：标签页、反向链接、路线勾选与阶段完成度、笔记标记已读联动、阅读进度条；
+// 论文笔记（papers/）：字段、unit 与 r-30u30 单元链接、day 不重复、标签白名单、合规篇目全部渲染、资源页与路线页的站内论文链接。
 import { chromium } from 'playwright';
 import { createServer } from 'node:http';
 import { readFileSync, existsSync, statSync, readdirSync } from 'node:fs';
 import { join, extname, resolve } from 'node:path';
 import yaml from 'js-yaml'; // astro 的依赖，已在 node_modules 中
+import { readPapers, readUnitLinks, validatePaper, SEGMENT_KEYS, unitUrl } from '../src/lib/paper-rules.mjs';
+import { TAG_WHITELIST } from '../src/data/tags.mjs';
 
 const dist = process.argv[2] ?? new URL('../dist/', import.meta.url).pathname;
 const base = (process.env.BASE_PATH ?? '/anthropic-eng-notes').replace(/\/$/, '');
@@ -37,8 +40,9 @@ const pages = [];
 })(dist);
 const notePages = pages.filter((p) => /^notes\/[^/]+\/$/.test(p));
 const resPages = pages.filter((p) => /^resources\/[^/]+\/$/.test(p));
+const paperPages = pages.filter((p) => /^papers\/[^/]+\/$/.test(p));
 const tagPageCount = pages.filter((p) => /^tags\//.test(p)).length;
-ok('页数', EXPECT_PAGES == null || pages.length === EXPECT_PAGES, `共 ${pages.length} 页（笔记 ${notePages.length}、资源 ${resPages.length}、标签 ${tagPageCount}）${EXPECT_PAGES ? `，期望 ${EXPECT_PAGES}` : ''}`);
+ok('页数', EXPECT_PAGES == null || pages.length === EXPECT_PAGES, `共 ${pages.length} 页（笔记 ${notePages.length}、资源 ${resPages.length}、论文 ${paperPages.length}、标签 ${tagPageCount}）${EXPECT_PAGES ? `，期望 ${EXPECT_PAGES}` : ''}`);
 
 const browser = await chromium.launch();
 const internal = new Set(); const orders = []; const mermaidBad = []; let mTotal = 0;
@@ -122,9 +126,9 @@ ok('移动端 390px 无横向溢出', overflow.length === 0, overflow.length ? '
 const noDesc = b1Pages.filter((p) => p.desc < 10).map((p) => p.rel || '/');
 const noIcon = b1Pages.filter((p) => !p.icon || !p.toTop).map((p) => p.rel || '/');
 ok('meta description / favicon / 回到顶部', noDesc.length === 0 && noIcon.length === 0, `缺 description：[${noDesc}]；缺 favicon 或回到顶部按钮：[${noIcon}]`);
-const contentPages = b1Pages.filter((p) => /^(notes|resources)\/[^/]+\/$/.test(p.rel));
+const contentPages = b1Pages.filter((p) => /^(notes|resources|papers)\/[^/]+\/$/.test(p.rel));
 const anchorBad = contentPages.filter((p) => p.headings === 0 || p.badAnchors.length);
-ok('标题锚点', anchorBad.length === 0, `${contentPages.length} 个笔记/资源页共 ${contentPages.reduce((n, p) => n + p.headings, 0)} 个 h2–h4，均带 #锚点` + (anchorBad.length ? '；问题：' + anchorBad.map((p) => `${p.rel}（${p.headings ? p.badAnchors.slice(0, 3).join(',') : '无标题'}）`).join('，') : ''));
+ok('标题锚点', anchorBad.length === 0, `${contentPages.length} 个笔记/资源/论文页共 ${contentPages.reduce((n, p) => n + p.headings, 0)} 个 h2–h4，均带 #锚点` + (anchorBad.length ? '；问题：' + anchorBad.map((p) => `${p.rel}（${p.headings ? p.badAnchors.slice(0, 3).join(',') : '无标题'}）`).join('，') : ''));
 const copyBad = b1Pages.filter((p) => p.pres !== p.copies);
 ok('代码块复制按钮', copyBad.length === 0, `代码块 ${b1Pages.reduce((n, p) => n + p.pres, 0)} 个，复制按钮 ${b1Pages.reduce((n, p) => n + p.copies, 0)} 个` + (copyBad.length ? '；不一致：' + copyBad.map((p) => p.rel).join('，') : ''));
 
@@ -158,6 +162,8 @@ const loadMd = (dir, re) => existsSync(dir)
     })
   : [];
 const resData = loadMd(resDir, /^r-.*\.md$/);
+const papersDir = resolve(siteDir, process.env.PAPERS_DIR ?? '../papers');
+const paperData = readPapers(papersDir).map((p) => ({ ...p, f: p.file }));
 const noteData = loadMd(resolve(siteDir, process.env.NOTES_DIR ?? '../notes'), /\.md$/);
 const mainResSteps = resData.filter((r) => !r.d.track).flatMap((r) => (r.d.route ?? []).filter((e) => !(e.optional ?? r.d.optional)));
 const dataSteps = 26 + mainResSteps.length;
@@ -184,11 +190,11 @@ if (theoryData.length === 0) {
 ok('资源页', existsSync(join(dist, 'resources/index.html')), `资源列表页存在，单篇资源页 ${resPages.length} 个`);
 
 // ── B2：侧栏 / 目录 / 翻页 / 面包屑 ──
-const sideBad = b2Pages.filter((p) => p.noteLinks !== 26 || (/^(notes|resources)\/[^/]+\/$/.test(p.rel) || p.rel === '' || p.rel === 'path/' || p.rel === 'resources/') && (p.current.length !== 1 || p.current[0] !== p.here));
+const sideBad = b2Pages.filter((p) => p.noteLinks !== 26 || (/^(notes|resources)\/[^/]+\/$/.test(p.rel) || p.rel === '' || p.rel === 'path/' || p.rel === 'resources/' || /^papers\//.test(p.rel)) && (p.current.length !== 1 || p.current[0] !== p.here));
 ok('侧栏', sideBad.length === 0, `${b2Pages.length} 页均含 26 篇笔记链接，当前页高亮唯一且正确` + (sideBad.length ? '；问题：' + sideBad.map((p) => `${p.rel}（${p.noteLinks} 篇，高亮 ${p.current.join(',') || '无'}）`).join('，') : ''));
 const same = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
 const tocBad = contentPages.map((c) => b2Pages.find((p) => p.rel === c.rel)).filter((p) => !p.ids.length || !same(p.side, p.ids) || !same(p.inline, p.ids) || !same(p.drawer, p.ids));
-ok('本页目录', tocBad.length === 0, `${contentPages.length} 个笔记/资源页：右栏、折叠、抽屉三处目录均与正文 h2/h3 一致（共 ${contentPages.reduce((n, c) => n + b2Pages.find((p) => p.rel === c.rel).ids.length, 0)} 条）` + (tocBad.length ? '；不一致：' + tocBad.map((p) => `${p.rel}（正文 ${p.ids.length}/右栏 ${p.side.length}/折叠 ${p.inline.length}/抽屉 ${p.drawer.length}）`).join('，') : ''));
+ok('本页目录', tocBad.length === 0, `${contentPages.length} 个笔记/资源/论文页：右栏、折叠、抽屉三处目录均与正文 h2/h3 一致（共 ${contentPages.reduce((n, c) => n + b2Pages.find((p) => p.rel === c.rel).ids.length, 0)} 条）` + (tocBad.length ? '；不一致：' + tocBad.map((p) => `${p.rel}（正文 ${p.ids.length}/右栏 ${p.side.length}/折叠 ${p.inline.length}/抽屉 ${p.drawer.length}）`).join('，') : ''));
 // 面包屑“第 M 步”与路线页编号一致；笔记页两种翻页都在
 const stepOfHref = new Map([...pathHtml.matchAll(/<li[^>]*data-shown-step="(\d+)"[^>]*>([\s\S]*?)<\/li>/g)].map((x) => [/href="([^"]+)"/.exec(x[2])?.[1], x[1]]).filter(([h]) => h && /\/notes\//.test(h)));
 const noteB2 = b2Pages.filter((p) => /^notes\/[^/]+\/$/.test(p.rel));
@@ -344,8 +350,8 @@ await interact('图表放大', async (pg) => {
 // ── B3：标签页、反向链接（静态 HTML 对照源文件计算）；学习进度、阅读进度条（交互） ──
 const tagSlug = (t) => String(t).trim().toLowerCase().replace(/\s+/g, '-');
 const tagMap = new Map();
-for (const [kind, list] of [['notes', noteData], ['resources', resData]])
-  for (const x of list) for (const t of new Set((x.d.tags ?? []).map(tagSlug))) { const e = tagMap.get(t) ?? { notes: 0, resources: 0 }; e[kind]++; tagMap.set(t, e); }
+for (const [kind, list] of [['notes', noteData], ['resources', resData], ['papers', paperData]])
+  for (const x of list) for (const t of new Set((x.d.tags ?? []).map(tagSlug))) { const e = tagMap.get(t) ?? { notes: 0, resources: 0, papers: 0 }; e[kind]++; tagMap.set(t, e); }
 const tagBad = [];
 if (!pages.includes('tags/')) tagBad.push('缺 /tags/');
 const tagIndex = existsSync(join(dist, 'tags/index.html')) ? readFileSync(join(dist, 'tags/index.html'), 'utf8') : '';
@@ -354,22 +360,23 @@ for (const [t, e] of tagMap) {
   const f = join(dist, 'tags', t, 'index.html');
   if (!existsSync(f)) { tagBad.push(`缺 /tags/${t}/`); continue; }
   const h = readFileSync(f, 'utf8');
-  const n = +(/data-tag-notes="(\d+)"/.exec(h)?.[1] ?? 0), r = +(/data-tag-resources="(\d+)"/.exec(h)?.[1] ?? 0);
-  if (n !== e.notes || r !== e.resources) tagBad.push(`${t}: 页面 ${n}+${r} / 数据 ${e.notes}+${e.resources}`);
+  const n = +(/data-tag-notes="(\d+)"/.exec(h)?.[1] ?? 0), r = +(/data-tag-resources="(\d+)"/.exec(h)?.[1] ?? 0), pp = +(/data-tag-papers="(\d+)"/.exec(h)?.[1] ?? 0);
+  if (n !== e.notes || r !== e.resources || pp !== e.papers) tagBad.push(`${t}: 页面 ${n}+${r}+${pp} / 数据 ${e.notes}+${e.resources}+${e.papers}`);
 }
 const tagPages = pages.filter((p) => /^tags\/[^/]+\/$/.test(p)).length;
-ok('标签页', tagBad.length === 0 && tagPages === tagMap.size, `${tagMap.size} 个标签（笔记 + 资源 tags 去重），/tags/ 与 ${tagPages} 个标签页，条目数均与数据一致` + (tagBad.length ? '；问题：' + tagBad.slice(0, 8).join('，') : ''));
+ok('标签页', tagBad.length === 0 && tagPages === tagMap.size, `${tagMap.size} 个标签（笔记 + 资源 + 论文 tags 去重），/tags/ 与 ${tagPages} 个标签页，条目数均与数据一致` + (tagBad.length ? '；问题：' + tagBad.slice(0, 8).join('，') : ''));
 
 const { LINK_RE } = await import('../src/lib/remark-plugins.mjs');
 const linksOf = (body) => new Set([...body.matchAll(/\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g)].map((m) => LINK_RE.exec(m[1])?.[1]?.toLowerCase()).filter(Boolean));
 const slugOf = (x) => x.d.slug;
-const validSlugs = new Set([...noteData, ...resData].map(slugOf));
+const validSlugs = new Set([...noteData, ...resData, ...paperData].map(slugOf));
 const expBack = new Map();
 const addBack = (t, href) => { if (!validSlugs.has(t)) return; (expBack.get(t) ?? expBack.set(t, new Set()).get(t)).add(href); };
 for (const n of noteData) for (const t of linksOf(n.body)) if (t !== slugOf(n)) addBack(t, `${base}/notes/${slugOf(n)}/`);
+for (const x of paperData) for (const t of linksOf(x.body)) if (t !== slugOf(x)) addBack(t, `${base}/papers/${slugOf(x)}/`);
 for (const r of resData) for (const t of new Set([...linksOf(r.body), ...(r.d.pairs_with ?? [])])) if (t !== slugOf(r)) addBack(t, `${base}/resources/${slugOf(r)}/`);
 const backBad = []; let backTotal = 0;
-for (const x of [...noteData.map((n) => ['notes', n]), ...resData.map((r) => ['resources', r])]) {
+for (const x of [...noteData.map((n) => ['notes', n]), ...resData.map((r) => ['resources', r]), ...paperData.map((x) => ['papers', x])]) {
   const [sec, item] = x; const f = join(dist, sec, slugOf(item), 'index.html');
   if (!existsSync(f)) continue;
   const h = readFileSync(f, 'utf8');
@@ -380,11 +387,61 @@ for (const x of [...noteData.map((n) => ['notes', n]), ...resData.map((r) => ['r
   backTotal += got.size;
   if (got.size !== exp.size || [...exp].some((u) => !got.has(u))) backBad.push(`${sec}/${slugOf(item)}: 页面 ${got.size} / 期望 ${exp.size}`);
 }
-ok('反向链接', backBad.length === 0, `${noteData.length + resData.length} 个笔记/资源页均有反向链接区块，共 ${backTotal} 条，与源文件中的 .md 链接 + pairs_with 一致` + (backBad.length ? '；问题：' + backBad.slice(0, 8).join('，') : ''));
+ok('反向链接', backBad.length === 0, `${noteData.length + resData.length + paperData.length} 个笔记/资源/论文页均有反向链接区块，共 ${backTotal} 条，与源文件中的 .md 链接 + pairs_with 一致` + (backBad.length ? '；问题：' + backBad.slice(0, 8).join('，') : ''));
+
+// ── 论文笔记（papers/ 允许只有部分篇目；0 篇时只要求不渲染论文页） ──
+const units = readUnitLinks(resDir);
+const paperIssues = paperData.map((x) => ({ x, errs: validatePaper(x, { tags: TAG_WHITELIST, units }) }));
+const fmtErr = (list) => list.map(({ x, errs }) => `papers/${x.file}: ${errs.map((e) => `${e.field} ${e.msg}`).join('；')}`).join('\n  ');
+const schemaBad = paperIssues.map(({ x, errs }) => ({ x, errs: errs.filter((e) => e.field !== 'unit' && e.field !== 'tags') })).filter((r) => r.errs.length);
+ok('论文字段', schemaBad.length === 0, `${paperData.length} 篇论文笔记（Day ${paperData.map((x) => x.d.day).join('、') || '无'}）：必填字段、day 1–30、segment ${SEGMENT_KEYS.join('/')}、slug 与文件名一致、authors_en 非空` + (schemaBad.length ? '；不合规：\n  ' + fmtErr(schemaBad) : ' 均合规'));
+const unitBad = paperIssues.map(({ x, errs }) => ({ x, errs: errs.filter((e) => e.field === 'unit') })).filter((r) => r.errs.length);
+ok('论文 unit', units.size > 0 && unitBad.length === 0, `r-30u30 正文中 ${units.size} 个单元链接；每篇 unit 必填、在其中、且天数与 day 一致` + (unitBad.length ? '；问题：\n  ' + fmtErr(unitBad) : ''));
+const dayMap = new Map(); for (const x of paperData) dayMap.set(x.d.day, [...(dayMap.get(x.d.day) ?? []), x.file]);
+const dupDays = [...dayMap].filter(([, fs]) => fs.length > 1);
+ok('论文 day 不重复', dupDays.length === 0, dupDays.length ? dupDays.map(([d, fs]) => `day ${d}: ${fs.join(', ')}`).join('；') : `${dayMap.size} 个不同的 day`);
+const tagWBad = paperIssues.map(({ x, errs }) => ({ x, errs: errs.filter((e) => e.field === 'tags') })).filter((r) => r.errs.length);
+ok('论文标签白名单', tagWBad.length === 0, `白名单 ${TAG_WHITELIST.length} 个标签` + (tagWBad.length ? '；问题：\n  ' + fmtErr(tagWBad) : '，论文笔记标签全部在内'));
+// 合规篇目都渲染：详情页存在（含原论文链接、30u30 单元链接、反向链接区块）；/papers/ 列表按段分组、组内按 day 升序
+const goodPapers = paperIssues.filter((r) => r.errs.length === 0).map((r) => r.x);
+const renderBad = [];
+const listHtml = existsSync(join(dist, 'papers/index.html')) ? readFileSync(join(dist, 'papers/index.html'), 'utf8') : null;
+if (paperData.length && !listHtml) renderBad.push('缺 /papers/ 列表页');
+for (const x of goodPapers) {
+  const f = join(dist, 'papers', x.d.slug, 'index.html');
+  if (!existsSync(f)) { renderBad.push(`${x.d.slug}: 缺详情页`); continue; }
+  const h = readFileSync(f, 'utf8');
+  if (!h.includes(`href="${x.d.source_url}"`)) renderBad.push(`${x.d.slug}: 缺原论文链接`);
+  if (!h.includes(`href="${unitUrl(x.d.unit)}"`)) renderBad.push(`${x.d.slug}: 缺 30u30 单元链接`);
+  if (!h.includes('data-pagefind-body')) renderBad.push(`${x.d.slug}: 未进搜索索引`);
+  if (listHtml && !listHtml.includes(`data-paper-link="${x.d.slug}"`)) renderBad.push(`${x.d.slug}: /papers/ 列表缺该篇`);
+}
+const extraPages = paperPages.filter((p) => !paperData.some((x) => `papers/${x.d.slug}/` === p));
+if (extraPages.length) renderBad.push(`多出页面：${extraPages.join(', ')}`);
+const segOrder = listHtml ? [...listHtml.matchAll(/data-paper-segment="([^"]+)"/g)].map((m) => m[1]) : [];
+const daysInList = listHtml ? [...listHtml.matchAll(/<section[^>]*data-paper-segment[^>]*>([\s\S]*?)<\/section>/g)].map((m) => [...m[1].matchAll(/data-paper-day="(\d+)"/g)].map((d) => +d[1])) : [];
+if (segOrder.some((k, i) => i && SEGMENT_KEYS.indexOf(k) < SEGMENT_KEYS.indexOf(segOrder[i - 1]))) renderBad.push(`分组顺序 ${segOrder.join(',')}`);
+if (daysInList.some((ds) => ds.some((d, i) => i && d < ds[i - 1]))) renderBad.push('组内未按 day 排序');
+ok('论文渲染', renderBad.length === 0, `合规 ${goodPapers.length}/${paperData.length} 篇，详情页 ${paperPages.length} 个；/papers/ 分组 ${segOrder.join('、') || '无'}，组内按 day 排序` + (renderBad.length ? '；问题：' + renderBad.join('，') : ''));
+// 站内论文链接：r-30u30 资源页里有论文笔记的单元链接改指 /papers/<slug>/（并保留 GitHub ↗）；路线页原理支线按 segment 列出论文笔记
+const rHtml = existsSync(join(dist, 'resources/r-30u30/index.html')) ? readFileSync(join(dist, 'resources/r-30u30/index.html'), 'utf8') : '';
+const linkBad = [];
+const unitOfDay = new Map([...units].map(([u, d]) => [d, u]));
+for (const x of goodPapers) {
+  if (!unitOfDay.has(x.d.day)) continue;
+  if (!new RegExp(`href="${base}/papers/${x.d.slug}/"[^>]*data-paper-link="${x.d.slug}"`).test(rHtml)) linkBad.push(`r-30u30 缺 Day ${x.d.day} 的站内链接`);
+}
+const ghLeft = [...rHtml.matchAll(/<a href="https:\/\/github\.com\/Ojhaharsh\/30u30\/tree\/main\/papers\/([^"/]+)"(?![^>]*unit-gh)/g)].map((m) => m[1]).filter((u) => goodPapers.some((x) => x.d.unit === u));
+if (ghLeft.length) linkBad.push(`r-30u30 仍以 GitHub 为主链接：${ghLeft.join(', ')}`);
+const trackSec = /<section[^>]*data-track="theory"[^>]*>([\s\S]*?)<\/section>/.exec(pathHtml)?.[1] ?? '';
+const pathPapers = new Set([...trackSec.matchAll(/data-paper-link="([^"]+)"/g)].map((m) => m[1]));
+const missP = goodPapers.filter((x) => !pathPapers.has(x.d.slug)).map((x) => x.d.slug);
+if (missP.length) linkBad.push(`路线页原理支线缺：${missP.join(', ')}`);
+ok('论文站内链接', linkBad.length === 0, `r-30u30 页 ${(rHtml.match(/data-paper-link=/g) ?? []).length} 个单元链接指向站内论文笔记；路线页原理支线列出 ${pathPapers.size} 篇` + (linkBad.length ? '；问题：' + linkBad.join('，') : ''));
 
 const PATH = `${origin}${base}/path/`;
 const theoryCount = resData.filter((r) => r.d.track === 'theory').reduce((n, r) => n + (r.d.route ?? []).length, 0);
-for (const [rel, label] of [['', '首页'], ['path/', '路线页'], ['tags/', '标签页']]) await interact(`非笔记页交互（${label}，手机）`, async (pg) => {
+for (const [rel, label] of [['', '首页'], ['path/', '路线页'], ['tags/', '标签页'], ['papers/', '论文列表']]) await interact(`非笔记页交互（${label}，手机）`, async (pg) => {
   await pg.goto(`${origin}${base}/${rel}`, { waitUntil: 'networkidle' });
   await pg.click('.menu-btn'); await pg.waitForTimeout(350);
   const menu = await visible(pg, '#sidebar');

@@ -1,5 +1,7 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
+import { SEGMENT_KEYS, PAPER_SLUG_RE, UNIT_RE, dayOfUnit } from './lib/paper-rules.mjs';
+import { TAG_WHITELIST } from './data/tags.mjs';
 
 export const MODULES = {
   A: '智能体设计与架构',
@@ -101,4 +103,35 @@ const resources = defineCollection({
     }),
 });
 
-export const collections = { notes, resources };
+// ── 论文笔记（30u30 书单，papers/p-<两位天数>-<slug>.md；严格模式，未知字段报错） ──
+// unit 必填：30u30 papers/ 下的单元目录名；check-site.mjs 另核对它与 resources/r-30u30.md 的单元链接一致。
+const papers = defineCollection({
+  loader: glob({ pattern: 'p-*.md', base: process.env.PAPERS_DIR ?? '../papers', generateId: ({ entry }) => entry.replace(/\.md$/, '') }),
+  schema: z
+    .object({
+      title_zh: z.string({ required_error: '缺少 title_zh（中文标题）' }).min(1),
+      title_en: z.string({ required_error: '缺少 title_en（论文原题）' }).min(1),
+      slug: z.string({ required_error: '缺少 slug' }).regex(PAPER_SLUG_RE, 'slug 须为 p-<两位天数>-<slug>，且与文件名一致'),
+      day: z.number({ required_error: '缺少 day（1–30）', invalid_type_error: 'day 必须是 1–30 的整数' }).int('day 必须是整数').min(1, 'day 须在 1–30').max(30, 'day 须在 1–30'),
+      segment: z.enum(SEGMENT_KEYS as [string, ...string[]], { required_error: '缺少 segment', invalid_type_error: `segment 须为 ${SEGMENT_KEYS.join('/')}` }),
+      unit: z.string({ required_error: '缺少 unit（30u30 papers/ 下的单元目录名）' }).regex(UNIT_RE, 'unit 须为 30u30 papers/ 下的单元目录名'),
+      source_url: z.string({ required_error: '缺少 source_url' }).url('source_url 不是合法 URL'),
+      published: z.coerce.date({ required_error: '缺少 published（YYYY-MM-DD）', invalid_type_error: 'published 必须是日期 YYYY-MM-DD' }),
+      summary: z.string({ required_error: '缺少 summary' }).min(1),
+      tags: z.array(z.string().refine((t) => TAG_WHITELIST.includes(t), (t) => ({ message: `标签「${t}」不在白名单内（见 CONTENT-GUIDE 现行标签表）` })), { required_error: '缺少 tags（数组）' }),
+      reading_time: z.number({ required_error: '缺少 reading_time（分钟）' }).positive(),
+      authors_en: z.array(z.string().min(1), { required_error: '缺少 authors_en（作者英文名数组）' }).min(1, 'authors_en 至少 1 人'),
+      // 可选
+      notes_updated: z.coerce.date().optional(),
+      source_note: z.string().optional(),
+      venue: z.string().min(1).optional(),
+      source_version: z.string().min(1).optional(),
+    })
+    .strict()
+    .superRefine((d, ctx) => {
+      if (+d.slug.slice(2, 4) !== d.day) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['slug'], message: `slug 天数 ${d.slug.slice(2, 4)} 与 day ${d.day} 不一致` });
+      if (d.unit && dayOfUnit(d.unit) !== d.day) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['unit'], message: `unit ${d.unit} 的天数与 day ${d.day} 不一致` });
+    }),
+});
+
+export const collections = { notes, resources, papers };
