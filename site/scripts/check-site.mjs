@@ -1,10 +1,12 @@
 // 站点自检：node scripts/check-site.mjs [distDir]
 // 起一个本地静态服务（按 BASE_PATH 挂载 dist），用 playwright 逐页检查：
-// 页数、笔记 order 1–26、mermaid 块数 = svg 数且无报错、站内死链、首页 A–F 分组、路线/资源页。
+// 页数、笔记 order 1–26、mermaid 块数 = svg 数且无报错、站内死链、首页 A–F 分组、路线/资源页、
+// 主线 4 阶段 36 步（步数由资源数据推算，可用 EXPECT_STEPS 覆盖）、并行支线（track: theory）。
 import { chromium } from 'playwright';
 import { createServer } from 'node:http';
 import { readFileSync, existsSync, statSync, readdirSync } from 'node:fs';
-import { join, extname } from 'node:path';
+import { join, extname, resolve } from 'node:path';
+import yaml from 'js-yaml'; // astro 的依赖，已在 node_modules 中
 
 const dist = process.argv[2] ?? new URL('../dist/', import.meta.url).pathname;
 const base = (process.env.BASE_PATH ?? '/anthropic-eng-notes').replace(/\/$/, '');
@@ -90,9 +92,37 @@ const mismatch = [...pathHtml.matchAll(/<li class="res"([^>]*)>/g)]
   .filter(([d, sh]) => d !== sh).map(([d, sh]) => `声明 ${d ?? '无'} / 显示 ${sh ?? '选读'}`);
 const lastLi = [...pathHtml.matchAll(/<li[^>]*data-shown-step="(\d+)"[^>]*>([\s\S]*?)<\/li>/g)].find((x) => +x[1] === totalSteps);
 const lastText = lastLi ? lastLi[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() : '';
-const EXPECT_STEPS = process.env.EXPECT_STEPS ? +process.env.EXPECT_STEPS : null;
-ok('路线步数', (EXPECT_STEPS == null || totalSteps === EXPECT_STEPS) && mismatch.filter((m) => !m.includes('选读') || !m.startsWith('声明 无')).length === 0,
-  `共 ${totalSteps} 步（选读 ${(pathHtml.match(/class="num">选读/g) ?? []).length} 条不计）；资源 step 声明与显示${mismatch.length ? '不一致：' + mismatch.join('，') : '一致'}；最后一步：${lastText}`);
+// 从资源源文件推算：主线步数 = 26 篇笔记 + 主线（非 track）且非选读的 route 条目；支线条目数按 track 统计
+const siteDir = new URL('../', import.meta.url).pathname;
+const resDir = resolve(siteDir, process.env.RESOURCES_DIR ?? '../resources');
+const resData = existsSync(resDir)
+  ? readdirSync(resDir).filter((f) => /^r-.*\.md$/.test(f)).map((f) => {
+      const fm = /^---\r?\n([\s\S]*?)\r?\n---/.exec(readFileSync(join(resDir, f), 'utf8'));
+      return { f, d: fm ? yaml.load(fm[1]) ?? {} : {} };
+    })
+  : [];
+const mainResSteps = resData.filter((r) => !r.d.track).flatMap((r) => (r.d.route ?? []).filter((e) => !(e.optional ?? r.d.optional)));
+const dataSteps = 26 + mainResSteps.length;
+const EXPECT_STEPS = process.env.EXPECT_STEPS ? +process.env.EXPECT_STEPS : dataSteps;
+const contiguous = [...shown].sort((a, b) => a - b).every((n, i) => n === i + 1);
+ok('路线步数', totalSteps === EXPECT_STEPS && shown.length === totalSteps && contiguous && mismatch.filter((m) => !m.includes('选读') || !m.startsWith('声明 无')).length === 0,
+  `主线共 ${totalSteps} 步（期望 ${EXPECT_STEPS}；数据推算 ${dataSteps}${contiguous ? '，编号连续' : '，编号不连续！'}；选读 ${(pathHtml.match(/class="num">选读/g) ?? []).length} 条不计）；资源 step 声明与显示${mismatch.length ? '不一致：' + mismatch.join('，') : '一致'}；最后一步：${lastText}`);
+
+// 并行支线：有 track: theory 资源 → 支线区块存在、条目数 = 数据条目数、区块内无主线编号；没有 → 不得渲染空支线
+const theoryData = resData.filter((r) => r.d.track === 'theory');
+const theoryEntries = theoryData.reduce((n, r) => n + (r.d.route ?? []).length, 0);
+const secM = /<section[^>]*data-track="theory"[^>]*>([\s\S]*?)<\/section>/.exec(pathHtml);
+if (theoryData.length === 0) {
+  ok('原理支线', !secM && !/data-track-item=/.test(pathHtml), secM ? '没有 track: theory 资源，却渲染了支线区块' : '无 track: theory 资源，未渲染支线（符合预期）');
+} else {
+  const sec = secM?.[1] ?? '';
+  const declared = +(/data-track-items="(\d+)"/.exec(secM?.[0] ?? '')?.[1] ?? -1);
+  const items = (sec.match(/data-track-item="theory"/g) ?? []).length;
+  const leaked = (sec.match(/data-shown-step=/g) ?? []).length;
+  const mainLeak = (pathHtml.replace(secM?.[0] ?? '', '').match(/data-track-item=/g) ?? []).length;
+  ok('原理支线', !!secM && items === theoryEntries && declared === theoryEntries && leaked === 0 && mainLeak === 0,
+    `${secM ? '区块存在' : '区块缺失！'}；数据 ${theoryData.length} 个资源（${theoryData.map((r) => r.f).join(', ')}）共 ${theoryEntries} 条，页面渲染 ${items} 条（标注 ${declared}）；区块内主线编号 ${leaked} 个、区块外支线条目 ${mainLeak} 个`);
+}
 ok('资源页', existsSync(join(dist, 'resources/index.html')), `资源列表页存在，单篇资源页 ${resPages.length} 个`);
 
 await browser.close(); server.close();

@@ -40,6 +40,8 @@ const notes = defineCollection({
 // ── 资源导读（独立集合、独立 schema；确定版，严格校验，未知字段报错） ──
 export const RESOURCE_KINDS = ['course', 'article', 'guide', 'repo', 'cookbook', 'blog', 'catalog'] as const;
 export const RESOURCE_STATUS = ['active', 'archived', 'dated'] as const;
+// 并行支线：theory = 「原理支线」（不进入主线编号与步数）
+export const RESOURCE_TRACKS = ['theory'] as const;
 const stageNum = (what: string) =>
   z.number({ required_error: `缺少 ${what}（1–4）`, invalid_type_error: `${what} 必须是 1–4 的整数` }).int(`${what} 必须是整数`).min(1, `${what} 须在 1–4`).max(4, `${what} 须在 1–4`);
 const routeEntry = z
@@ -47,7 +49,8 @@ const routeEntry = z
     part: z.string({ required_error: 'route 条目缺少 part' }).min(1, 'route.part 不能为空'),
     // 必须显式写出：笔记 slug 或 null（null = 所属阶段开头）
     after: z.string({ required_error: 'route 条目缺少 after（笔记 slug 或 null）', invalid_type_error: 'route.after 必须是笔记 slug 字符串或 null' }).nullable(),
-    // 不用 coerce：step: null / 0 / 小数 都报错；选读条目不写 step
+    // 不用 coerce：step: null / 0 / 小数 都报错。
+    // 非选读条目 step 必填；选读条目（optional: true，或资源级 optional: true）不写 step——见下方 superRefine
     step: z.number({ invalid_type_error: 'route.step 必须是正整数（选读条目请不写 step，不要写 null）' }).int('route.step 必须是整数').positive('route.step 必须 ≥ 1').optional(),
     stage: stageNum('route.stage').optional(),
     optional: z.boolean({ invalid_type_error: 'route.optional 必须是 true/false' }).optional(),
@@ -80,8 +83,22 @@ const resources = defineCollection({
       license_note: z.string().optional(),
       estimated_hours: z.number({ invalid_type_error: 'estimated_hours 必须是数字' }).positive().optional(),
       source_note: z.string().optional(),
+      // 并行支线：track: theory 的资源不进主线，单独渲染为「原理支线」；其 route 条目须全部 optional: true 且不写 step
+      track: z.enum(RESOURCE_TRACKS, { invalid_type_error: `track 须为 ${RESOURCE_TRACKS.join('/')}` }).optional(),
     })
-    .strict(),
+    .strict()
+    .superRefine((d, ctx) => {
+      d.route.forEach((e, i) => {
+        const path = ['route', i];
+        if (d.track === 'theory' && e.optional !== true)
+          ctx.addIssue({ code: z.ZodIssueCode.custom, path: [...path, 'optional'], message: `track: ${d.track} 的 route 条目必须写 optional: true（支线不占主线编号）` });
+        const opt = e.optional ?? d.optional ?? false;
+        if (opt && e.step !== undefined)
+          ctx.addIssue({ code: z.ZodIssueCode.custom, path: [...path, 'step'], message: `选读/支线条目不应写 step（当前 ${e.step}）` });
+        if (!opt && e.step === undefined)
+          ctx.addIssue({ code: z.ZodIssueCode.custom, path: [...path, 'step'], message: '非选读条目必须写 step（选读条目请写 optional: true）' });
+      });
+    }),
 });
 
 export const collections = { notes, resources };

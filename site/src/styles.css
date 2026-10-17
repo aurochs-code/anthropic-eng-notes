@@ -41,6 +41,13 @@ nav.top a[aria-current="page"] { color:var(--accent); }
 .badge.res { border-color:var(--accent); color:var(--accent); }
 .route li.res { background:var(--code); padding-left:8px; padding-right:8px; border-radius:6px; }
 .route .part { color:var(--muted); font-size:14px; }
+/* 并行支线（原理支线） */
+.track { border-left:3px solid var(--accent); padding-left:12px; }
+.track .route .num { color:var(--muted); }
+.badge.track { border-style:dashed; border-color:var(--accent); color:var(--accent); }
+.track-pointer { margin:10px 0 0; font-size:14px; color:var(--muted); }
+.route li.track-item { overflow-wrap:anywhere; }
+@media (max-width: 600px) { .track { padding-left:8px; } }
 .stage-goal { color:var(--muted); font-size:14px; margin:-4px 0 8px; }
 dl.facts { display:grid; grid-template-columns:auto 1fr; gap:2px 12px; font-size:14px; margin:12px 0; }
 dl.facts dt { color:var(--muted); }

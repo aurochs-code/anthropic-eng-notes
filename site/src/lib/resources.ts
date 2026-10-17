@@ -54,7 +54,8 @@ export async function getLearningPath() {
   const orderOf = new Map(notes.map((n) => [n.data.slug, n.data.order]));
   type Keyed = { stage: number; pos: number; tie: number; item: PathItem };
   const rows: Keyed[] = notes.map((n) => ({ stage: stageOfOrder(n.data.order), pos: n.data.order, tie: -1, item: { type: 'note', note: n } }));
-  for (const res of resources) {
+  // track（如 theory）资源不进入主线，见 getTracks()
+  for (const res of resources.filter((r) => !r.data.track)) {
     for (const e of res.data.route) {
       const afterOrder = e.after ? orderOf.get(e.after) : undefined;
       const stage = e.stage ?? (afterOrder ? stageOfOrder(afterOrder) : undefined) ?? res.data.stage;
@@ -64,4 +65,26 @@ export async function getLearningPath() {
   }
   rows.sort((a, b) => a.stage - b.stage || a.pos - b.pos || a.tie - b.tie);
   return STAGES.map((s) => ({ ...s, items: rows.filter((r) => r.stage === s.n).map((r) => r.item) }));
+}
+
+export const TRACKS = {
+  theory: { name: '原理支线', startsAfter: 1, parallelWith: [2, 3] },
+} as const;
+export type TrackItem = { res: Resource; part: string; after: string | null; stage?: number };
+
+/**
+ * 并行支线：按 track 分组，资源按 getSortedResources 顺序、条目按 route 顺序排列。
+ * 没有该 track 的资源时不返回该支线（页面不渲染空支线）。
+ */
+export async function getTracks() {
+  const resources = await getSortedResources();
+  return (Object.keys(TRACKS) as (keyof typeof TRACKS)[])
+    .map((key) => ({
+      key,
+      ...TRACKS[key],
+      items: resources
+        .filter((r) => r.data.track === key)
+        .flatMap((res) => res.data.route.map((e): TrackItem => ({ res, part: e.part, after: e.after, stage: e.stage }))),
+    }))
+    .filter((t) => t.items.length > 0);
 }

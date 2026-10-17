@@ -37,7 +37,7 @@ const { Content } = await render(res);
         {d.cost && <><dt>费用</dt><dd>{d.cost}</dd></>}
         {d.estimated_hours && <><dt>估计投入</dt><dd>约 {d.estimated_hours} 小时（估算）</dd></>}
         {d.license_note && <><dt>许可</dt><dd>{d.license_note}</dd></>}
-        <dt>路线位置</dt><dd>{d.route.map((e) => `${e.step ? `第 ${e.step} 步：` : '选读：'}${e.part.replace(/^选读：/, '')}`).join('；')}（<a href={url('/path/')}>查看路线</a>）</dd>
+        <dt>路线位置</dt><dd>{d.route.map((e) => e.step ? `第 ${e.step} 步：${e.part}` : d.track === 'theory' ? (e.part.startsWith('原理支线') ? e.part : `原理支线：${e.part}`) : `选读：${e.part.replace(/^选读：/, '')}`).join('；')}（<a href={url('/path/')}>查看路线</a>）</dd>
       </dl>
     )}
     {pairs.length > 0 && (

@@ -21,6 +21,7 @@ const groups = [
             <span class="badge">{r.data.kind}</span>
             <a href={url(`resources/${resSlug(r)}/`)}>{r.data.title_zh}</a>
             <span class="meta" style="display:inline"> · {r.data.provider}{r.data.estimated_hours && ` · 约 ${r.data.estimated_hours} 小时（估算）`}</span>
+            {r.data.track === 'theory' && <span class="badge track">原理支线</span>}
             {r.data.optional && <span class="badge">选读</span>}
             {r.data.status !== 'active' && <span class="badge">{r.data.status}</span>}
             {<p class="sum" style="margin-left:0">{r.data.summary}</p>}

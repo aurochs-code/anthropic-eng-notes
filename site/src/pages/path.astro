@@ -1,8 +1,13 @@
 ---
 import Base from '../layouts/Base.astro';
-import { getLearningPath, resSlug } from '../lib/resources';
-import { url } from '../lib/notes';
+import { getLearningPath, getTracks, resSlug } from '../lib/resources';
+import { url, getSortedNotes } from '../lib/notes';
+import { stageName } from '../data/stages';
 const stages = await getLearningPath();
+const tracks = await getTracks();
+const noteBySlug = new Map((await getSortedNotes()).map((n) => [n.data.slug, n]));
+const trackNote = (t: (typeof tracks)[number]) =>
+  `从${stageName(t.startsAfter)}阶段结束后开始，与${t.parallelWith.map(stageName).join('和')}并行`;
 let step = 0;
 ---
 <Base title="学习路线 · 学习笔记">
@@ -28,6 +33,29 @@ let step = 0;
             {it.part && <span class="part"> · {it.part}</span>}
           </li>
         ))}
+      </ol>
+      {tracks.filter((t) => t.startsAfter === s.n).map((t) => (
+        <p class="track-pointer">↳ {stageName(s.n)}阶段结束后，可同时开始并行的<a href={`#track-${t.key}`}>{t.name}</a>（{t.items.length} 条，不占主线编号）</p>
+      ))}
+    </section>
+  ))}
+  {tracks.map((t) => (
+    <section class={`module track track-${t.key}`} id={`track-${t.key}`} data-track={t.key} data-track-items={t.items.length}>
+      <h2>{t.name}<span class="meta" style="display:inline;font-weight:400"> （并行 · {t.items.length} 条）</span></h2>
+      <p class="stage-goal track-note">{trackNote(t)}。支线条目不计入主线编号与步数，可按自己的节奏穿插阅读。</p>
+      <ol class="route">
+        {t.items.map((it, i) => {
+          const n = it.after ? noteBySlug.get(it.after) : undefined;
+          return (
+            <li class="track-item" data-track-item={t.key}>
+              <span class="num">{String(i + 1).padStart(2, '0')}</span>
+              <span class="badge track">原理</span>
+              <a href={url(`resources/${resSlug(it.res)}/`)}>{it.res.data.title_zh}</a>
+              {it.part && <span class="part"> · {it.part}</span>}
+              {(n || it.stage) && <span class="part track-when"> · 对应主线{it.stage ? `${stageName(it.stage)}阶段` : ''}{n && <>，读完笔记 <a href={url(`notes/${n.data.slug}/`)}>#{n.data.order} {n.data.title_zh}</a> 后</>}</span>}
+            </li>
+          );
+        })}
       </ol>
     </section>
   ))}
