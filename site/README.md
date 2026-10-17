@@ -31,7 +31,7 @@ Astro 静态站，内容直接读取上级目录 `../notes/*.md`（不复制）�
 需要 Node ≥ 22（`package.json` 的 `engines`，CI 同为 Node 22）。
 ```bash
 npm ci
-npm run build          # 输出 dist/
+npm run build          # astro build + 建搜索索引（scripts/pagefind-index.mjs → dist/pagefind/）
 npm run preview        # http://localhost:4321/anthropic-eng-notes/
 npm run screenshots    # 需 preview 运行中；截图到 screenshots/ 并校验 mermaid 渲染成 svg
 npm run check          # 自检：order、mermaid、站内死链、首页分组、路线/资源页（自带静态服务，读 dist/）
@@ -42,3 +42,10 @@ npm run check          # 自检：order、mermaid、站内死链、首页分组�
 - 工作流在仓库根目录 `.github/workflows/deploy.yml`（构建 `site/` 子目录），目前**只允许手动触发**（Actions → Deploy to GitHub Pages → Run workflow）。
 - 先在仓库 Settings → Pages → Source 选 “GitHub Actions”。确认要自动发布时，可在 `on:` 下加回 `push: branches: [main]`。
 - base 默认取 `/<仓库名>`，可用仓库变量 `BASE_PATH` 覆盖。
+
+## 页面功能与实现位置
+- 布局（`src/layouts/Base.astro`）：≥1200px 三栏（左侧栏 `components/Sidebar.astro` + 正文 + 右侧本页目录 `components/Toc.astro`）；768–1199px 侧栏收进菜单抽屉、目录折叠在正文顶部；<768px 菜单抽屉 + 底部“本页目录”抽屉。
+- 交互脚本在 `src/lib/client/`：`chrome.ts`（主题三态切换并存 localStorage、侧栏抽屉、目录滚动高亮、代码复制、回到顶部）、`mermaid.ts`（渲染、切换主题后重渲染、点击放大）、`search.ts`（搜索弹窗）。
+- 搜索：Pagefind。`scripts/pagefind-index.mjs` 用 Pagefind Node API 建索引，中文按“字”索引；`src/lib/search-query.mjs` 把中文查询按字检索后再做子串过滤（原因见脚本开头注释）。首页和资源列表页不进索引（`searchable={false}`）。快捷键 Ctrl/⌘ K 或 `/`。
+- 笔记页有两组翻页：按编号、按学习路线（主线 36 步，下一步可能是资源）；面包屑里的“第 M 步”链接到路线页对应条目（`/path/#step-M`）。
+- 改了 remark/rehype 插件后，本地要先删 `node_modules/.astro` 再 build（Astro 内容层会缓存渲染结果）。

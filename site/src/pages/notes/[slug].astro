@@ -1,8 +1,12 @@
 ---
 import { render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import Toc from '../../components/Toc.astro';
+import RoutePager from '../../components/RoutePager.astro';
 import { MODULES } from '../../content.config';
 import { getSortedNotes, fmtDate, url } from '../../lib/notes';
+import { getMainSequence } from '../../lib/resources';
+import { stageName } from '../../data/stages';
 
 export async function getStaticPaths() {
   const notes = await getSortedNotes();
@@ -13,10 +17,17 @@ export async function getStaticPaths() {
 }
 const { note, prev, next } = Astro.props;
 const d = note.data;
-const { Content } = await render(note);
+const { Content, headings } = await render(note);
+const seq = await getMainSequence();
+const at = seq.findIndex((s) => s.item.type === 'note' && s.item.note.data.slug === d.slug);
+const me = seq[at];
 ---
-<Base title={`${d.title_zh} · 学习笔记`} mermaid={true} description={d.summary} ogType="article">
+<Base title={`${d.title_zh} · 学习笔记`} mermaid={true} description={d.summary} ogType="article" headings={headings}>
   <article>
+    <nav class="breadcrumb" aria-label="位置" data-pagefind-ignore>
+      <a href={url('/')}>笔记</a><span aria-hidden="true">›</span><a href={url(`/#module-${d.moduleKey}`)}>模块 {d.moduleKey} · {MODULES[d.moduleKey]}</a><span aria-hidden="true">›</span><span>#{d.order}</span>
+      {me && <a class="crumb-step" href={url(`/path/#step-${me.n}`)} data-route-step={me.n}>阶段 {me.stage} · {stageName(me.stage)} · 第 {me.n} 步</a>}
+    </nav>
     <h1>{d.title_zh}</h1>
     <p class="en">{d.title_en}</p>
     <div class="meta">
@@ -27,10 +38,12 @@ const { Content } = await render(note);
     </div>
     <ul class="tags">{d.tags.map((t) => <li>{t}</li>)}</ul>
     {d.source_note && <div class="note-box">⚠️ {d.source_note}</div>}
+    <Toc headings={headings} variant="inline" />
     <Content />
   </article>
-  <nav class="pager">
+  <nav class="pager" aria-label="按编号翻页" data-pager="order" data-pagefind-ignore>
     {prev ? <a class="prev" href={url(`notes/${prev.data.slug}/`)}><small>← 上一篇 #{prev.data.order}</small>{prev.data.title_zh}</a> : <span />}
     {next ? <a class="next" href={url(`notes/${next.data.slug}/`)}><small>下一篇 #{next.data.order} →</small>{next.data.title_zh}</a> : <span />}
   </nav>
+  {me && <RoutePager seq={seq} at={at} />}
 </Base>

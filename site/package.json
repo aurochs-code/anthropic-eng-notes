@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && node scripts/pagefind-index.mjs",
     "preview": "astro preview",
     "screenshots": "node scripts/screenshots.mjs",
     "check": "node scripts/check-site.mjs"
@@ -19,6 +19,7 @@
     "unist-util-visit": "^5.1.0"
   },
   "devDependencies": {
+    "pagefind": "^1.5.2",
     "playwright": "^1.64.1"
   }
 }

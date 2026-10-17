@@ -1,16 +1,34 @@
 ---
 import '../styles.css';
 import { url } from '../lib/notes';
+import Sidebar from '../components/Sidebar.astro';
+import Toc, { type Heading } from '../components/Toc.astro';
 const SITE_DESC = 'Anthropic 工程博客 26 篇文章的中文学习笔记（非翻译），附外部资源导读与 4 阶段学习路线。';
-const { title, mermaid = false, description = SITE_DESC, ogType = 'website' } = Astro.props;
+// searchable=false：不进搜索索引（首页、资源列表只是摘要汇总，会挤占真正的笔记结果）
+const { title, mermaid = false, description = SITE_DESC, ogType = 'website', headings = [], searchable = true } = Astro.props as {
+  title: string; mermaid?: boolean; description?: string; ogType?: string; headings?: Heading[]; searchable?: boolean;
+};
 const desc = description.replace(/\s+/g, ' ').trim();
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const tocList = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
+const hasToc = tocList.length > 0;
 ---
 <!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script is:inline>
+    // 首屏前确定主题，避免闪烁：theme = auto | light | dark（localStorage），html[data-theme] 为实际生效的 light/dark
+    (function () {
+      var pref = 'auto';
+      try { pref = localStorage.getItem('theme') || 'auto'; } catch (e) {}
+      var dark = pref === 'dark' || (pref !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+      var h = document.documentElement;
+      h.dataset.themePref = pref;
+      h.dataset.theme = dark ? 'dark' : 'light';
+    })();
+  </script>
   <title>{title}</title>
   <meta name="description" content={desc} />
   <link rel="canonical" href={canonical} />
@@ -22,56 +40,69 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
   <meta property="og:locale" content="zh_CN" />
   <meta property="og:site_name" content="Anthropic 工程博客 · 中文学习笔记" />
 </head>
-<body>
+<body class={hasToc ? 'has-toc' : undefined}>
+  <a class="skip-link" href="#main">跳到正文</a>
   <header class="site">
+    <button type="button" class="icon-btn menu-btn" aria-controls="sidebar" aria-expanded="false" aria-label="打开导航菜单">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
     <a class="brand" href={url('/')}><span class="brand-long">Anthropic 工程博客 · 中文学习笔记</span><span class="brand-short">Anthropic 工程笔记</span></a>
-    <nav class="top">
+    <nav class="top" aria-label="主导航">
       {[['/', '笔记'], ['/path/', '学习路线'], ['/resources/', '资源']].map(([p, label]) => (
         <a href={url(p)} aria-current={Astro.url.pathname === url(p) ? 'page' : undefined}>{label}</a>
       ))}
     </nav>
+    <div class="header-tools">
+      <button type="button" class="search-btn" aria-haspopup="dialog" aria-controls="search-dialog" aria-label="搜索（快捷键 Ctrl K 或 /）">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span class="search-label">搜索笔记与资源</span><kbd>Ctrl K</kbd>
+      </button>
+      <button type="button" class="icon-btn theme-btn" aria-label="切换主题（当前：跟随系统）" title="切换主题">
+        <svg class="i-auto" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg>
+        <svg class="i-light" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <svg class="i-dark" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        <span class="theme-label">自动</span>
+      </button>
+    </div>
   </header>
-  <main><slot /></main>
+  <dialog id="search-dialog" class="search-dialog" aria-label="站内搜索" data-state="idle">
+    <div class="search-head">
+      <input class="search-input" type="search" placeholder="搜索笔记与资源（中英文均可）" aria-label="搜索关键词" autocomplete="off" enterkeyhint="search" />
+      <button type="button" class="icon-btn search-close" aria-label="关闭搜索">✕</button>
+    </div>
+    <p class="search-summary" role="status" aria-live="polite"></p>
+    <ol class="search-results"></ol>
+    <p class="search-foot" aria-hidden="true"><kbd>↑</kbd><kbd>↓</kbd> 选择　<kbd>Enter</kbd> 打开　<kbd>Esc</kbd> 关闭</p>
+  </dialog>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar" aria-label="导航侧栏">
+      <Sidebar />
+    </aside>
+    <div class="sidebar-backdrop" hidden></div>
+    <main id="main" data-pagefind-body={searchable ? '' : undefined}><slot /></main>
+    {hasToc && <aside class="toc-col"><Toc headings={headings} variant="side" /></aside>}
+  </div>
   <footer class="site">学习笔记，非翻译；原文版权归 Anthropic 所有。</footer>
+  {hasToc && (
+    <>
+      <button type="button" class="toc-fab" aria-haspopup="dialog" aria-controls="toc-drawer">本页目录</button>
+      <dialog id="toc-drawer" class="toc-drawer" aria-label="本页目录">
+        <div class="drawer-head"><strong>本页目录</strong><button type="button" class="icon-btn drawer-close" aria-label="关闭目录">✕</button></div>
+        <Toc headings={headings} variant="drawer" />
+      </dialog>
+    </>
+  )}
   <button type="button" class="to-top" aria-label="回到顶部" title="回到顶部" hidden>↑</button>
   <script>
-    // 代码块复制按钮（mermaid 源码块除外）
-    for (const pre of document.querySelectorAll('main pre:not(.mermaid)')) {
-      const wrap = document.createElement('div');
-      wrap.className = 'code-wrap';
-      pre.replaceWith(wrap);
-      wrap.append(pre);
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'copy-btn';
-      btn.textContent = '复制';
-      btn.setAttribute('aria-label', '复制代码');
-      btn.addEventListener('click', async () => {
-        const text = pre.querySelector('code')?.innerText ?? pre.innerText;
-        try {
-          await navigator.clipboard.writeText(text);
-          btn.textContent = '已复制';
-        } catch {
-          btn.textContent = '复制失败';
-        }
-        setTimeout(() => (btn.textContent = '复制'), 1500);
-      });
-      wrap.append(btn);
-    }
-    // 回到顶部：滚过一屏后出现
-    const top = document.querySelector<HTMLButtonElement>('.to-top')!;
-    const onScroll = () => (top.hidden = scrollY < innerHeight);
-    addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
-    top.addEventListener('click', () => scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }));
+    import { initChrome } from '../lib/client/chrome';
+    import { initSearch } from '../lib/client/search';
+    initChrome();
+    initSearch();
   </script>
   {mermaid && (
     <script>
-      import mermaid from 'mermaid';
-      const dark = matchMedia('(prefers-color-scheme: dark)').matches;
-      mermaid.initialize({ startOnLoad: false, theme: dark ? 'dark' : 'default', securityLevel: 'strict' });
-      await mermaid.run({ querySelector: 'pre.mermaid' });
-      document.documentElement.dataset.mermaid = 'done';
+      import { initMermaid } from '../lib/client/mermaid';
+      initMermaid();
     </script>
   )}
 </body>

@@ -7,7 +7,7 @@ export function remarkMermaid() {
   return (tree) => {
     visit(tree, 'code', (node, index, parent) => {
       if (node.lang !== 'mermaid' || !parent) return;
-      parent.children[index] = { type: 'html', value: `<pre class="mermaid">${esc(node.value)}</pre>` };
+      parent.children[index] = { type: 'html', value: `<pre class="mermaid" data-pagefind-ignore>${esc(node.value)}</pre>` };
     });
   };
 }

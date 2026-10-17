@@ -1,8 +1,10 @@
 ---
 import { render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import Toc from '../../components/Toc.astro';
+import RoutePager from '../../components/RoutePager.astro';
 import { stageName } from '../../data/stages';
-import { getSortedResources, resSlug } from '../../lib/resources';
+import { getSortedResources, getMainSequence, resSlug } from '../../lib/resources';
 import { getSortedNotes, fmtDate, url } from '../../lib/notes';
 
 export async function getStaticPaths() {
@@ -14,10 +16,19 @@ const d = res.data;
 const notes = await getSortedNotes();
 const bySlug = new Map(notes.map((n) => [n.data.slug, n]));
 const pairs = d.pairs_with.map((s) => bySlug.get(s)).filter(Boolean);
-const { Content } = await render(res);
+const { Content, headings } = await render(res);
+const seq = await getMainSequence();
+// 资源可能在主线出现多次：路线翻页取第一次出现的位置
+const at = seq.findIndex((s) => s.item.type === 'resource' && s.item.res.id === res.id);
+const steps = seq.filter((s) => s.item.type === 'resource' && s.item.res.id === res.id).map((s) => s.n);
 ---
-<Base title={`${d.title_zh} · 资源导读`} mermaid={true} description={d.summary} ogType="article">
+<Base title={`${d.title_zh} · 资源导读`} mermaid={true} description={d.summary} ogType="article" headings={headings}>
   <article>
+    <nav class="breadcrumb" aria-label="位置" data-pagefind-ignore>
+      <a href={url('/resources/')}>资源导读</a><span aria-hidden="true">›</span><span>阶段 {d.stage} · {stageName(d.stage)}</span>
+      {steps.length > 0 && <a class="crumb-step" href={url(`/path/#step-${steps[0]}`)} data-route-step={steps[0]}>路线第 {steps.join('、')} 步</a>}
+      {d.track === 'theory' && <a class="crumb-step" href={url('/path/#track-theory')}>原理支线</a>}
+    </nav>
     <h1>{d.title_zh}</h1>
     {d.title_en && <p class="en">{d.title_en}</p>}
     <div class="meta">
@@ -43,10 +54,12 @@ const { Content } = await render(res);
     {pairs.length > 0 && (
       <p class="meta">搭配笔记：{pairs.map((n, i) => <>{i > 0 && '、'}<a href={url(`notes/${n!.data.slug}/`)}>#{n!.data.order} {n!.data.title_zh}</a></>)}</p>
     )}
+    <Toc headings={headings} variant="inline" />
     <Content />
   </article>
-  <nav class="pager">
+  <nav class="pager" aria-label="资源翻页" data-pagefind-ignore>
     {prev ? <a class="prev" href={url(`resources/${resSlug(prev)}/`)}><small>← 上一个资源</small>{prev.data.title_zh}</a> : <span />}
     {next ? <a class="next" href={url(`resources/${resSlug(next)}/`)}><small>下一个资源 →</small>{next.data.title_zh}</a> : <span />}
   </nav>
+  {at >= 0 && <RoutePager seq={seq} at={at} />}
 </Base>

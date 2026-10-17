@@ -1,0 +1,19 @@
+---
+// 本页目录：h2/h3。variant=side（宽屏右栏）/ inline（中屏折叠）/ drawer（手机底部抽屉内）
+export type Heading = { depth: number; slug: string; text: string };
+const { headings, variant } = Astro.props as { headings: Heading[]; variant: 'side' | 'inline' | 'drawer' };
+const list = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
+---
+{list.length > 0 && (
+  variant === 'inline' ? (
+    <details class="toc toc-inline" data-pagefind-ignore>
+      <summary>本页目录（{list.length}）</summary>
+      <ol>{list.map((h) => <li class={`d${h.depth}`}><a href={`#${h.slug}`}>{h.text}</a></li>)}</ol>
+    </details>
+  ) : (
+    <nav class={`toc toc-${variant}`} aria-label="本页目录" data-pagefind-ignore>
+      {variant === 'side' && <p class="toc-title">本页内容</p>}
+      <ol>{list.map((h) => <li class={`d${h.depth}`}><a href={`#${h.slug}`}>{h.text}</a></li>)}</ol>
+    </nav>
+  )
+)}

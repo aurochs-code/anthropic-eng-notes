@@ -8,7 +8,7 @@ const groups = [
   ...STAGES.map((s) => ({ title: `阶段 ${s.n} · ${s.name}`, items: resources.filter((r) => r.data.stage === s.n) })),
 ].filter((g) => g.items.length);
 ---
-<Base title="资源导读 · 学习笔记" description="Anthropic 笔记之外的外部课程、文章与仓库导读，按学习阶段分组。">
+<Base title="资源导读 · 学习笔记" description="Anthropic 笔记之外的外部课程、文章与仓库导读，按学习阶段分组。" searchable={false}>
   <h1>资源导读</h1>
   <p class="en">Anthropic 笔记之外的外部课程与文章导读，按主阶段分组；它们在<a href={url('/path/')}>学习路线</a>里穿插出现。</p>
   {resources.length === 0 && <p class="empty">资源导读撰写中…</p>}

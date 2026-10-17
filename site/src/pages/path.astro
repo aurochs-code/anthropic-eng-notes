@@ -9,24 +9,28 @@ const noteBySlug = new Map((await getSortedNotes()).map((n) => [n.data.slug, n])
 const trackNote = (t: (typeof tracks)[number]) =>
   `从${stageName(t.startsAfter)}阶段结束后开始，与${t.parallelWith.map(stageName).join('和')}并行`;
 let step = 0;
+const headings = [
+  ...stages.map((s) => ({ depth: 2, slug: `stage-${s.n}`, text: `阶段 ${s.n} · ${s.name}` })),
+  ...tracks.map((t) => ({ depth: 2, slug: `track-${t.key}`, text: t.name })),
+];
 ---
-<Base title="学习路线 · 学习笔记" description="四阶段 36 步学习路线：Anthropic 工程博客笔记按推荐顺序排列，外部课程与文章导读穿插其间，另有并行的原理支线。">
+<Base title="学习路线 · 学习笔记" description="四阶段 36 步学习路线：Anthropic 工程博客笔记按推荐顺序排列，外部课程与文章导读穿插其间，另有并行的原理支线。" headings={headings}>
   <h1>学习路线</h1>
   <p class="en">四个阶段：Anthropic 笔记按 order 排列，外部资源（<span class="badge res">资源</span>）穿插其间。</p>
   {stages.map((s) => (
     <section class="module">
-      <h2>阶段 {s.n} · {s.name}<span class="meta" style="display:inline;font-weight:400"> （笔记 {s.from}–{s.to}）</span></h2>
+      <h2 id={`stage-${s.n}`}>阶段 {s.n} · {s.name}<span class="meta" style="display:inline;font-weight:400"> （笔记 {s.from}–{s.to}）</span></h2>
       <p class="stage-goal">{s.goal}</p>
       <ol class="route">
         {s.items.map((it) => it.type === 'note' ? (
-          <li data-shown-step={step + 1}>
+          <li id={`step-${step + 1}`} data-shown-step={step + 1}>
             <span class="num">{String(++step).padStart(2, '0')}</span>
             <span class="badge">笔记 #{it.note.data.order}</span>
             <a href={url(`notes/${it.note.data.slug}/`)}>{it.note.data.title_zh}</a>
             <span class="meta" style="display:inline"> · {it.note.data.reading_time} 分钟</span>
           </li>
         ) : (
-          <li class="res" data-declared-step={it.step} data-shown-step={it.optional ? undefined : step + 1}>
+          <li class="res" id={it.optional ? undefined : `step-${step + 1}`} data-declared-step={it.step} data-shown-step={it.optional ? undefined : step + 1}>
             <span class="num">{it.optional ? '选读' : String(++step).padStart(2, '0')}</span>
             <span class="badge res">资源</span>
             <a href={url(`resources/${resSlug(it.res)}/`)}>{it.res.data.title_zh}</a>

@@ -1,0 +1,16 @@
+---
+// 按学习路线（主线编号序列）的上一步/下一步；下一步可能是资源
+import { url } from '../lib/notes';
+import { resSlug, type SeqItem } from '../lib/resources';
+const { seq, at } = Astro.props as { seq: SeqItem[]; at: number };
+const link = (s: SeqItem) =>
+  s.item.type === 'note'
+    ? { href: url(`notes/${s.item.note.data.slug}/`), title: s.item.note.data.title_zh, kind: '笔记' }
+    : { href: url(`resources/${resSlug(s.item.res)}/`), title: `${s.item.res.data.title_zh}${s.item.part ? ` · ${s.item.part}` : ''}`, kind: '资源' };
+const prev = seq[at - 1] && { ...link(seq[at - 1]), n: seq[at - 1].n };
+const next = seq[at + 1] && { ...link(seq[at + 1]), n: seq[at + 1].n };
+---
+<nav class="pager route-pager" aria-label="按学习路线翻页" data-pager="route" data-pagefind-ignore>
+  {prev ? <a class="prev" href={prev.href}><small>← 路线上一步 · 第 {prev.n} 步（{prev.kind}）</small>{prev.title}</a> : <span />}
+  {next ? <a class="next" href={next.href}><small>路线下一步 · 第 {next.n} 步（{next.kind}）→</small>{next.title}</a> : <a class="next" href={url('/path/')}><small>路线终点 →</small>回到学习路线</a>}
+</nav>

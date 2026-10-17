@@ -88,3 +88,16 @@ export async function getTracks() {
     }))
     .filter((t) => t.items.length > 0);
 }
+
+export type SeqItem = { n: number; stage: number; item: PathItem };
+/**
+ * 主线编号序列（与 /path/ 页编号一致）：笔记与非选读资源条目依次编号 1..N；选读、支线不计。
+ * 供“按学习路线的上一步/下一步”和面包屑“第 M 步”使用。
+ */
+export async function getMainSequence(): Promise<SeqItem[]> {
+  const stages = await getLearningPath();
+  const seq: SeqItem[] = [];
+  for (const s of stages)
+    for (const it of s.items) if (it.type === 'note' || !it.optional) seq.push({ n: seq.length + 1, stage: s.n, item: it });
+  return seq;
+}
