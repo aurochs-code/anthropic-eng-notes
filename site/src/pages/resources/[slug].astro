@@ -29,15 +29,15 @@ const { Content } = await render(res);
       {d.source_url && <a href={d.source_url} target="_blank" rel="noopener">原文链接 ↗</a>}
       {d.source_url_zh && <a href={d.source_url_zh} target="_blank" rel="noopener">中文版 ↗</a>}
     </div>
-    {d.tags.length > 0 && <ul class="tags">{d.tags.map((t) => <li>{t}</li>)}</ul>}
+    {<ul class="tags">{d.tags.map((t) => <li>{t}</li>)}</ul>}
     {d.source_note && <div class="note-box">⚠️ {d.source_note}</div>}
-    {(d.status || d.cost || d.estimated_hours || d.license_note || d.route.length > 0) && (
+    {(
       <dl class="facts">
-        {d.status && <><dt>状态</dt><dd>{d.status}</dd></>}
+        <dt>状态</dt><dd>{d.status}{d.optional && '（选读）'}</dd>
         {d.cost && <><dt>费用</dt><dd>{d.cost}</dd></>}
-        {d.estimated_hours && <><dt>估计投入</dt><dd>约 {d.estimated_hours} 小时（笔者估算）</dd></>}
+        {d.estimated_hours && <><dt>估计投入</dt><dd>约 {d.estimated_hours} 小时（估算）</dd></>}
         {d.license_note && <><dt>许可</dt><dd>{d.license_note}</dd></>}
-        {d.route.length > 0 && <><dt>路线位置</dt><dd>{d.route.map((e) => `${e.step ? `第 ${e.step} 步` : ''}${e.part ? ` ${e.part}` : ''}`.trim()).join('；')}（<a href={url('/path/')}>查看路线</a>）</dd></>}
+        <dt>路线位置</dt><dd>{d.route.map((e) => `${e.step ? `第 ${e.step} 步：` : '选读：'}${e.part.replace(/^选读：/, '')}`).join('；')}（<a href={url('/path/')}>查看路线</a>）</dd>
       </dl>
     )}
     {pairs.length > 0 && (

@@ -6,7 +6,6 @@ import { url } from '../../lib/notes';
 const resources = await getSortedResources();
 const groups = [
   ...STAGES.map((s) => ({ title: `阶段 ${s.n} · ${s.name}`, items: resources.filter((r) => r.data.stage === s.n) })),
-  { title: '未分阶段', items: resources.filter((r) => !STAGES.some((s) => s.n === r.data.stage)) },
 ].filter((g) => g.items.length);
 ---
 <Base title="资源导读 · 学习笔记">
@@ -19,12 +18,12 @@ const groups = [
       <ol class="route">
         {g.items.map((r) => (
           <li>
-            {r.data.kind && <span class="badge">{r.data.kind}</span>}
+            <span class="badge">{r.data.kind}</span>
             <a href={url(`resources/${resSlug(r)}/`)}>{r.data.title_zh}</a>
-            {r.data.provider && <span class="meta" style="display:inline"> · {r.data.provider}</span>}
+            <span class="meta" style="display:inline"> · {r.data.provider}{r.data.estimated_hours && ` · 约 ${r.data.estimated_hours} 小时（估算）`}</span>
             {r.data.optional && <span class="badge">选读</span>}
-            {r.data.status && r.data.status !== 'active' && <span class="badge">{r.data.status}</span>}
-            {r.data.summary && <p class="sum" style="margin-left:0">{r.data.summary}</p>}
+            {r.data.status !== 'active' && <span class="badge">{r.data.status}</span>}
+            {<p class="sum" style="margin-left:0">{r.data.summary}</p>}
           </li>
         ))}
       </ol>

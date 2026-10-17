@@ -83,6 +83,16 @@ const stages = [...pathHtml.matchAll(/<h2>阶段 (\d)/g)].map((x) => x[1]).join(
 const noteLinks = (pathHtml.match(/badge">笔记 #/g) ?? []).length;
 const resLinks = (pathHtml.match(/badge res">资源/g) ?? []).length;
 ok('路线页', stages === '1234' && noteLinks === 26, `阶段 ${stages}，笔记 ${noteLinks} 条，资源条目 ${resLinks} 条`);
+const shown = [...pathHtml.matchAll(/data-shown-step="(\d+)"/g)].map((x) => +x[1]);
+const totalSteps = shown.length ? Math.max(...shown) : 0;
+const mismatch = [...pathHtml.matchAll(/<li class="res"([^>]*)>/g)]
+  .map((x) => [/data-declared-step="(\d+)"/.exec(x[1])?.[1], /data-shown-step="(\d+)"/.exec(x[1])?.[1]])
+  .filter(([d, sh]) => d !== sh).map(([d, sh]) => `声明 ${d ?? '无'} / 显示 ${sh ?? '选读'}`);
+const lastLi = [...pathHtml.matchAll(/<li[^>]*data-shown-step="(\d+)"[^>]*>([\s\S]*?)<\/li>/g)].find((x) => +x[1] === totalSteps);
+const lastText = lastLi ? lastLi[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() : '';
+const EXPECT_STEPS = process.env.EXPECT_STEPS ? +process.env.EXPECT_STEPS : null;
+ok('路线步数', (EXPECT_STEPS == null || totalSteps === EXPECT_STEPS) && mismatch.filter((m) => !m.includes('选读') || !m.startsWith('声明 无')).length === 0,
+  `共 ${totalSteps} 步（选读 ${(pathHtml.match(/class="num">选读/g) ?? []).length} 条不计）；资源 step 声明与显示${mismatch.length ? '不一致：' + mismatch.join('，') : '一致'}；最后一步：${lastText}`);
 ok('资源页', existsSync(join(dist, 'resources/index.html')), `资源列表页存在，单篇资源页 ${resPages.length} 个`);
 
 await browser.close(); server.close();

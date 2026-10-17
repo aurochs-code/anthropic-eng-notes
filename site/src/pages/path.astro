@@ -14,14 +14,14 @@ let step = 0;
       <p class="stage-goal">{s.goal}</p>
       <ol class="route">
         {s.items.map((it) => it.type === 'note' ? (
-          <li>
+          <li data-shown-step={step + 1}>
             <span class="num">{String(++step).padStart(2, '0')}</span>
             <span class="badge">笔记 #{it.note.data.order}</span>
             <a href={url(`notes/${it.note.data.slug}/`)}>{it.note.data.title_zh}</a>
             <span class="meta" style="display:inline"> · {it.note.data.reading_time} 分钟</span>
           </li>
         ) : (
-          <li class="res">
+          <li class="res" data-declared-step={it.step} data-shown-step={it.optional ? undefined : step + 1}>
             <span class="num">{it.optional ? '选读' : String(++step).padStart(2, '0')}</span>
             <span class="badge res">资源</span>
             <a href={url(`resources/${resSlug(it.res)}/`)}>{it.res.data.title_zh}</a>

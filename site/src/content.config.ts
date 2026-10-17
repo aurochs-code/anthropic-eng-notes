@@ -37,49 +37,51 @@ const notes = defineCollection({
     .transform((d) => ({ ...d, moduleKey: d.module[0] as keyof typeof MODULES })),
 });
 
-// ── 资源导读（独立集合、独立 schema；宽松版，确定版字段待定） ──
-const nullableSlug = z.string().nullable().optional();
+// ── 资源导读（独立集合、独立 schema；确定版，严格校验，未知字段报错） ──
+export const RESOURCE_KINDS = ['course', 'article', 'guide', 'repo', 'cookbook', 'blog', 'catalog'] as const;
+export const RESOURCE_STATUS = ['active', 'archived', 'dated'] as const;
+const stageNum = (what: string) =>
+  z.number({ required_error: `缺少 ${what}（1–4）`, invalid_type_error: `${what} 必须是 1–4 的整数` }).int(`${what} 必须是整数`).min(1, `${what} 须在 1–4`).max(4, `${what} 须在 1–4`);
+const routeEntry = z
+  .object({
+    part: z.string({ required_error: 'route 条目缺少 part' }).min(1, 'route.part 不能为空'),
+    // 必须显式写出：笔记 slug 或 null（null = 所属阶段开头）
+    after: z.string({ required_error: 'route 条目缺少 after（笔记 slug 或 null）', invalid_type_error: 'route.after 必须是笔记 slug 字符串或 null' }).nullable(),
+    // 不用 coerce：step: null / 0 / 小数 都报错；选读条目不写 step
+    step: z.number({ invalid_type_error: 'route.step 必须是正整数（选读条目请不写 step，不要写 null）' }).int('route.step 必须是整数').positive('route.step 必须 ≥ 1').optional(),
+    stage: stageNum('route.stage').optional(),
+    optional: z.boolean({ invalid_type_error: 'route.optional 必须是 true/false' }).optional(),
+  })
+  .strict();
 const resources = defineCollection({
   // 读取 ../resources/r-*.md；目录不存在或为空时集合为空，构建照常通过
   loader: glob({ pattern: 'r-*.md', base: process.env.RESOURCES_DIR ?? '../resources', generateId: ({ entry }) => entry.replace(/\.md$/, '') }),
   schema: z
     .object({
       title_zh: z.string({ required_error: '缺少 title_zh（中文标题）' }).min(1),
+      slug: z.string({ required_error: '缺少 slug' }).regex(/^r-[a-z0-9-]+$/, '资源 slug 须匹配 ^r-[a-z0-9-]+$'),
+      kind: z.enum(RESOURCE_KINDS, { required_error: '缺少 kind', invalid_type_error: `kind 须为 ${RESOURCE_KINDS.join('/')}` }),
+      stage: stageNum('stage'),
+      route: z.array(routeEntry, { required_error: '缺少 route（至少 1 条）' }).min(1, 'route 至少 1 条'),
+      source_url: z.string({ required_error: '缺少 source_url' }).url('source_url 不是合法 URL'),
+      provider: z.string({ required_error: '缺少 provider' }).min(1),
+      last_checked: z.coerce.date({ required_error: '缺少 last_checked（YYYY-MM-DD）', invalid_type_error: 'last_checked 必须是日期 YYYY-MM-DD' }),
+      status: z.enum(RESOURCE_STATUS, { required_error: '缺少 status', invalid_type_error: `status 须为 ${RESOURCE_STATUS.join('/')}` }),
+      summary: z.string({ required_error: '缺少 summary' }).min(1),
+      pairs_with: z.array(z.string(), { required_error: '缺少 pairs_with（笔记 slug 数组）' }),
+      tags: z.array(z.string(), { required_error: '缺少 tags（数组）' }),
+      // 可选
       title_en: z.string().optional(),
-      slug: z.string().regex(/^r-[a-z0-9-]+$/, '资源 slug 须以 r- 开头，只含小写字母、数字、短横线').optional(),
-      kind: z.string().optional(), // course | article | guide | repo | cookbook | blog | catalog（暂不限定）
-      stage: z.coerce.number().int().min(1).max(4).optional(),
       optional: z.boolean().optional(), // 整个资源为选读：路线中不占编号
-      route: z
-        .array(
-          z
-            .object({
-              step: z.coerce.number().optional(),
-              part: z.string().optional(),
-              after: nullableSlug, // 插在哪篇笔记之后；null/缺省 = 阶段开头
-              stage: z.coerce.number().int().min(1).max(4).optional(), // 可选：覆盖所属阶段
-              optional: z.boolean().optional(),
-            })
-            .passthrough(),
-        )
-        .optional()
-        .default([]),
-      source_url: z.string().url('source_url 不是合法 URL').optional(),
-      source_url_zh: z.string().url().optional(),
-      provider: z.string().optional(),
+      source_url_zh: z.string().url('source_url_zh 不是合法 URL').optional(),
       authors_en: z.array(z.string()).optional(),
       published: z.coerce.date().optional(),
-      last_checked: z.coerce.date().optional(),
-      status: z.string().optional(), // active | archived | dated
       cost: z.string().optional(),
       license_note: z.string().optional(),
-      estimated_hours: z.coerce.number().optional(),
-      summary: z.string().optional(),
-      pairs_with: z.array(z.string()).optional().default([]),
-      tags: z.array(z.string()).optional().default([]),
+      estimated_hours: z.number({ invalid_type_error: 'estimated_hours 必须是数字' }).positive().optional(),
       source_note: z.string().optional(),
     })
-    .passthrough(),
+    .strict(),
 });
 
 export const collections = { notes, resources };
