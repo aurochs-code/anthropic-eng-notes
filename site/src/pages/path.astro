@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import { getLearningPath, getTracks, resSlug } from '../lib/resources';
+import { getLearningPath, getTracks, resSlug, progressId } from '../lib/resources';
 import { url, getSortedNotes } from '../lib/notes';
 import { stageName } from '../data/stages';
 const stages = await getLearningPath();
@@ -13,24 +13,38 @@ const headings = [
   ...stages.map((s) => ({ depth: 2, slug: `stage-${s.n}`, text: `阶段 ${s.n} · ${s.name}` })),
   ...tracks.map((t) => ({ depth: 2, slug: `track-${t.key}`, text: t.name })),
 ];
+const counted = (s: (typeof stages)[number]) => s.items.filter((it) => it.type === 'note' || !it.optional).length;
+const total = stages.reduce((n, s) => n + counted(s), 0);
 ---
 <Base title="学习路线 · 学习笔记" description="四阶段 36 步学习路线：Anthropic 工程博客笔记按推荐顺序排列，外部课程与文章导读穿插其间，另有并行的原理支线。" headings={headings}>
   <h1>学习路线</h1>
   <p class="en">四个阶段：Anthropic 笔记按 order 排列，外部资源（<span class="badge res">资源</span>）穿插其间。</p>
+  <div class="progress-card" data-progress-group="all" data-progress-total={total}>
+    <div class="progress-head">
+      <strong>我的进度</strong>
+      <span class="progress-text"><span class="progress-done">0</span> / {total} 步</span>
+      <button type="button" class="progress-reset" hidden>清除进度</button>
+    </div>
+    <div class="progress-bar" role="progressbar" aria-label="主线完成度" aria-valuemin="0" aria-valuemax={total} aria-valuenow="0"><span></span></div>
+    <p class="progress-note">勾选每一步记录进度，读完笔记也可以在笔记页底部“标记为已读”。进度只保存在本机浏览器（localStorage），换设备或清除浏览器数据后不保留。</p>
+  </div>
   {stages.map((s) => (
-    <section class="module">
+    <section class="module" data-progress-group={`stage-${s.n}`} data-progress-total={counted(s)}>
       <h2 id={`stage-${s.n}`}>阶段 {s.n} · {s.name}<span class="meta" style="display:inline;font-weight:400"> （笔记 {s.from}–{s.to}）</span></h2>
       <p class="stage-goal">{s.goal}</p>
+      <div class="stage-progress"><div class="progress-bar" role="progressbar" aria-label={`阶段 ${s.n} 完成度`} aria-valuemin="0" aria-valuemax={counted(s)} aria-valuenow="0"><span></span></div><span class="progress-text"><span class="progress-done">0</span> / {counted(s)}</span></div>
       <ol class="route">
         {s.items.map((it) => it.type === 'note' ? (
           <li id={`step-${step + 1}`} data-shown-step={step + 1}>
+            <input type="checkbox" class="done-box" data-pid={progressId(it)} aria-label={`第 ${step + 1} 步已完成：${it.note.data.title_zh}`} />
             <span class="num">{String(++step).padStart(2, '0')}</span>
             <span class="badge">笔记 #{it.note.data.order}</span>
-            <a href={url(`notes/${it.note.data.slug}/`)}>{it.note.data.title_zh}</a>
+            <a href={url(`notes/${it.note.data.slug}/`)} data-note-link={it.note.data.slug}>{it.note.data.title_zh}</a>
             <span class="meta" style="display:inline"> · {it.note.data.reading_time} 分钟</span>
           </li>
         ) : (
           <li class="res" id={it.optional ? undefined : `step-${step + 1}`} data-declared-step={it.step} data-shown-step={it.optional ? undefined : step + 1}>
+            {!it.optional && <input type="checkbox" class="done-box" data-pid={progressId(it)} aria-label={`第 ${step + 1} 步已完成：${it.res.data.title_zh}`} />}
             <span class="num">{it.optional ? '选读' : String(++step).padStart(2, '0')}</span>
             <span class="badge res">资源</span>
             <a href={url(`resources/${resSlug(it.res)}/`)}>{it.res.data.title_zh}</a>
@@ -44,14 +58,16 @@ const headings = [
     </section>
   ))}
   {tracks.map((t) => (
-    <section class={`module track track-${t.key}`} id={`track-${t.key}`} data-track={t.key} data-track-items={t.items.length}>
+    <section class={`module track track-${t.key}`} id={`track-${t.key}`} data-track={t.key} data-track-items={t.items.length} data-progress-group={`track-${t.key}`} data-progress-total={t.items.length}>
       <h2>{t.name}<span class="meta" style="display:inline;font-weight:400"> （并行 · {t.items.length} 条）</span></h2>
       <p class="stage-goal track-note">{trackNote(t)}。支线条目不计入主线编号与步数，可按自己的节奏穿插阅读。</p>
+      <div class="stage-progress"><div class="progress-bar" role="progressbar" aria-label={`${t.name}完成度`} aria-valuemin="0" aria-valuemax={t.items.length} aria-valuenow="0"><span></span></div><span class="progress-text"><span class="progress-done">0</span> / {t.items.length}</span></div>
       <ol class="route">
         {t.items.map((it, i) => {
           const n = it.after ? noteBySlug.get(it.after) : undefined;
           return (
             <li class="track-item" data-track-item={t.key}>
+              <input type="checkbox" class="done-box" data-pid={progressId({ track: true, res: it.res, idx: it.idx })} aria-label={`${t.name}第 ${i + 1} 条已完成`} />
               <span class="num">{String(i + 1).padStart(2, '0')}</span>
               <span class="badge track">原理</span>
               <a href={url(`resources/${resSlug(it.res)}/`)}>{it.res.data.title_zh}</a>

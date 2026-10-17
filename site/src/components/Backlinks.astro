@@ -1,0 +1,29 @@
+---
+// 页底“反向链接”：哪些笔记 / 资源引用了本页
+import { url } from '../lib/notes';
+import { getBacklinks } from '../lib/backlinks';
+const { slug } = Astro.props as { slug: string };
+const list = (await getBacklinks()).get(slug) ?? [];
+const notes = list.filter((b) => b.kind === 'note').sort((a, b) => (a.kind === 'note' && b.kind === 'note' ? a.note.data.order - b.note.data.order : 0));
+const res = list.filter((b) => b.kind === 'resource');
+const VIA = { link: '正文引用', pairs: '搭配笔记', both: '正文引用 · 搭配笔记' } as const;
+---
+<section class="backlinks" aria-labelledby="backlinks-title" data-backlinks={list.length} data-pagefind-ignore>
+  <h2 id="backlinks-title">反向链接 <span class="meta" style="display:inline;font-weight:400">（{list.length}）</span></h2>
+  {list.length === 0 ? <p class="empty">暂时没有其他笔记或资源引用本页。</p> : (
+    <div class="backlinks-grid">
+      {notes.length > 0 && (
+        <div>
+          <h3>引用本篇的笔记（{notes.length}）</h3>
+          <ul>{notes.map((b) => b.kind === 'note' && <li><a data-backlink href={url(`notes/${b.note.data.slug}/`)}><span class="side-num">#{b.note.data.order}</span>{b.note.data.title_zh}</a></li>)}</ul>
+        </div>
+      )}
+      {res.length > 0 && (
+        <div>
+          <h3>引用本篇的资源（{res.length}）</h3>
+          <ul>{res.map((b) => b.kind === 'resource' && <li><a data-backlink href={url(`resources/${b.res.data.slug}/`)}>{b.res.data.title_zh}</a> <span class="meta" style="display:inline">· {VIA[b.via]}</span></li>)}</ul>
+        </div>
+      )}
+    </div>
+  )}
+</section>

@@ -5,8 +5,9 @@ import Sidebar from '../components/Sidebar.astro';
 import Toc, { type Heading } from '../components/Toc.astro';
 const SITE_DESC = 'Anthropic 工程博客 26 篇文章的中文学习笔记（非翻译），附外部资源导读与 4 阶段学习路线。';
 // searchable=false：不进搜索索引（首页、资源列表只是摘要汇总，会挤占真正的笔记结果）
-const { title, mermaid = false, description = SITE_DESC, ogType = 'website', headings = [], searchable = true } = Astro.props as {
-  title: string; mermaid?: boolean; description?: string; ogType?: string; headings?: Heading[]; searchable?: boolean;
+// readProgress：页顶阅读进度条（笔记 / 资源页）
+const { title, description = SITE_DESC, ogType = 'website', headings = [], searchable = true, readProgress = false } = Astro.props as {
+  title: string; description?: string; ogType?: string; headings?: Heading[]; searchable?: boolean; readProgress?: boolean;
 };
 const desc = description.replace(/\s+/g, ' ').trim();
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
@@ -42,13 +43,14 @@ const hasToc = tocList.length > 0;
 </head>
 <body class={hasToc ? 'has-toc' : undefined}>
   <a class="skip-link" href="#main">跳到正文</a>
+  {readProgress && <div class="read-progress" role="progressbar" aria-label="阅读进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>}
   <header class="site">
     <button type="button" class="icon-btn menu-btn" aria-controls="sidebar" aria-expanded="false" aria-label="打开导航菜单">
       <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     </button>
     <a class="brand" href={url('/')}><span class="brand-long">Anthropic 工程博客 · 中文学习笔记</span><span class="brand-short">Anthropic 工程笔记</span></a>
     <nav class="top" aria-label="主导航">
-      {[['/', '笔记'], ['/path/', '学习路线'], ['/resources/', '资源']].map(([p, label]) => (
+      {[['/', '笔记'], ['/path/', '学习路线'], ['/resources/', '资源'], ['/tags/', '标签']].map(([p, label]) => (
         <a href={url(p)} aria-current={Astro.url.pathname === url(p) ? 'page' : undefined}>{label}</a>
       ))}
     </nav>
@@ -96,14 +98,14 @@ const hasToc = tocList.length > 0;
   <script>
     import { initChrome } from '../lib/client/chrome';
     import { initSearch } from '../lib/client/search';
+    import { initProgress } from '../lib/client/progress';
     initChrome();
     initSearch();
+    initProgress();
+    document.documentElement.dataset.js = 'ready'; // 供检查脚本确认每页都跑起了交互脚本
+    // mermaid 按需加载：页面里有图才拉取（脚本必须只有这一个：Astro 不支持条件渲染的 <script>，
+    // 写成 {cond && <script>} 时会把错误的脚本挂到页面上）
+    if (document.querySelector('pre.mermaid')) import('../lib/client/mermaid').then((m) => m.initMermaid());
   </script>
-  {mermaid && (
-    <script>
-      import { initMermaid } from '../lib/client/mermaid';
-      initMermaid();
-    </script>
-  )}
 </body>
 </html>

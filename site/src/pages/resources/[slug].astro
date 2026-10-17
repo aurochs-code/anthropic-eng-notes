@@ -3,6 +3,8 @@ import { render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import Toc from '../../components/Toc.astro';
 import RoutePager from '../../components/RoutePager.astro';
+import TagList from '../../components/TagList.astro';
+import Backlinks from '../../components/Backlinks.astro';
 import { stageName } from '../../data/stages';
 import { getSortedResources, getMainSequence, resSlug } from '../../lib/resources';
 import { getSortedNotes, fmtDate, url } from '../../lib/notes';
@@ -22,7 +24,7 @@ const seq = await getMainSequence();
 const at = seq.findIndex((s) => s.item.type === 'resource' && s.item.res.id === res.id);
 const steps = seq.filter((s) => s.item.type === 'resource' && s.item.res.id === res.id).map((s) => s.n);
 ---
-<Base title={`${d.title_zh} · 资源导读`} mermaid={true} description={d.summary} ogType="article" headings={headings}>
+<Base title={`${d.title_zh} · 资源导读`} description={d.summary} ogType="article" headings={headings} readProgress={true}>
   <article>
     <nav class="breadcrumb" aria-label="位置" data-pagefind-ignore>
       <a href={url('/resources/')}>资源导读</a><span aria-hidden="true">›</span><span>阶段 {d.stage} · {stageName(d.stage)}</span>
@@ -40,7 +42,7 @@ const steps = seq.filter((s) => s.item.type === 'resource' && s.item.res.id === 
       {d.source_url && <a href={d.source_url} target="_blank" rel="noopener">原文链接 ↗</a>}
       {d.source_url_zh && <a href={d.source_url_zh} target="_blank" rel="noopener">中文版 ↗</a>}
     </div>
-    {<ul class="tags">{d.tags.map((t) => <li>{t}</li>)}</ul>}
+    <TagList tags={d.tags} />
     {d.source_note && <div class="note-box">⚠️ {d.source_note}</div>}
     {(
       <dl class="facts">
@@ -57,6 +59,7 @@ const steps = seq.filter((s) => s.item.type === 'resource' && s.item.res.id === 
     <Toc headings={headings} variant="inline" />
     <Content />
   </article>
+  <Backlinks slug={d.slug} />
   <nav class="pager" aria-label="资源翻页" data-pagefind-ignore>
     {prev ? <a class="prev" href={url(`resources/${resSlug(prev)}/`)}><small>← 上一个资源</small>{prev.data.title_zh}</a> : <span />}
     {next ? <a class="next" href={url(`resources/${resSlug(next)}/`)}><small>下一个资源 →</small>{next.data.title_zh}</a> : <span />}

@@ -1,0 +1,50 @@
+---
+import Base from '../../layouts/Base.astro';
+import TagList from '../../components/TagList.astro';
+import { getTags } from '../../lib/tags';
+import { url } from '../../lib/notes';
+import { resSlug } from '../../lib/resources';
+import { MODULES } from '../../content.config';
+
+export async function getStaticPaths() {
+  const tags = await getTags();
+  return tags.map((t) => ({ params: { tag: t.slug }, props: { t } }));
+}
+const { t } = Astro.props;
+---
+<Base title={`标签：${t.tag} · 学习笔记`} description={`标签「${t.tag}」下的 ${t.notes.length} 篇笔记、${t.resources.length} 个资源导读。`} searchable={false}>
+  <nav class="breadcrumb" aria-label="位置"><a href={url('/tags/')}>标签</a><span aria-hidden="true">›</span><span>{t.tag}</span></nav>
+  <h1>标签：{t.tag}</h1>
+  <p class="en">{t.notes.length} 篇笔记 · {t.resources.length} 个资源导读</p>
+  {t.notes.length > 0 && (
+    <section class="module" data-tag-notes={t.notes.length}>
+      <h2>笔记（{t.notes.length}）</h2>
+      <ol class="route">
+        {t.notes.map((n) => (
+          <li>
+            <span class="num">{String(n.data.order).padStart(2, '0')}</span>
+            <a href={url(`notes/${n.data.slug}/`)} data-note-link={n.data.slug}>{n.data.title_zh}</a>
+            <span class="meta" style="display:inline"> · 模块 {n.data.moduleKey} {MODULES[n.data.moduleKey]} · {n.data.reading_time} 分钟</span>
+            <p class="sum zh">{n.data.summary}</p>
+            <TagList tags={n.data.tags} />
+          </li>
+        ))}
+      </ol>
+    </section>
+  )}
+  {t.resources.length > 0 && (
+    <section class="module" data-tag-resources={t.resources.length}>
+      <h2>资源导读（{t.resources.length}）</h2>
+      <ol class="route">
+        {t.resources.map((r) => (
+          <li>
+            <span class="badge res">资源</span>
+            <a href={url(`resources/${resSlug(r)}/`)}>{r.data.title_zh}</a>
+            <p class="sum zh" style="margin-left:0">{r.data.summary}</p>
+          </li>
+        ))}
+      </ol>
+    </section>
+  )}
+  <p class="meta" style="margin-top:24px"><a href={url('/tags/')}>← 全部标签</a></p>
+</Base>

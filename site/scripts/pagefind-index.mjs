@@ -53,13 +53,14 @@ const files = [];
 
 const { index, errors } = await pagefind.createIndex({});
 if (!index) throw new Error(`pagefind createIndex 失败：${errors.join('; ')}`);
-let pages = 0;
 for (const f of files) {
   const r = await index.addHTMLFile({ sourcePath: relative(dist, f), content: segmentHtml(readFileSync(f, 'utf8')) });
   if (r.errors.length) throw new Error(`${f}: ${r.errors.join('; ')}`);
-  if (r.file) pages++;
 }
 const w = await index.writeFiles({ outputPath: join(dist, 'pagefind') });
 if (w.errors.length) throw new Error(`pagefind writeFiles: ${w.errors.join('; ')}`);
 await pagefind.close();
-console.log(`[pagefind] 已索引 ${pages} 个页面（共扫描 ${files.length} 个 HTML，中文按字索引）→ ${relative(process.cwd(), join(dist, 'pagefind'))}/`);
+// 只有带 data-pagefind-body 的页面进索引（首页、资源列表、标签页不进）
+const entry = JSON.parse(readFileSync(join(dist, 'pagefind/pagefind-entry.json'), 'utf8'));
+const indexed = Object.values(entry.languages).reduce((n, l) => n + l.page_count, 0);
+console.log(`[pagefind] 扫描 ${files.length} 个 HTML，索引 ${indexed} 个页面（中文按字索引）→ ${relative(process.cwd(), join(dist, 'pagefind'))}/`);

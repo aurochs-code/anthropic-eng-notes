@@ -42,7 +42,7 @@ export async function getSortedResources() {
 
 export type PathItem =
   | { type: 'note'; note: Awaited<ReturnType<typeof getSortedNotes>>[number] }
-  | { type: 'resource'; res: Resource; part?: string; step?: number; optional?: boolean };
+  | { type: 'resource'; res: Resource; part?: string; step?: number; optional?: boolean; idx: number };
 
 /**
  * 合成学习路线：笔记按 order 归入阶段；资源的每个 route 条目插在 `after` 指向的笔记之后。
@@ -56,12 +56,12 @@ export async function getLearningPath() {
   const rows: Keyed[] = notes.map((n) => ({ stage: stageOfOrder(n.data.order), pos: n.data.order, tie: -1, item: { type: 'note', note: n } }));
   // track（如 theory）资源不进入主线，见 getTracks()
   for (const res of resources.filter((r) => !r.data.track)) {
-    for (const e of res.data.route) {
+    res.data.route.forEach((e, idx) => {
       const afterOrder = e.after ? orderOf.get(e.after) : undefined;
       const stage = e.stage ?? (afterOrder ? stageOfOrder(afterOrder) : undefined) ?? res.data.stage;
       const pos = afterOrder && stageOfOrder(afterOrder) === stage ? afterOrder : 0;
-      rows.push({ stage, pos, tie: e.step ?? 1e6, item: { type: 'resource', res, part: e.part, step: e.step, optional: e.optional ?? res.data.optional } });
-    }
+      rows.push({ stage, pos, tie: e.step ?? 1e6, item: { type: 'resource', res, part: e.part, step: e.step, optional: e.optional ?? res.data.optional, idx } });
+    });
   }
   rows.sort((a, b) => a.stage - b.stage || a.pos - b.pos || a.tie - b.tie);
   return STAGES.map((s) => ({ ...s, items: rows.filter((r) => r.stage === s.n).map((r) => r.item) }));
@@ -70,7 +70,7 @@ export async function getLearningPath() {
 export const TRACKS = {
   theory: { name: '原理支线', startsAfter: 1, parallelWith: [2, 3] },
 } as const;
-export type TrackItem = { res: Resource; part: string; after: string | null; stage?: number };
+export type TrackItem = { res: Resource; part: string; after: string | null; stage?: number; idx: number };
 
 /**
  * 并行支线：按 track 分组，资源按 getSortedResources 顺序、条目按 route 顺序排列。
@@ -84,7 +84,7 @@ export async function getTracks() {
       ...TRACKS[key],
       items: resources
         .filter((r) => r.data.track === key)
-        .flatMap((res) => res.data.route.map((e): TrackItem => ({ res, part: e.part, after: e.after, stage: e.stage }))),
+        .flatMap((res) => res.data.route.map((e, idx): TrackItem => ({ res, part: e.part, after: e.after, stage: e.stage, idx }))),
     }))
     .filter((t) => t.items.length > 0);
 }
@@ -101,3 +101,7 @@ export async function getMainSequence(): Promise<SeqItem[]> {
     for (const it of s.items) if (it.type === 'note' || !it.optional) seq.push({ n: seq.length + 1, stage: s.n, item: it });
   return seq;
 }
+
+/** 学习进度（localStorage）里的条目 id：笔记 n:<slug>；资源主线条目 r:<slug>:<route 下标>；支线条目 t:<slug>:<route 下标> */
+export const progressId = (it: PathItem | { track: true; res: Resource; idx: number }) =>
+  'track' in it ? `t:${it.res.data.slug}:${it.idx}` : it.type === 'note' ? `n:${it.note.data.slug}` : `r:${it.res.data.slug}:${it.idx}`;

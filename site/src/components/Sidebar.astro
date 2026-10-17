@@ -17,6 +17,7 @@ const curNote = notes.find((n) => here === url(`notes/${n.data.slug}/`));
     <li><a href={url('/')} aria-current={cur('/')}>笔记目录</a></li>
     <li><a href={url('/path/')} aria-current={cur('/path/')}>学习路线</a></li>
     <li><a href={url('/resources/')} aria-current={cur('/resources/')}>资源导读</a></li>
+    <li><a href={url('/tags/')} aria-current={here.startsWith(url('/tags/')) ? 'page' : undefined}>标签</a></li>
   </ul>
   {groups.map((g) => (
     <details class="side-group" open={!curNote || curNote.data.moduleKey === g.k} data-module={g.k}>

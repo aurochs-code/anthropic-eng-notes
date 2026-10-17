@@ -45,7 +45,10 @@ npm run check          # 自检：order、mermaid、站内死链、首页分组�
 
 ## 页面功能与实现位置
 - 布局（`src/layouts/Base.astro`）：≥1200px 三栏（左侧栏 `components/Sidebar.astro` + 正文 + 右侧本页目录 `components/Toc.astro`）；768–1199px 侧栏收进菜单抽屉、目录折叠在正文顶部；<768px 菜单抽屉 + 底部“本页目录”抽屉。
-- 交互脚本在 `src/lib/client/`：`chrome.ts`（主题三态切换并存 localStorage、侧栏抽屉、目录滚动高亮、代码复制、回到顶部）、`mermaid.ts`（渲染、切换主题后重渲染、点击放大）、`search.ts`（搜索弹窗）。
+- 交互脚本在 `src/lib/client/`：`chrome.ts`（主题三态切换并存 localStorage、侧栏抽屉、目录滚动高亮、代码复制、回到顶部）、`mermaid.ts`（渲染、切换主题后重渲染、点击放大）、`search.ts`（搜索弹窗）、`progress.ts`（学习进度、阅读进度条）。全站只有 `Base.astro` 里的一个 `<script>`，mermaid 在页面有图时才动态加载；不要写 `{cond && <script>}`：Astro 不支持条件渲染的 script，会把错误的脚本挂到页面上。
 - 搜索：Pagefind。`scripts/pagefind-index.mjs` 用 Pagefind Node API 建索引，中文按“字”索引；`src/lib/search-query.mjs` 把中文查询按字检索后再做子串过滤（原因见脚本开头注释）。首页和资源列表页不进索引（`searchable={false}`）。快捷键 Ctrl/⌘ K 或 `/`。
 - 笔记页有两组翻页：按编号、按学习路线（主线 36 步，下一步可能是资源）；面包屑里的“第 M 步”链接到路线页对应条目（`/path/#step-M`）。
+- 学习进度只存在本机浏览器 `localStorage['progress:v1']`（`{ id: 完成时间 }`）。id 规则见 `lib/resources.ts` 的 `progressId`：笔记 `n:<slug>`；主线上的资源条目 `r:<slug>:<route 下标>`；支线条目 `t:<slug>:<route 下标>`。路线页可以逐步勾选，并显示各阶段和支线的完成度。笔记页底部的“标记为已读”与路线页勾选是同一份数据，侧栏、首页的笔记链接也会带 ✓。选读条目不计入进度。
+- 反向链接（`lib/backlinks.ts`、`components/Backlinks.astro`）：从笔记和资源正文里指向其他笔记或资源的 .md 链接，加上资源的 `pairs_with`，在被引用页的底部列出。
+- 标签：`/tags/` 列出全部标签，`/tags/<slug>/` 列出该标签下的笔记和资源（`lib/tags.ts`，slug 是小写加连字符）。标签页不进搜索索引。
 - 改了 remark/rehype 插件后，本地要先删 `node_modules/.astro` 再 build（Astro 内容层会缓存渲染结果）。

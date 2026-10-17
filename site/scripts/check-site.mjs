@@ -3,7 +3,8 @@
 // 页数、笔记 order 1–26、mermaid 块数 = svg 数且无报错、站内死链、首页 A–F 分组、路线/资源页、
 // 主线 4 阶段 36 步（步数由资源数据推算，可用 EXPECT_STEPS 覆盖）、并行支线（track: theory）、
 // 移动端 390px 无横向溢出、meta description/favicon/回到顶部、标题锚点、代码块复制按钮；
-// B2：侧栏、三处目录、两种翻页与面包屑、布局断点、目录高亮、抽屉、Pagefind 搜索、暗色切换与 mermaid 重渲染、图表放大。
+// B2：侧栏、三处目录、两种翻页与面包屑、布局断点、目录高亮、抽屉、Pagefind 搜索、暗色切换与 mermaid 重渲染、图表放大；
+// B3：标签页、反向链接、路线勾选与阶段完成度、笔记标记已读联动、阅读进度条。
 import { chromium } from 'playwright';
 import { createServer } from 'node:http';
 import { readFileSync, existsSync, statSync, readdirSync } from 'node:fs';
@@ -36,16 +37,18 @@ const pages = [];
 })(dist);
 const notePages = pages.filter((p) => /^notes\/[^/]+\/$/.test(p));
 const resPages = pages.filter((p) => /^resources\/[^/]+\/$/.test(p));
-ok('页数', EXPECT_PAGES == null || pages.length === EXPECT_PAGES, `共 ${pages.length} 页（笔记 ${notePages.length}、资源 ${resPages.length}）${EXPECT_PAGES ? `，期望 ${EXPECT_PAGES}` : ''}`);
+const tagPageCount = pages.filter((p) => /^tags\//.test(p)).length;
+ok('页数', EXPECT_PAGES == null || pages.length === EXPECT_PAGES, `共 ${pages.length} 页（笔记 ${notePages.length}、资源 ${resPages.length}、标签 ${tagPageCount}）${EXPECT_PAGES ? `，期望 ${EXPECT_PAGES}` : ''}`);
 
 const browser = await chromium.launch();
 const internal = new Set(); const orders = []; const mermaidBad = []; let mTotal = 0;
-const b1Pages = []; const overflow = []; const b2Pages = [];
+const b1Pages = []; const overflow = []; const b2Pages = []; const noJs = [];
 for (const rel of pages) {
   const page = await browser.newPage(); const errs = [];
   page.on('pageerror', (e) => errs.push(e.message));
   page.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
   await page.goto(`${origin}${base}/${rel}`, { waitUntil: 'networkidle' });
+  if (!(await page.$('html[data-js="ready"]'))) noJs.push(rel || '/');
   const hasM = await page.$('pre.mermaid');
   if (hasM) await page.waitForSelector('html[data-mermaid="done"]', { timeout: 20000 }).catch(() => errs.push('mermaid 未完成'));
   const m = await page.$$eval('pre.mermaid', (els) => els.map((e) => !!e.querySelector('svg') && !/Syntax error|Parse error/i.test(e.textContent)));
@@ -114,6 +117,7 @@ for (const j of internal) {
   if (r.status !== 200) dead.push(`${rel} → ${h} (${r.status})`);
   if (/\.md$/.test(path)) dead.push(`${rel} → ${h}（未改写的 .md 链接）`);
 }
+ok('每页交互脚本', noJs.length === 0, noJs.length ? `${noJs.length} 页未跑起 Base 脚本：${noJs.slice(0, 8).join('、')}` : `${pages.length} 页均已运行主题/侧栏/搜索/进度脚本（html[data-js=ready]）`);
 ok('移动端 390px 无横向溢出', overflow.length === 0, overflow.length ? '溢出：\n  ' + overflow.join('\n  ') : `${pages.length} 页 scrollWidth 均 ≤ 视口宽度`);
 const noDesc = b1Pages.filter((p) => p.desc < 10).map((p) => p.rel || '/');
 const noIcon = b1Pages.filter((p) => !p.icon || !p.toTop).map((p) => p.rel || '/');
@@ -146,12 +150,15 @@ const lastText = lastLi ? lastLi[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ')
 // 从资源源文件推算：主线步数 = 26 篇笔记 + 主线（非 track）且非选读的 route 条目；支线条目数按 track 统计
 const siteDir = new URL('../', import.meta.url).pathname;
 const resDir = resolve(siteDir, process.env.RESOURCES_DIR ?? '../resources');
-const resData = existsSync(resDir)
-  ? readdirSync(resDir).filter((f) => /^r-.*\.md$/.test(f)).map((f) => {
-      const fm = /^---\r?\n([\s\S]*?)\r?\n---/.exec(readFileSync(join(resDir, f), 'utf8'));
-      return { f, d: fm ? yaml.load(fm[1]) ?? {} : {} };
+const loadMd = (dir, re) => existsSync(dir)
+  ? readdirSync(dir).filter((f) => re.test(f)).map((f) => {
+      const src = readFileSync(join(dir, f), 'utf8');
+      const fm = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/.exec(src);
+      return { f, d: fm ? yaml.load(fm[1]) ?? {} : {}, body: fm ? fm[2] : src };
     })
   : [];
+const resData = loadMd(resDir, /^r-.*\.md$/);
+const noteData = loadMd(resolve(siteDir, process.env.NOTES_DIR ?? '../notes'), /\.md$/);
 const mainResSteps = resData.filter((r) => !r.d.track).flatMap((r) => (r.d.route ?? []).filter((e) => !(e.optional ?? r.d.optional)));
 const dataSteps = 26 + mainResSteps.length;
 const EXPECT_STEPS = process.env.EXPECT_STEPS ? +process.env.EXPECT_STEPS : dataSteps;
@@ -278,7 +285,7 @@ await interact('中文搜索召回', async (pg) => {
   const { parseQuery, cleanText, hasAll } = await import('../src/lib/search-query.mjs');
   const TERMS = ['上下文', '上下文工程', '上下文窗口', '沙箱', '提示缓存', '智能体', '多智能体', '评测', '检索', '记忆', '编排', '提示注入', '基础设施', '编译器', '原理支线', '学习路线', '工作流', '护栏'];
   const texts = pages.filter((rel) => /<main[^>]*data-pagefind-body/.test(readFileSync(join(dist, rel, 'index.html'), 'utf8'))).map((rel) => [rel, (/<main[^>]*>([\s\S]*)<\/main>/.exec(readFileSync(join(dist, rel, 'index.html'), 'utf8'))?.[1] ?? '')
-    .replace(/<pre class="mermaid"[\s\S]*?<\/pre>/g, '').replace(/<(nav|details)\b[\s\S]*?<\/\1>/g, '').replace(/<a class="anchor"[^>]*>#<\/a>/g, '').replace(/<[^>]+>/g, '')]);
+    .replace(/<pre class="mermaid"[\s\S]*?<\/pre>/g, '').replace(/<(nav|details)\b[\s\S]*?<\/\1>/g, '').replace(/<(section|div)\b[^>]*data-pagefind-ignore[^>]*>[\s\S]*?<\/\1>/g, '').replace(/<a class="anchor"[^>]*>#<\/a>/g, '').replace(/<[^>]+>/g, '')]);
   await pg.goto(`${origin}${base}/`, { waitUntil: 'networkidle' });
   // 与弹窗相同：按字检索 + 子串过滤（过滤在 Node 侧用同一模块做）
   const raw = await pg.evaluate(async ([bp, qs]) => {
@@ -332,6 +339,109 @@ await interact('图表放大', async (pg) => {
   await pg.focus('pre.mermaid'); await pg.keyboard.press('Enter');
   const kb = await pg.$eval('dialog.zoom-dialog', (d) => d.open);
   return { pass: open && w1 > w0 * 1.2 && closed && kb, detail: `点击打开 ${open}；放大 ${Math.round(w0)} → ${Math.round(w1)}px；Esc 关闭 ${closed}；键盘 Enter 打开 ${kb}` };
+});
+
+// ── B3：标签页、反向链接（静态 HTML 对照源文件计算）；学习进度、阅读进度条（交互） ──
+const tagSlug = (t) => String(t).trim().toLowerCase().replace(/\s+/g, '-');
+const tagMap = new Map();
+for (const [kind, list] of [['notes', noteData], ['resources', resData]])
+  for (const x of list) for (const t of new Set((x.d.tags ?? []).map(tagSlug))) { const e = tagMap.get(t) ?? { notes: 0, resources: 0 }; e[kind]++; tagMap.set(t, e); }
+const tagBad = [];
+if (!pages.includes('tags/')) tagBad.push('缺 /tags/');
+const tagIndex = existsSync(join(dist, 'tags/index.html')) ? readFileSync(join(dist, 'tags/index.html'), 'utf8') : '';
+if (+(/data-tag-count="(\d+)"/.exec(tagIndex)?.[1] ?? -1) !== tagMap.size) tagBad.push(`/tags/ 标注 ${/data-tag-count="(\d+)"/.exec(tagIndex)?.[1]} 个，数据 ${tagMap.size} 个`);
+for (const [t, e] of tagMap) {
+  const f = join(dist, 'tags', t, 'index.html');
+  if (!existsSync(f)) { tagBad.push(`缺 /tags/${t}/`); continue; }
+  const h = readFileSync(f, 'utf8');
+  const n = +(/data-tag-notes="(\d+)"/.exec(h)?.[1] ?? 0), r = +(/data-tag-resources="(\d+)"/.exec(h)?.[1] ?? 0);
+  if (n !== e.notes || r !== e.resources) tagBad.push(`${t}: 页面 ${n}+${r} / 数据 ${e.notes}+${e.resources}`);
+}
+const tagPages = pages.filter((p) => /^tags\/[^/]+\/$/.test(p)).length;
+ok('标签页', tagBad.length === 0 && tagPages === tagMap.size, `${tagMap.size} 个标签（笔记 + 资源 tags 去重），/tags/ 与 ${tagPages} 个标签页，条目数均与数据一致` + (tagBad.length ? '；问题：' + tagBad.slice(0, 8).join('，') : ''));
+
+const { LINK_RE } = await import('../src/lib/remark-plugins.mjs');
+const linksOf = (body) => new Set([...body.matchAll(/\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g)].map((m) => LINK_RE.exec(m[1])?.[1]?.toLowerCase()).filter(Boolean));
+const slugOf = (x) => x.d.slug;
+const validSlugs = new Set([...noteData, ...resData].map(slugOf));
+const expBack = new Map();
+const addBack = (t, href) => { if (!validSlugs.has(t)) return; (expBack.get(t) ?? expBack.set(t, new Set()).get(t)).add(href); };
+for (const n of noteData) for (const t of linksOf(n.body)) if (t !== slugOf(n)) addBack(t, `${base}/notes/${slugOf(n)}/`);
+for (const r of resData) for (const t of new Set([...linksOf(r.body), ...(r.d.pairs_with ?? [])])) if (t !== slugOf(r)) addBack(t, `${base}/resources/${slugOf(r)}/`);
+const backBad = []; let backTotal = 0;
+for (const x of [...noteData.map((n) => ['notes', n]), ...resData.map((r) => ['resources', r])]) {
+  const [sec, item] = x; const f = join(dist, sec, slugOf(item), 'index.html');
+  if (!existsSync(f)) continue;
+  const h = readFileSync(f, 'utf8');
+  const sect = /<section class="backlinks"[\s\S]*?<\/section>/.exec(h)?.[0];
+  if (!sect) { backBad.push(`${sec}/${slugOf(item)}: 缺反向链接区块`); continue; }
+  const got = new Set([...sect.matchAll(/<a data-backlink[^>]*href="([^"]+)"/g)].map((m) => m[1]));
+  const exp = expBack.get(slugOf(item)) ?? new Set();
+  backTotal += got.size;
+  if (got.size !== exp.size || [...exp].some((u) => !got.has(u))) backBad.push(`${sec}/${slugOf(item)}: 页面 ${got.size} / 期望 ${exp.size}`);
+}
+ok('反向链接', backBad.length === 0, `${noteData.length + resData.length} 个笔记/资源页均有反向链接区块，共 ${backTotal} 条，与源文件中的 .md 链接 + pairs_with 一致` + (backBad.length ? '；问题：' + backBad.slice(0, 8).join('，') : ''));
+
+const PATH = `${origin}${base}/path/`;
+const theoryCount = resData.filter((r) => r.d.track === 'theory').reduce((n, r) => n + (r.d.route ?? []).length, 0);
+for (const [rel, label] of [['', '首页'], ['path/', '路线页'], ['tags/', '标签页']]) await interact(`非笔记页交互（${label}，手机）`, async (pg) => {
+  await pg.goto(`${origin}${base}/${rel}`, { waitUntil: 'networkidle' });
+  await pg.click('.menu-btn'); await pg.waitForTimeout(350);
+  const menu = await visible(pg, '#sidebar');
+  await pg.keyboard.press('Escape'); await pg.waitForTimeout(350);
+  await pg.click('.search-btn');
+  const search = await pg.waitForSelector('#search-dialog .search-input', { state: 'visible', timeout: 5000 }).then(() => true, () => false);
+  await pg.keyboard.press('Escape');
+  const t0 = await pg.evaluate(() => document.documentElement.dataset.themePref);
+  await pg.click('.theme-btn');
+  const t1 = await pg.evaluate(() => document.documentElement.dataset.themePref);
+  return { pass: menu && search && t0 !== t1, detail: `菜单 ${menu}、搜索弹窗 ${search}、主题切换 ${t0}→${t1}` };
+}, { viewport: { width: 390, height: 844 } });
+await interact('学习进度：路线勾选与阶段完成度', async (pg) => {
+  pg.on('dialog', (d) => d.accept());
+  await pg.goto(PATH, { waitUntil: 'networkidle' });
+  const main = await pg.$$eval('section[data-progress-group^="stage-"] input.done-box', (b) => b.length);
+  const track = await pg.$$eval('section[data-progress-group^="track-"] input.done-box', (b) => b.length);
+  const stepBoxes = await pg.$$eval('li[data-shown-step] > input.done-box', (b) => b.length);
+  await pg.check('#step-1 input.done-box');
+  await pg.check('#step-2 input.done-box');
+  const s1 = await pg.$eval('section[data-progress-group="stage-1"]', (s) => s.dataset.progressDone);
+  const all = await pg.$eval('.progress-card', (s) => [s.dataset.progressDone, s.querySelector('.progress-bar').getAttribute('aria-valuenow')].join('/'));
+  const w = await pg.$eval('section[data-progress-group="stage-1"] .progress-bar > span', (e) => parseFloat(e.style.width));
+  await pg.reload({ waitUntil: 'networkidle' });
+  const kept = await pg.$$eval('#step-1 input.done-box, #step-2 input.done-box', (b) => b.every((x) => x.checked));
+  const resetShown = await visible(pg, '.progress-reset');
+  await pg.click('.progress-reset');
+  const cleared = await pg.$$eval('input.done-box', (b) => b.every((x) => !x.checked)) && (await pg.evaluate(() => localStorage.getItem('progress:v1'))) === '{}';
+  const pass = main === EXPECT_STEPS && stepBoxes === EXPECT_STEPS && track === theoryCount && s1 === '2' && all === '2/2' && w > 0 && kept && resetShown && cleared;
+  return { pass, detail: `主线勾选框 ${main}（期望 ${EXPECT_STEPS}），支线 ${track}（期望 ${theoryCount}）；勾 2 步后阶段 1 = ${s1}、总进度/aria = ${all}、进度条 ${w.toFixed(1)}%；刷新后保留 ${kept}；清除进度 ${resetShown && cleared}` };
+});
+await interact('学习进度：笔记“标记为已读”联动', async (pg) => {
+  const slug = 'building-effective-agents';
+  await pg.goto(NOTE, { waitUntil: 'networkidle' });
+  await pg.click('.mark-read');
+  const pressed = await pg.getAttribute('.mark-read', 'aria-pressed');
+  const side = await pg.$eval(`#sidebar a[data-note-link="${slug}"]`, (a) => a.hasAttribute('data-read'));
+  await pg.goto(PATH, { waitUntil: 'networkidle' });
+  const onPath = await pg.$eval(`li[data-shown-step]:has(a[data-note-link="${slug}"]) input.done-box`, (b) => b.checked);
+  await pg.goto(`${origin}${base}/`, { waitUntil: 'networkidle' });
+  const onHome = await pg.$eval(`main a[data-note-link="${slug}"]`, (a) => a.hasAttribute('data-read'));
+  await pg.goto(NOTE, { waitUntil: 'networkidle' });
+  await pg.click('.mark-read');
+  const unpressed = await pg.getAttribute('.mark-read', 'aria-pressed');
+  const sideOff = await pg.$eval(`#sidebar a[data-note-link="${slug}"]`, (a) => !a.hasAttribute('data-read'));
+  return { pass: pressed === 'true' && side && onPath && onHome && unpressed === 'false' && sideOff, detail: `标记后按钮 ${pressed}、侧栏 ✓ ${side}、路线页勾选 ${onPath}、首页 ✓ ${onHome}；取消后按钮 ${unpressed}、侧栏取消 ${sideOff}` };
+});
+await interact('阅读进度条', async (pg) => {
+  await pg.goto(NOTE, { waitUntil: 'networkidle' });
+  const val = async () => +(await pg.getAttribute('.read-progress', 'aria-valuenow'));
+  const top = await val();
+  await pg.evaluate(() => { const a = document.querySelector('main article'); const r = a.getBoundingClientRect(); scrollTo(0, scrollY + r.top + (r.height - innerHeight) / 2); });
+  await pg.waitForTimeout(200); const mid = await val();
+  await pg.evaluate(() => { const a = document.querySelector('main article'); const r = a.getBoundingClientRect(); scrollTo(0, scrollY + r.bottom - innerHeight + 2); });
+  await pg.waitForTimeout(200); const end = await val();
+  const onPath = existsSync(join(dist, 'path/index.html')) && !readFileSync(join(dist, 'path/index.html'), 'utf8').includes('class="read-progress"');
+  return { pass: top === 0 && mid >= 40 && mid <= 60 && end === 100 && onPath, detail: `顶部 ${top}%、正文中部 ${mid}%、正文末尾 ${end}%；路线页无进度条 ${onPath}` };
 });
 
 await browser.close(); server.close();

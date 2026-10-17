@@ -3,6 +3,8 @@ import { render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import Toc from '../../components/Toc.astro';
 import RoutePager from '../../components/RoutePager.astro';
+import TagList from '../../components/TagList.astro';
+import Backlinks from '../../components/Backlinks.astro';
 import { MODULES } from '../../content.config';
 import { getSortedNotes, fmtDate, url } from '../../lib/notes';
 import { getMainSequence } from '../../lib/resources';
@@ -22,7 +24,7 @@ const seq = await getMainSequence();
 const at = seq.findIndex((s) => s.item.type === 'note' && s.item.note.data.slug === d.slug);
 const me = seq[at];
 ---
-<Base title={`${d.title_zh} · 学习笔记`} mermaid={true} description={d.summary} ogType="article" headings={headings}>
+<Base title={`${d.title_zh} · 学习笔记`} description={d.summary} ogType="article" headings={headings} readProgress={true}>
   <article>
     <nav class="breadcrumb" aria-label="位置" data-pagefind-ignore>
       <a href={url('/')}>笔记</a><span aria-hidden="true">›</span><a href={url(`/#module-${d.moduleKey}`)}>模块 {d.moduleKey} · {MODULES[d.moduleKey]}</a><span aria-hidden="true">›</span><span>#{d.order}</span>
@@ -36,11 +38,16 @@ const me = seq[at];
       <span>阅读约 {d.reading_time} 分钟</span>
       <a href={d.source_url} target="_blank" rel="noopener">原文链接 ↗</a>
     </div>
-    <ul class="tags">{d.tags.map((t) => <li>{t}</li>)}</ul>
+    <TagList tags={d.tags} />
     {d.source_note && <div class="note-box">⚠️ {d.source_note}</div>}
     <Toc headings={headings} variant="inline" />
     <Content />
+    <div class="mark-read-row" data-pagefind-ignore>
+      <button type="button" class="mark-read" data-pid={`n:${d.slug}`} aria-pressed="false"><span class="mark-label">标记为已读</span></button>
+      <span class="meta" style="display:inline">进度只保存在本机浏览器，<a href={url(me ? `/path/#step-${me.n}` : '/path/')}>在学习路线中查看</a></span>
+    </div>
   </article>
+  <Backlinks slug={d.slug} />
   <nav class="pager" aria-label="按编号翻页" data-pager="order" data-pagefind-ignore>
     {prev ? <a class="prev" href={url(`notes/${prev.data.slug}/`)}><small>← 上一篇 #{prev.data.order}</small>{prev.data.title_zh}</a> : <span />}
     {next ? <a class="next" href={url(`notes/${next.data.slug}/`)}><small>下一篇 #{next.data.order} →</small>{next.data.title_zh}</a> : <span />}
