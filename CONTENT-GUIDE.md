@@ -142,7 +142,7 @@
 
 | 文字 | 位置 |
 |---|---|
-| 站点描述（首页、路线页、资源列表、标签页等没有 summary 的页面用作 meta description） | `site/src/layouts/Base.astro`（`SITE_DESC`） |
+| 各页 meta description：首页用 `SITE_DESC`；路线页、资源列表、标签页各自写死在页面里（标签页的数字自动统计）；只有笔记页和资源页取 `summary` | `site/src/layouts/Base.astro`（`SITE_DESC`）及各页面的 `<Base description=…>` |
 | 首页介绍“共 26 篇规划，已完成 N 篇……” | `site/src/pages/index.astro`（N 自动统计） |
 | 模块 A–F 名称 | `site/src/content.config.ts`（`MODULES`） |
 | 路线页介绍、进度说明（“进度只保存在本机浏览器……”） | `site/src/pages/path.astro` |
