@@ -1,7 +1,8 @@
 // 站点自检：node scripts/check-site.mjs [distDir]
 // 起一个本地静态服务（按 BASE_PATH 挂载 dist），用 playwright 逐页检查：
 // 页数、笔记 order 1–26、mermaid 块数 = svg 数且无报错、站内死链、首页 A–F 分组、路线/资源页、
-// 主线 4 阶段 36 步（步数由资源数据推算，可用 EXPECT_STEPS 覆盖）、并行支线（track: theory）。
+// 主线 4 阶段 36 步（步数由资源数据推算，可用 EXPECT_STEPS 覆盖）、并行支线（track: theory）、
+// 移动端 390px 无横向溢出、meta description/favicon/回到顶部、标题锚点、代码块复制按钮。
 import { chromium } from 'playwright';
 import { createServer } from 'node:http';
 import { readFileSync, existsSync, statSync, readdirSync } from 'node:fs';
@@ -38,6 +39,7 @@ ok('页数', EXPECT_PAGES == null || pages.length === EXPECT_PAGES, `共 ${pages
 
 const browser = await chromium.launch();
 const internal = new Set(); const orders = []; const mermaidBad = []; let mTotal = 0;
+const b1Pages = []; const overflow = [];
 for (const rel of pages) {
   const page = await browser.newPage(); const errs = [];
   page.on('pageerror', (e) => errs.push(e.message));
@@ -53,10 +55,32 @@ for (const rel of pages) {
     const t = await page.$eval('.meta span', (e) => e.textContent);
     orders.push(+/#(\d+)/.exec(t)[1]);
   }
-  for (const h of await page.$$eval('a[href]', (as) => as.map((a) => a.getAttribute('href')))) {
+  for (const h of await page.$$eval('a[href], link[rel="icon"][href]', (as) => as.map((a) => a.getAttribute('href')))) {
     if (/^(https?:|mailto:)/.test(h) && !h.startsWith(origin)) continue;
     internal.add(JSON.stringify([rel, h]));
   }
+  // B1：每页 meta description / favicon / 回到顶部；正文标题锚点；代码块复制按钮
+  const b1 = await page.evaluate(() => {
+    const desc = document.querySelector('meta[name="description"]')?.getAttribute('content')?.trim() ?? '';
+    const icon = !!document.querySelector('link[rel="icon"]');
+    const toTop = !!document.querySelector('button.to-top');
+    const hs = [...document.querySelectorAll('article h2[id], article h3[id], article h4[id]')];
+    const badAnchors = hs.filter((h) => h.querySelector(':scope > a.anchor')?.getAttribute('href') !== `#${h.id}`).map((h) => h.id);
+    const pres = document.querySelectorAll('main pre:not(.mermaid)').length;
+    const copies = document.querySelectorAll('main .code-wrap > .copy-btn').length;
+    return { desc: desc.length, icon, toTop, headings: hs.length, badAnchors, pres, copies };
+  });
+  b1Pages.push({ rel, ...b1 });
+  // 移动端：390px 视口无横向溢出
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForTimeout(50);
+  const ov = await page.evaluate(() => {
+    const w = document.documentElement.clientWidth;
+    const sw = document.documentElement.scrollWidth;
+    const culprits = sw > w ? [...document.querySelectorAll('body *')].filter((e) => e.getBoundingClientRect().right > w + 1 && !e.closest('pre, table, .scroll-x')).slice(0, 3).map((e) => `${e.tagName.toLowerCase()}.${e.className}`.slice(0, 60)) : [];
+    return { w, sw, culprits };
+  });
+  if (ov.sw > ov.w) overflow.push(`${rel || '/'}: scrollWidth ${ov.sw} > ${ov.w}（${ov.culprits.join('、')}）`);
   await page.close();
 }
 orders.sort((a, b) => a - b);
@@ -74,11 +98,22 @@ for (const j of internal) {
   if (r.status !== 200) dead.push(`${rel} → ${h} (${r.status})`);
   if (/\.md$/.test(path)) dead.push(`${rel} → ${h}（未改写的 .md 链接）`);
 }
+ok('移动端 390px 无横向溢出', overflow.length === 0, overflow.length ? '溢出：\n  ' + overflow.join('\n  ') : `${pages.length} 页 scrollWidth 均 ≤ 视口宽度`);
+const noDesc = b1Pages.filter((p) => p.desc < 10).map((p) => p.rel || '/');
+const noIcon = b1Pages.filter((p) => !p.icon || !p.toTop).map((p) => p.rel || '/');
+ok('meta description / favicon / 回到顶部', noDesc.length === 0 && noIcon.length === 0, `缺 description：[${noDesc}]；缺 favicon 或回到顶部按钮：[${noIcon}]`);
+const contentPages = b1Pages.filter((p) => /^(notes|resources)\/[^/]+\/$/.test(p.rel));
+const anchorBad = contentPages.filter((p) => p.headings === 0 || p.badAnchors.length);
+ok('标题锚点', anchorBad.length === 0, `${contentPages.length} 个笔记/资源页共 ${contentPages.reduce((n, p) => n + p.headings, 0)} 个 h2–h4，均带 #锚点` + (anchorBad.length ? '；问题：' + anchorBad.map((p) => `${p.rel}（${p.headings ? p.badAnchors.slice(0, 3).join(',') : '无标题'}）`).join('，') : ''));
+const copyBad = b1Pages.filter((p) => p.pres !== p.copies);
+ok('代码块复制按钮', copyBad.length === 0, `代码块 ${b1Pages.reduce((n, p) => n + p.pres, 0)} 个，复制按钮 ${b1Pages.reduce((n, p) => n + p.copies, 0)} 个` + (copyBad.length ? '；不一致：' + copyBad.map((p) => p.rel).join('，') : ''));
+
 ok('站内死链', dead.length === 0, `检查 ${internal.size} 个（页面, 链接）对` + (dead.length ? '；死链：\n  ' + dead.join('\n  ') : ''));
 
 const home = readFileSync(join(dist, 'index.html'), 'utf8');
 const mods = [...home.matchAll(/<h2>模块 ([A-F])/g)].map((x) => x[1]).join('');
-ok('首页 A–F 分组', mods === 'ABCDEF', `分组：${mods}`);
+const homeSums = (home.match(/<p class="sum zh">/g) ?? []).length;
+ok('首页 A–F 分组', mods === 'ABCDEF' && homeSums === 26, `分组：${mods}；摘要 ${homeSums} 条`);
 
 const pathHtml = readFileSync(join(dist, 'path/index.html'), 'utf8');
 const stages = [...pathHtml.matchAll(/<h2>阶段 (\d)/g)].map((x) => x[1]).join('');

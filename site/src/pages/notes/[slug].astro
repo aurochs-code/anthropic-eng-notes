@@ -15,7 +15,7 @@ const { note, prev, next } = Astro.props;
 const d = note.data;
 const { Content } = await render(note);
 ---
-<Base title={`${d.title_zh} · 学习笔记`} mermaid={true}>
+<Base title={`${d.title_zh} · 学习笔记`} mermaid={true} description={d.summary} ogType="article">
   <article>
     <h1>{d.title_zh}</h1>
     <p class="en">{d.title_en}</p>

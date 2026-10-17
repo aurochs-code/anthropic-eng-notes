@@ -19,6 +19,8 @@ const groups = Object.entries(MODULES).map(([k, name]) => ({ k, name, items: not
               <a href={url(`notes/${n.data.slug}/`)}>{n.data.title_zh}</a>
               <span class="meta" style="display:inline"> · {n.data.reading_time} 分钟</span>
               <p class="sum">{n.data.title_en}</p>
+              <p class="sum zh">{n.data.summary}</p>
+              <ul class="tags">{n.data.tags.map((t) => <li>{t}</li>)}</ul>
             </li>
           ))}
         </ol>

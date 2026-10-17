@@ -10,6 +10,7 @@
     "check": "node scripts/check-site.mjs"
   },
   "dependencies": {
+    "@astrojs/markdown-remark": "^6.3.11",
     "astro": "^5.18.2",
     "mermaid": "^12.2.0",
     "unist-util-visit": "^5.1.0"

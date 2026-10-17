@@ -10,7 +10,7 @@ const trackNote = (t: (typeof tracks)[number]) =>
   `从${stageName(t.startsAfter)}阶段结束后开始，与${t.parallelWith.map(stageName).join('和')}并行`;
 let step = 0;
 ---
-<Base title="学习路线 · 学习笔记">
+<Base title="学习路线 · 学习笔记" description="四阶段 36 步学习路线：Anthropic 工程博客笔记按推荐顺序排列，外部课程与文章导读穿插其间，另有并行的原理支线。">
   <h1>学习路线</h1>
   <p class="en">四个阶段：Anthropic 笔记按 order 排列，外部资源（<span class="badge res">资源</span>）穿插其间。</p>
   {stages.map((s) => (

@@ -34,3 +34,22 @@ export function remarkNoteLinks({ base = '' } = {}) {
     });
   };
 }
+
+/**
+ * 标题锚点（rehype）：给带 id 的 h2–h4 末尾追加 `<a class="anchor" href="#id">#</a>`。
+ * 须排在 rehypeHeadingIds 之后（astro.config.mjs 里显式先放 rehypeHeadingIds）。
+ * Astro 收集的 headings（TOC 用）在 rehypeHeadingIds 阶段生成，不含这个 "#"。
+ */
+export function rehypeHeadingAnchors() {
+  return (tree) => {
+    visit(tree, 'element', (node) => {
+      if (!/^h[2-4]$/.test(node.tagName) || !node.properties?.id) return;
+      node.children.push({
+        type: 'element',
+        tagName: 'a',
+        properties: { className: ['anchor'], href: `#${node.properties.id}`, ariaLabel: '本节链接', dataPagefindIgnore: '' },
+        children: [{ type: 'text', value: '#' }],
+      });
+    });
+  };
+}

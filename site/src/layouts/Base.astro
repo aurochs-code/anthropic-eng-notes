@@ -1,7 +1,10 @@
 ---
 import '../styles.css';
 import { url } from '../lib/notes';
-const { title, mermaid = false } = Astro.props;
+const SITE_DESC = 'Anthropic 工程博客 26 篇文章的中文学习笔记（非翻译），附外部资源导读与 4 阶段学习路线。';
+const { title, mermaid = false, description = SITE_DESC, ogType = 'website' } = Astro.props;
+const desc = description.replace(/\s+/g, ' ').trim();
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
 ---
 <!doctype html>
 <html lang="zh-CN">
@@ -9,10 +12,19 @@ const { title, mermaid = false } = Astro.props;
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{title}</title>
+  <meta name="description" content={desc} />
+  <link rel="canonical" href={canonical} />
+  <link rel="icon" type="image/svg+xml" href={url('/favicon.svg')} />
+  <meta property="og:type" content={ogType} />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={desc} />
+  <meta property="og:url" content={canonical} />
+  <meta property="og:locale" content="zh_CN" />
+  <meta property="og:site_name" content="Anthropic 工程博客 · 中文学习笔记" />
 </head>
 <body>
   <header class="site">
-    <a class="brand" href={url('/')}>Anthropic 工程博客 · 中文学习笔记</a>
+    <a class="brand" href={url('/')}><span class="brand-long">Anthropic 工程博客 · 中文学习笔记</span><span class="brand-short">Anthropic 工程笔记</span></a>
     <nav class="top">
       {[['/', '笔记'], ['/path/', '学习路线'], ['/resources/', '资源']].map(([p, label]) => (
         <a href={url(p)} aria-current={Astro.url.pathname === url(p) ? 'page' : undefined}>{label}</a>
@@ -21,6 +33,38 @@ const { title, mermaid = false } = Astro.props;
   </header>
   <main><slot /></main>
   <footer class="site">学习笔记，非翻译；原文版权归 Anthropic 所有。</footer>
+  <button type="button" class="to-top" aria-label="回到顶部" title="回到顶部" hidden>↑</button>
+  <script>
+    // 代码块复制按钮（mermaid 源码块除外）
+    for (const pre of document.querySelectorAll('main pre:not(.mermaid)')) {
+      const wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.replaceWith(wrap);
+      wrap.append(pre);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'copy-btn';
+      btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制代码');
+      btn.addEventListener('click', async () => {
+        const text = pre.querySelector('code')?.innerText ?? pre.innerText;
+        try {
+          await navigator.clipboard.writeText(text);
+          btn.textContent = '已复制';
+        } catch {
+          btn.textContent = '复制失败';
+        }
+        setTimeout(() => (btn.textContent = '复制'), 1500);
+      });
+      wrap.append(btn);
+    }
+    // 回到顶部：滚过一屏后出现
+    const top = document.querySelector<HTMLButtonElement>('.to-top')!;
+    const onScroll = () => (top.hidden = scrollY < innerHeight);
+    addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    top.addEventListener('click', () => scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }));
+  </script>
   {mermaid && (
     <script>
       import mermaid from 'mermaid';

@@ -52,3 +52,25 @@ nav.top a[aria-current="page"] { color:var(--accent); }
 dl.facts { display:grid; grid-template-columns:auto 1fr; gap:2px 12px; font-size:14px; margin:12px 0; }
 dl.facts dt { color:var(--muted); }
 dl.facts dd { margin:0; }
+
+/* ── B1：移动端溢出、锚点、复制按钮、回到顶部、首页摘要 ── */
+html { -webkit-text-size-adjust:100%; }
+main { overflow-wrap:anywhere; }
+main pre, main code { overflow-wrap:normal; }
+table { max-width:100%; }
+pre { max-width:100%; }
+h2 .anchor, h3 .anchor, h4 .anchor { margin-left:.35em; color:var(--muted); text-decoration:none; font-weight:400; opacity:0; transition:opacity .15s; }
+h2:hover .anchor, h3:hover .anchor, h4:hover .anchor, .anchor:focus-visible { opacity:1; }
+@media (hover: none) { h2 .anchor, h3 .anchor, h4 .anchor { opacity:.45; } }
+:target { scroll-margin-top:16px; }
+.code-wrap { position:relative; }
+.code-wrap pre { background:var(--code); }
+.copy-btn { position:absolute; top:6px; right:6px; font:12px/1.6 inherit; padding:1px 8px; border:1px solid var(--line); border-radius:4px; background:var(--bg); color:var(--muted); cursor:pointer; }
+.copy-btn:hover, .copy-btn:focus-visible { color:var(--accent); border-color:var(--accent); }
+.to-top { position:fixed; right:16px; bottom:20px; width:40px; height:40px; border-radius:50%; border:1px solid var(--line); background:var(--bg); color:var(--fg); font-size:18px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.12); z-index:20; }
+.to-top:hover, .to-top:focus-visible { color:var(--accent); border-color:var(--accent); }
+.brand-short { display:none; }
+@media (max-width: 480px) { .brand-long { display:none; } .brand-short { display:inline; } }
+.route .sum.zh { color:var(--fg); opacity:.85; }
+.route .tags { margin:4px 0 0 2.2em; }
+.route .tags li { font-size:11px; padding:0 8px; border:1px solid var(--line); line-height:1.7; }

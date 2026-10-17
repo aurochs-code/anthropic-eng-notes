@@ -16,7 +16,7 @@ const bySlug = new Map(notes.map((n) => [n.data.slug, n]));
 const pairs = d.pairs_with.map((s) => bySlug.get(s)).filter(Boolean);
 const { Content } = await render(res);
 ---
-<Base title={`${d.title_zh} · 资源导读`} mermaid={true}>
+<Base title={`${d.title_zh} · 资源导读`} mermaid={true} description={d.summary} ogType="article">
   <article>
     <h1>{d.title_zh}</h1>
     {d.title_en && <p class="en">{d.title_en}</p>}
