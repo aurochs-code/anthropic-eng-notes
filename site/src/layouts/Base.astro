@@ -11,7 +11,14 @@ const { title, mermaid = false } = Astro.props;
   <title>{title}</title>
 </head>
 <body>
-  <header class="site"><a href={url('/')}>Anthropic 工程博客 · 中文学习笔记</a></header>
+  <header class="site">
+    <a class="brand" href={url('/')}>Anthropic 工程博客 · 中文学习笔记</a>
+    <nav class="top">
+      {[['/', '笔记'], ['/path/', '学习路线'], ['/resources/', '资源']].map(([p, label]) => (
+        <a href={url(p)} aria-current={Astro.url.pathname === url(p) ? 'page' : undefined}>{label}</a>
+      ))}
+    </nav>
+  </header>
   <main><slot /></main>
   <footer class="site">学习笔记，非翻译；原文版权归 Anthropic 所有。</footer>
   {mermaid && (

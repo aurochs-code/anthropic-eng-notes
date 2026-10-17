@@ -1,0 +1,52 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { stageName } from '../../data/stages';
+import { getSortedResources, resSlug } from '../../lib/resources';
+import { getSortedNotes, fmtDate, url } from '../../lib/notes';
+
+export async function getStaticPaths() {
+  const list = await getSortedResources();
+  return list.map((res, i) => ({ params: { slug: resSlug(res) }, props: { res, prev: list[i - 1], next: list[i + 1] } }));
+}
+const { res, prev, next } = Astro.props;
+const d = res.data;
+const notes = await getSortedNotes();
+const bySlug = new Map(notes.map((n) => [n.data.slug, n]));
+const pairs = d.pairs_with.map((s) => bySlug.get(s)).filter(Boolean);
+const { Content } = await render(res);
+---
+<Base title={`${d.title_zh} · 资源导读`} mermaid={true}>
+  <article>
+    <h1>{d.title_zh}</h1>
+    {d.title_en && <p class="en">{d.title_en}</p>}
+    <div class="meta">
+      {d.stage && <span>主阶段：{d.stage} · {stageName(d.stage)}</span>}
+      {d.kind && <span>类型：{d.kind}</span>}
+      {d.provider && <span>{d.provider}</span>}
+      {d.published && <span>发布：{fmtDate(d.published)}</span>}
+      {d.last_checked && <span>核实：{fmtDate(d.last_checked)}</span>}
+      {d.source_url && <a href={d.source_url} target="_blank" rel="noopener">原文链接 ↗</a>}
+      {d.source_url_zh && <a href={d.source_url_zh} target="_blank" rel="noopener">中文版 ↗</a>}
+    </div>
+    {d.tags.length > 0 && <ul class="tags">{d.tags.map((t) => <li>{t}</li>)}</ul>}
+    {d.source_note && <div class="note-box">⚠️ {d.source_note}</div>}
+    {(d.status || d.cost || d.estimated_hours || d.license_note || d.route.length > 0) && (
+      <dl class="facts">
+        {d.status && <><dt>状态</dt><dd>{d.status}</dd></>}
+        {d.cost && <><dt>费用</dt><dd>{d.cost}</dd></>}
+        {d.estimated_hours && <><dt>估计投入</dt><dd>约 {d.estimated_hours} 小时（笔者估算）</dd></>}
+        {d.license_note && <><dt>许可</dt><dd>{d.license_note}</dd></>}
+        {d.route.length > 0 && <><dt>路线位置</dt><dd>{d.route.map((e) => `${e.step ? `第 ${e.step} 步` : ''}${e.part ? ` ${e.part}` : ''}`.trim()).join('；')}（<a href={url('/path/')}>查看路线</a>）</dd></>}
+      </dl>
+    )}
+    {pairs.length > 0 && (
+      <p class="meta">搭配笔记：{pairs.map((n, i) => <>{i > 0 && '、'}<a href={url(`notes/${n!.data.slug}/`)}>#{n!.data.order} {n!.data.title_zh}</a></>)}</p>
+    )}
+    <Content />
+  </article>
+  <nav class="pager">
+    {prev ? <a class="prev" href={url(`resources/${resSlug(prev)}/`)}><small>← 上一个资源</small>{prev.data.title_zh}</a> : <span />}
+    {next ? <a class="next" href={url(`resources/${resSlug(next)}/`)}><small>下一个资源 →</small>{next.data.title_zh}</a> : <span />}
+  </nav>
+</Base>

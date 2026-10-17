@@ -33,3 +33,15 @@ nav.pager { display:flex; justify-content:space-between; gap:12px; margin-top:40
 nav.pager a { flex:1; border:1px solid var(--line); border-radius:8px; padding:10px 12px; text-decoration:none; font-size:14px; }
 nav.pager .next { text-align:right; }
 nav.pager small { display:block; color:var(--muted); }
+header.site { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 16px; }
+nav.top { display:flex; gap:14px; font-weight:500; font-size:15px; }
+nav.top a { color:var(--muted); }
+nav.top a[aria-current="page"] { color:var(--accent); }
+.badge { display:inline-block; font-size:12px; line-height:1.6; border:1px solid var(--line); border-radius:4px; padding:0 6px; margin-right:6px; color:var(--muted); vertical-align:1px; }
+.badge.res { border-color:var(--accent); color:var(--accent); }
+.route li.res { background:var(--code); padding-left:8px; padding-right:8px; border-radius:6px; }
+.route .part { color:var(--muted); font-size:14px; }
+.stage-goal { color:var(--muted); font-size:14px; margin:-4px 0 8px; }
+dl.facts { display:grid; grid-template-columns:auto 1fr; gap:2px 12px; font-size:14px; margin:12px 0; }
+dl.facts dt { color:var(--muted); }
+dl.facts dd { margin:0; }

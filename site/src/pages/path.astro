@@ -1,0 +1,34 @@
+---
+import Base from '../layouts/Base.astro';
+import { getLearningPath, resSlug } from '../lib/resources';
+import { url } from '../lib/notes';
+const stages = await getLearningPath();
+let step = 0;
+---
+<Base title="学习路线 · 学习笔记">
+  <h1>学习路线</h1>
+  <p class="en">四个阶段：Anthropic 笔记按 order 排列，外部资源（<span class="badge res">资源</span>）穿插其间。</p>
+  {stages.map((s) => (
+    <section class="module">
+      <h2>阶段 {s.n} · {s.name}<span class="meta" style="display:inline;font-weight:400"> （笔记 {s.from}–{s.to}）</span></h2>
+      <p class="stage-goal">{s.goal}</p>
+      <ol class="route">
+        {s.items.map((it) => it.type === 'note' ? (
+          <li>
+            <span class="num">{String(++step).padStart(2, '0')}</span>
+            <span class="badge">笔记 #{it.note.data.order}</span>
+            <a href={url(`notes/${it.note.data.slug}/`)}>{it.note.data.title_zh}</a>
+            <span class="meta" style="display:inline"> · {it.note.data.reading_time} 分钟</span>
+          </li>
+        ) : (
+          <li class="res">
+            <span class="num">{it.optional ? '选读' : String(++step).padStart(2, '0')}</span>
+            <span class="badge res">资源</span>
+            <a href={url(`resources/${resSlug(it.res)}/`)}>{it.res.data.title_zh}</a>
+            {it.part && <span class="part"> · {it.part}</span>}
+          </li>
+        ))}
+      </ol>
+    </section>
+  ))}
+</Base>

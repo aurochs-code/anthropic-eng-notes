@@ -6,8 +6,8 @@ const notes = await getSortedNotes();
 const groups = Object.entries(MODULES).map(([k, name]) => ({ k, name, items: notes.filter((n) => n.data.moduleKey === k) }));
 ---
 <Base title="Anthropic 工程博客 · 中文学习笔记">
-  <h1>学习路线</h1>
-  <p class="en">共 26 篇规划，已完成 {notes.length} 篇。按模块 A–F 分组，序号为全站推荐阅读顺序。</p>
+  <h1>笔记目录</h1>
+  <p class="en">共 26 篇规划，已完成 {notes.length} 篇。按模块 A–F 分组，序号为全站推荐阅读顺序；含外部资源的完整路线见<a href={url("/path/")}>学习路线</a>。</p>
   {groups.map((g) => (
     <section class="module">
       <h2>模块 {g.k} · {g.name}</h2>

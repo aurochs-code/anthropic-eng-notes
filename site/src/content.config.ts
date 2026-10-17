@@ -37,4 +37,49 @@ const notes = defineCollection({
     .transform((d) => ({ ...d, moduleKey: d.module[0] as keyof typeof MODULES })),
 });
 
-export const collections = { notes };
+// ── 资源导读（独立集合、独立 schema；宽松版，确定版字段待定） ──
+const nullableSlug = z.string().nullable().optional();
+const resources = defineCollection({
+  // 读取 ../resources/r-*.md；目录不存在或为空时集合为空，构建照常通过
+  loader: glob({ pattern: 'r-*.md', base: process.env.RESOURCES_DIR ?? '../resources', generateId: ({ entry }) => entry.replace(/\.md$/, '') }),
+  schema: z
+    .object({
+      title_zh: z.string({ required_error: '缺少 title_zh（中文标题）' }).min(1),
+      title_en: z.string().optional(),
+      slug: z.string().regex(/^r-[a-z0-9-]+$/, '资源 slug 须以 r- 开头，只含小写字母、数字、短横线').optional(),
+      kind: z.string().optional(), // course | article | guide | repo | cookbook | blog | catalog（暂不限定）
+      stage: z.coerce.number().int().min(1).max(4).optional(),
+      optional: z.boolean().optional(), // 整个资源为选读：路线中不占编号
+      route: z
+        .array(
+          z
+            .object({
+              step: z.coerce.number().optional(),
+              part: z.string().optional(),
+              after: nullableSlug, // 插在哪篇笔记之后；null/缺省 = 阶段开头
+              stage: z.coerce.number().int().min(1).max(4).optional(), // 可选：覆盖所属阶段
+              optional: z.boolean().optional(),
+            })
+            .passthrough(),
+        )
+        .optional()
+        .default([]),
+      source_url: z.string().url('source_url 不是合法 URL').optional(),
+      source_url_zh: z.string().url().optional(),
+      provider: z.string().optional(),
+      authors_en: z.array(z.string()).optional(),
+      published: z.coerce.date().optional(),
+      last_checked: z.coerce.date().optional(),
+      status: z.string().optional(), // active | archived | dated
+      cost: z.string().optional(),
+      license_note: z.string().optional(),
+      estimated_hours: z.coerce.number().optional(),
+      summary: z.string().optional(),
+      pairs_with: z.array(z.string()).optional().default([]),
+      tags: z.array(z.string()).optional().default([]),
+      source_note: z.string().optional(),
+    })
+    .passthrough(),
+});
+
+export const collections = { notes, resources };
