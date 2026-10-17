@@ -28,6 +28,7 @@ Astro 静态站，内容直接读取上级目录 `../notes/*.md`（不复制）�
 6. 学习路线的阶段划分（按笔记 order）在 `src/data/stages.ts`。
 
 ## 构建 / 本地预览
+需要 Node ≥ 22（`package.json` 的 `engines`，CI 同为 Node 22）。
 ```bash
 npm ci
 npm run build          # 输出 dist/
