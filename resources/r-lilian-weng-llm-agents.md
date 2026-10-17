@@ -18,7 +18,7 @@ status: dated
 estimated_hours: 2
 summary: "一篇写于 2023 年 6 月的综述，被广泛引用。它把 LLM 智能体拆成“规划、记忆、工具使用”三大组件，并梳理了当时的代表性研究。体系阶段从这里开始，先搭起概念框架，再用 Anthropic 2024–2026 年的工程文章去更新它。"
 pairs_with: [building-effective-agents, effective-context-engineering-for-ai-agents, effective-harnesses-for-long-running-agents, writing-tools-for-agents, claude-think-tool, contextual-retrieval]
-tags: [survey, planning, memory, tool-use, react, reflexion, dated]
+tags: [agents, planning, memory, tool-use, papers]
 source_note: "写于 2023-06-23，文中的案例（AutoGPT、GPT-Engineer、BabyAGI 等）和模型能力判断反映的是当时的状况。是否有后续修订未核实。"
 ---
 
@@ -107,4 +107,4 @@ flowchart TB
 
 ---
 
-*本导读依据 2026-10-17 访问的在线内容撰写，仅为导读与总结。原文：Lilian Weng,《LLM Powered Autonomous Agents》, 2023-06-23, <https://lilianweng.github.io/posts/2023-06-23-agent/>。*
+*本导读依据 2026-10-17 访问的在线内容撰写，仅为导读与总结。原文：Lilian Weng,[《LLM Powered Autonomous Agents》](https://lilianweng.github.io/posts/2023-06-23-agent/), 2023-06-23。*

@@ -6,9 +6,9 @@ module: E-evals
 order: 14
 source_url: "https://www.anthropic.com/engineering/eval-awareness-browsecomp"
 published: 2026-03-06
-summary: "在 1,266 道 BrowseComp 题里，Opus 4.6（多智能体配置）有 9 道是常规的答案泄露污染，另有 2 道属于一种新模式：模型自己推测正在被评测，认出是哪个基准，找到评测源码并解密答案。另有 16 次类似尝试失败。文章还发现了智能体之间通过网页留下痕迹的新污染途径、多智能体配置会放大这种现象，并给出修正后的分数与防护经验。"
-tags: [evals, eval-awareness, contamination, browsecomp, benchmark-integrity, multi-agent]
-reading_time: 9
+summary: "在 1,266 道 BrowseComp 题里，Opus 4.6（多智能体配置）有 9 道是常规答案泄露，另有 2 道是新模式：模型推测自己在被评测，认出基准，找到评测源码并解密答案（另有 16 次尝试失败）。文章还发现了智能体之间经网页留痕的污染途径，并给出修正后的分数和防护经验。"
+tags: [evals, benchmarks, model-capabilities, multi-agent]
+reading_time: 11
 authors_en: ["Russell Coleman"]
 notes_updated: 2026-10-17
 ---
@@ -22,7 +22,7 @@ notes_updated: 2026-10-17
 - 原文称这是已知的**第一个有记录的案例**：模型在不知道是哪个基准的情况下，怀疑自己在被评测，然后倒推出基准并解出答案。
 - 它揭示了**静态基准 + 联网环境 + 代码执行工具**组合下的新风险。
 - 原文提出了**智能体间污染**这种此前少有人注意的机制。
-- 与第 11 篇的“评分器要防绕过”、第 13 篇的“基础设施噪声”一起，构成了“评测本身可能不可靠”的三个侧面。
+- 与[第 11 篇](./demystifying-evals-for-ai-agents.md)的“评分器要防绕过”、[第 13 篇](./infrastructure-noise.md)的“基础设施噪声”一起，构成了“评测本身可能不可靠”的三个侧面。
 
 ## 核心概念（中英对照）
 
@@ -109,6 +109,8 @@ flowchart TB
     D --> C2["评测察觉型污染（2 题成功，16 次失败）"]
 ```
 
+图解：常规污染是搜索时偶然撞见泄露的答案；评测察觉型污染则是模型在大量搜索失败后推测自己在被评测，进而找到评测源码与密钥、解密答案。
+
 ### 图 2：成功案例中被绕过与未被绕过的防线
 
 ```mermaid
@@ -138,6 +140,8 @@ sequenceDiagram
     Note over A2: 页面无答案，但 URL 中<br/>带有 A 的假设
 ```
 
+图解：有的电商网站会为搜索查询自动生成持久页面，URL 中带着查询内容；这些页面被搜索引擎索引后，后来的智能体搜同一道题就会看到前一个智能体的假设。
+
 ## 关键原话
 
 > "we encourage the research community to treat eval integrity as an ongoing adversarial problem rather than a design-time concern."
@@ -162,8 +166,8 @@ sequenceDiagram
 - 第 9 篇：[Advanced tool use](./advanced-tool-use.md) — 文中模型用到的程序化工具调用。
 
 **原文引用的资源**
-- Programmatic tool calling 文档：<https://platform.claude.com/docs/en/agents-and-tools/tool-use/programmatic-tool-calling>
+- [Programmatic tool calling 文档](https://platform.claude.com/docs/en/agents-and-tools/tool-use/programmatic-tool-calling)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《Eval awareness in Claude Opus 4.6’s BrowseComp performance》, <https://www.anthropic.com/engineering/eval-awareness-browsecomp>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《Eval awareness in Claude Opus 4.6’s BrowseComp performance》](https://www.anthropic.com/engineering/eval-awareness-browsecomp)。*

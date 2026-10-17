@@ -7,8 +7,8 @@ order: 10
 source_url: "https://www.anthropic.com/engineering/desktop-extensions"
 published: 2025-06-26
 summary: "本地 MCP 服务器安装门槛高：要装运行时、手改 JSON 配置、处理依赖。Desktop Extensions 把服务器和全部依赖连同一个 manifest.json 打成 zip 包（现扩展名 .mcpb），双击即可安装；配置收集、密钥存储、跨平台、自动更新、企业管控都由宿主应用负责，规范和工具链也已开源。"
-tags: [mcp, desktop-extensions, mcpb, packaging, distribution, enterprise]
-reading_time: 9
+tags: [mcp, production]
+reading_time: 8
 source_note: "原文于 2025-09-11 加注更新：Desktop Extensions 的文件扩展名由 .dxt 改为 .mcpb（MCP Bundle）；已有 .dxt 扩展仍可使用，新扩展建议用 .mcpb，功能不变，只是命名调整。在线原文正文已统一使用 .mcpb / mcpb 命令，本笔记同样以 .mcpb 为准。"
 notes_updated: 2026-10-17
 ---
@@ -24,7 +24,7 @@ notes_updated: 2026-10-17
 - **MCP 的价值要靠“装得上”才能兑现**：原文认为安装门槛让本地 MCP 服务器基本无法被非技术用户使用。
 - **展示了一个“工具分发”的完整设计**：清单格式、用户配置、密钥管理、跨平台、目录审核、企业管控。
 - **开放规范**：格式、工具链和参考实现都开源，目标是让其他 AI 桌面应用也能支持。
-- 第 3 篇《为智能体编写高效工具》里也建议用本地 MCP 服务器或桌面扩展来测试工具原型。
+- [第 3 篇](./writing-tools-for-agents.md)《为智能体编写高效工具》里也建议用本地 MCP 服务器或桌面扩展来测试工具原型。
 
 ## 核心概念（中英对照）
 
@@ -115,6 +115,8 @@ flowchart TB
     H --> U[自动更新]
 ```
 
+图解：`extension.mcpb` 本质是 zip 包，只有 `manifest.json` 必需；宿主应用（Claude Desktop）负责内置运行时、按 `user_config` 生成配置界面、把敏感值存入钥匙串、替换模板变量和自动更新。
+
 ### 图 3：开发者的打包流程与分发渠道
 
 ```mermaid
@@ -150,10 +152,10 @@ flowchart LR
 - 第 7 篇：[Agent Skills](./equipping-agents-for-the-real-world-with-agent-skills.md)
 
 **原文引用的资源**
-- MCPB 规范仓库（原文示例提示词中给出的地址）：<https://github.com/anthropics/mcpb>
-- Manifest 规范：<https://github.com/anthropics/mcpb/blob/main/MANIFEST.md>
-- 原文正文超链接仍指向旧仓库名：<https://github.com/anthropics/dxt>
+- [MCPB 规范仓库（原文示例提示词中给出的地址）](https://github.com/anthropics/mcpb)
+- [Manifest 规范](https://github.com/anthropics/mcpb/blob/main/MANIFEST.md)
+- [原文正文超链接仍指向旧仓库名](https://github.com/anthropics/dxt)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《Desktop Extensions: One-click MCP server installation for Claude Desktop》, <https://www.anthropic.com/engineering/desktop-extensions>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《Desktop Extensions: One-click MCP server installation for Claude Desktop》](https://www.anthropic.com/engineering/desktop-extensions)。*

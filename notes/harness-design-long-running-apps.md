@@ -6,9 +6,9 @@ module: A-agent-design
 order: 18
 source_url: "https://www.anthropic.com/engineering/harness-design-long-running-apps"
 published: 2026-03-24
-summary: "借鉴 GAN 思路，把“干活的”和“打分的”分成生成者与评估者两个智能体，并用评分标准把主观的设计质量变得可评分；再扩展为规划者-生成者-评估者三智能体，在多小时的自主编码中构建完整的全栈应用。随后随模型升级（Opus 4.5 → 4.6）逐个拆掉不再必要的组件，得出结论：评估者是否值得，取决于任务是否超出当前模型独立可靠完成的范围。"
-tags: [harness, long-running-agents, generator-evaluator, planner, frontend-design, qa, multi-agent]
-reading_time: 15
+summary: "借鉴 GAN 思路，把干活的生成者和打分的评估者分开，用评分标准让主观的设计质量可评分；再扩展成规划者-生成者-评估者三智能体，在多小时自主编码中构建全栈应用。随模型升级逐个拆掉多余组件后得出：评估者是否值得，取决于任务是否超出当前模型独立可靠完成的范围。"
+tags: [harness, long-running-agents, multi-agent, planning, testing]
+reading_time: 14
 authors_en: ["Prithvi Rajasekaran"]
 notes_updated: 2026-10-17
 ---
@@ -19,7 +19,7 @@ notes_updated: 2026-10-17
 
 ## 为什么重要
 
-- **是第 17 篇（初始化 + 编码智能体）的直接续篇**，补上了“自我评估不可靠”这个此前没有解决的问题。
+- **是[第 17 篇](./effective-harnesses-for-long-running-agents.md)（初始化 + 编码智能体）的直接续篇**，补上了“自我评估不可靠”这个此前没有解决的问题。
 - **展示了如何把主观质量变得可评分**：写成评分标准，用少样本示例校准评估者。
 - **给出了真实的成本 / 耗时 / 效果对比**（单智能体 20 分钟 9 美元 vs 完整 harness 6 小时 200 美元）。
 - **方法论价值**：逐个移除组件、观察影响，以及“评估者不是固定的是非题”这一判断，对任何维护 harness 的人都适用。
@@ -187,8 +187,8 @@ flowchart TD
 - 第 11 篇：[揭秘智能体评测](./demystifying-evals-for-ai-agents.md)
 
 **原文引用的资源**
-- Claude Agent SDK：<https://platform.claude.com/docs/en/agent-sdk/overview>
+- [Claude Agent SDK](https://platform.claude.com/docs/en/agent-sdk/overview)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《Harness design for long-running application development》, <https://www.anthropic.com/engineering/harness-design-long-running-apps>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《Harness design for long-running application development》](https://www.anthropic.com/engineering/harness-design-long-running-apps)。*

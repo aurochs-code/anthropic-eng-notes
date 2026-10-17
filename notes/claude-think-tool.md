@@ -7,13 +7,13 @@ order: 6
 source_url: "https://www.anthropic.com/engineering/claude-think-tool"
 published: 2025-03-20
 summary: "给 Claude 一个什么都不做、只把想法记进日志的“think”工具，让它在长工具调用链中途停下来核对规则和信息。在 τ-bench 航空领域，配合带示例的提示词，pass^1 相对基线提升 54%。注意：2025-12 起官方在多数场景下改为推荐 extended thinking。"
-tags: [think-tool, tool-use, extended-thinking, tau-bench, policy-adherence]
-reading_time: 10
+tags: [tool-use, extended-thinking, benchmarks]
+reading_time: 8
 source_note: "原文于 2025-12-15 加注更新：extended thinking 能力已改进，多数情况下推荐使用 extended thinking 而不是专门的 think 工具，它提供类似的收益，集成度和性能更好。本笔记保留原文方法作为思路学习，选型时请以该更新为准。"
 notes_updated: 2026-10-17
 ---
 
-> 🔄 **原文后续更新（2025-12-15）**：官方表示 extended thinking 已经改进，**多数情况下建议改用 extended thinking**，而不是单独定义 think 工具（见 <https://platform.claude.com/docs/en/build-with-claude/extended-thinking>）。下面的内容记录的是 2025 年 3 月时的方法和实验，适合用来理解“在工具链中间留出思考空间”这一思路。
+> 🔄 **原文后续更新（2025-12-15）**：官方表示 extended thinking 已经改进，**多数情况下建议改用 extended thinking**，而不是单独定义 think 工具（见 [Extended thinking 文档](https://platform.claude.com/docs/en/build-with-claude/extended-thinking)）。下面的内容记录的是 2025 年 3 月时的方法和实验，适合用来理解“在工具链中间留出思考空间”这一思路。
 
 ## 一句话总结
 
@@ -154,10 +154,10 @@ flowchart LR
 - 第 11 篇：[揭秘智能体评测](./demystifying-evals-for-ai-agents.md) — pass@k 与 pass^k。
 
 **原文引用的资源**
-- Extended thinking 文档：<https://platform.claude.com/docs/en/build-with-claude/extended-thinking>
-- τ-bench 论文：<https://arxiv.org/abs/2406.12045>
-- τ-bench 航空政策：<https://github.com/sierra-research/tau-bench/blob/main/tau_bench/envs/airline/wiki.md>
+- [Extended thinking 文档](https://platform.claude.com/docs/en/build-with-claude/extended-thinking)
+- [τ-bench 论文](https://arxiv.org/abs/2406.12045)
+- [τ-bench 航空政策](https://github.com/sierra-research/tau-bench/blob/main/tau_bench/envs/airline/wiki.md)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《The "think" tool》, <https://www.anthropic.com/engineering/claude-think-tool>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《The "think" tool》](https://www.anthropic.com/engineering/claude-think-tool)。*

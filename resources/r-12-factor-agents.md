@@ -18,7 +18,7 @@ license_note: "文字与图片采用 CC BY-SA 4.0，代码采用 Apache 2.0。�
 estimated_hours: 3
 summary: "仿照经典的“12-Factor App”，从工程实践角度总结出 12 条（外加附录 1 条）构建生产级 LLM 应用的原则。核心主张：好的智能体大部分是普通软件，LLM 只在合适的位置做决策；提示、上下文窗口和控制流都应该由开发者自己掌控。"
 pairs_with: [building-effective-agents, effective-context-engineering-for-ai-agents, effective-harnesses-for-long-running-agents, harness-design-long-running-apps, managed-agents, claude-code-auto-mode, multi-agent-research-system]
-tags: [guide, production, context-window, control-flow, human-in-the-loop, state]
+tags: [agents, production, context-window, workflows, human-in-the-loop]
 source_note: "仓库最后推送 2025-09-21（2026-10-17 查看）。README 明确表示不讨论 MCP；示例多为 TypeScript 伪代码，部分用 BAML。第 12 条作者自称“主要是为了好玩”，正文几乎只有图。"
 ---
 
@@ -29,7 +29,7 @@ source_note: "仓库最后推送 2025-09-21（2026-10-17 查看）。README 明�
 ## 为什么放在这个阶段
 
 - **实战阶段第一篇**：体系阶段读完多智能体研究系统后，你已经掌握了模式、工具、上下文和评测。12-Factor 把这些知识重新组织成**工程约束**（状态、暂停与恢复、人工审批、错误处理），正好用来引出后面的长时 harness、Managed Agents 和安全笔记。
-- 它对 Anthropic 文章既有呼应也有批评（README 直接拿 Building effective agents 中“智能体”那一节当反例），适合锻炼批判性阅读。
+- 它对 Anthropic 文章既有呼应也有批评（README 直接拿 [Building effective agents](./building-effective-agents.md) 中“智能体”那一节当反例），适合锻炼批判性阅读。
 
 ## 结构速览
 
@@ -119,4 +119,4 @@ flowchart LR
 
 ---
 
-*本导读依据 2026-10-17 访问的在线内容撰写，仅为导读与总结。原文：Dex（HumanLayer）,《12-Factor Agents》, <https://github.com/humanlayer/12-factor-agents>。*
+*本导读依据 2026-10-17 访问的在线内容撰写，仅为导读与总结。原文：Dex（HumanLayer）,[《12-Factor Agents》](https://github.com/humanlayer/12-factor-agents)。*

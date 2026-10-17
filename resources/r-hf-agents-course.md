@@ -27,7 +27,7 @@ cost: "课程免费；两种证书的认证流程也免费（课程首页说明�
 estimated_hours: 20
 summary: "Hugging Face 的免费智能体课程。先从“思考 → 行动 → 观察”循环和一个手写的 dummy agent 讲清楚机制，再介绍 smolagents、LlamaIndex、LangGraph 三个框架，最后用 GAIA 基准做结业项目。它贯穿整条路线，是主线练手项目。"
 pairs_with: [building-effective-agents, writing-tools-for-agents, code-execution-with-mcp, multi-agent-research-system, contextual-retrieval, demystifying-evals-for-ai-agents, swe-bench-sonnet]
-tags: [course, hands-on, smolagents, langgraph, llamaindex, gaia, observability]
+tags: [agents, agent-frameworks, benchmarks]
 source_note: "课程是持续更新的项目，框架 API 和示例模型会变。本导读只概括结构和学习目标，不复述代码。官方另有简体中文版，但中文版与英文版是否同步未核实。"
 ---
 
@@ -37,8 +37,8 @@ source_note: "课程是持续更新的项目，框架 API 和示例模型会变�
 
 ## 为什么放在这个阶段
 
-- **主阶段：入门（Unit 0–1）**。Anthropic 的第 1 篇笔记讲的是“该用什么模式”，Unit 1 补的是“机制是什么”：消息格式与特殊 token、工具如何写进系统提示、“思考 → 行动 → 观察”循环、不依赖框架的手写 dummy agent。两者正好互补。
-- **体系阶段末尾（Unit 2）**：读完检索、工具、MCP、评测几组笔记后，再看框架如何把解析器、记忆、重试等组件封装起来，并用多智能体一节衔接第 16 篇。
+- **主阶段：入门（Unit 0–1）**。Anthropic 的[第 1 篇](./building-effective-agents.md)笔记讲的是“该用什么模式”，Unit 1 补的是“机制是什么”：消息格式与特殊 token、工具如何写进系统提示、“思考 → 行动 → 观察”循环、不依赖框架的手写 dummy agent。两者正好互补。
+- **体系阶段末尾（Unit 2）**：读完检索、工具、MCP、评测几组笔记后，再看框架如何把解析器、记忆、重试等组件封装起来，并用多智能体一节衔接[第 16 篇](./multi-agent-research-system.md)。
 - **实战阶段收尾（Unit 3–4 + 附加单元 2）**：做一个能在 GAIA 子集上计分、带可观测性的智能体，把整条路线的知识串起来。
 
 ## 结构速览
@@ -86,7 +86,7 @@ flowchart LR
 
 ## 学习任务
 
-1. 不用框架，照着 Unit 1 的思路，用你常用的模型 API 手写一个只有一个工具的循环；然后对照第 1 篇笔记，判断它属于“工作流”还是“智能体”。
+1. 不用框架，照着 Unit 1 的思路，用你常用的模型 API 手写一个只有一个工具的循环；然后对照[第 1 篇](./building-effective-agents.md)笔记，判断它属于“工作流”还是“智能体”。
 2. Unit 2 选定一个框架后，列出它替你做了哪些事（解析、重试、记忆……），再思考哪些地方你更希望自己掌控（可以带到实战阶段，与 [12-Factor Agents 导读](./r-12-factor-agents.md) 对照）。
 3. Unit 4 提交一次后，挑三道失败的题，判断失败属于规划、工具还是答案格式问题（可以借用 [Chip Huyen 对失败模式的分类](./r-chip-huyen-agents.md)）。
 4. 用附加单元 2 的指标清单，为你的结业智能体列一份最小监控方案。
@@ -108,9 +108,9 @@ flowchart LR
 - [上下文检索](./contextual-retrieval.md)
 
 **原文相关链接**
-- 课程源码与目录：<https://github.com/huggingface/agents-course>
-- GAIA 论文页：<https://huggingface.co/papers/2311.12983>
+- [课程源码与目录](https://github.com/huggingface/agents-course)
+- [GAIA 论文页](https://huggingface.co/papers/2311.12983)
 
 ---
 
-*本导读依据 2026-10-17 访问的在线内容撰写，仅为导读与总结。原文：Hugging Face,《AI Agents Course》, <https://huggingface.co/learn/agents-course>。*
+*本导读依据 2026-10-17 访问的在线内容撰写，仅为导读与总结。原文：Hugging Face,[《AI Agents Course》](https://huggingface.co/learn/agents-course)。*

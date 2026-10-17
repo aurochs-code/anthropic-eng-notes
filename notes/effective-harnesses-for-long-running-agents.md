@@ -6,8 +6,8 @@ module: A-agent-design
 order: 17
 source_url: "https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents"
 published: 2025-11-26
-summary: "长任务必须跨越多个上下文窗口，而每个新会话都“失忆”。仅靠压缩不够：智能体要么想一次做完、做到一半上下文用尽，要么看到已有进展就宣布完成。解法分两部分：初始化智能体搭好环境（功能清单 JSON、进度文件、init.sh、初始 git 提交），编码智能体每次只做一个功能、端到端测试，并以干净状态收尾（提交 + 更新进度）。"
-tags: [long-running-agents, harness, claude-agent-sdk, context-windows, incremental-progress, testing]
+summary: "长任务要跨越多个上下文窗口，每个新会话都会“失忆”，仅靠压缩不够。解法分两部分：初始化智能体搭好环境（功能清单 JSON、进度文件、init.sh、初始 git 提交）；编码智能体每次只做一个功能、做端到端测试，并以干净状态收尾（提交并更新进度）。"
+tags: [long-running-agents, harness, agent-frameworks, context-window, testing]
 reading_time: 9
 authors_en: ["Justin Young"]
 notes_updated: 2026-10-17
@@ -21,7 +21,7 @@ notes_updated: 2026-10-17
 
 - **把“上下文工程”中的结构化笔记落地成了一个具体的 harness 设计**，并提供了配套的快速上手代码。
 - **点出两种非常典型的长任务失败模式**（想一次做完、过早宣布完成），在 Claude Code 日常使用中也很常见。
-- **是第 18 篇《长时应用开发的 harness 设计》和第 19 篇《并行 Claude 写 C 编译器》的前导篇。**
+- **是[第 18 篇](./harness-design-long-running-apps.md)《长时应用开发的 harness 设计》和[第 19 篇](./building-c-compiler.md)《并行 Claude 写 C 编译器》的前导篇。**
 
 ## 核心概念（中英对照）
 
@@ -104,6 +104,8 @@ flowchart TD
     C2 --> CN["……会话 N"]
 ```
 
+图解：初始化智能体只在第 1 个会话运行，产出功能清单 `feature_list.json`（200 多项，初始全部未通过）、`claude-progress.txt`、`init.sh` 和初始 git 提交；之后的编码智能体会话都从这些文件接手。
+
 ### 图 2：编码智能体的单次会话流程
 
 ```mermaid
@@ -162,10 +164,10 @@ flowchart LR
 - 第 4 篇：[Claude Code 最佳实践](./claude-code-best-practices.md)
 
 **原文引用的资源**
-- 配套 quickstart 代码：<https://github.com/anthropics/claude-quickstarts/tree/main/autonomous-coding>
-- Claude 4 提示指南（多上下文窗口工作流）：<https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/claude-4-best-practices#multi-context-window-workflows>
-- Claude Agent SDK：<https://platform.claude.com/docs/en/agent-sdk/overview>
+- [配套 quickstart 代码](https://github.com/anthropics/claude-quickstarts/tree/main/autonomous-coding)
+- [Claude 4 提示指南（多上下文窗口工作流）](https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/claude-4-best-practices#multi-context-window-workflows)
+- [Claude Agent SDK](https://platform.claude.com/docs/en/agent-sdk/overview)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《Effective harnesses for long-running agents》, <https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《Effective harnesses for long-running agents》](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)。*

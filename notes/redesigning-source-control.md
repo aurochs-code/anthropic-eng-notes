@@ -6,9 +6,9 @@ module: F-infra
 order: 26
 source_url: "https://www.anthropic.com/engineering/redesigning-source-control"
 published: 2026-10-13
-summary: "当 Claude 让写代码不再是瓶颈，瓶颈就转移到为人类规模设计的开发基础设施上：Anthropic 每天合并的代码变更从 2026 年 5 月的约 2,500 个增长到 9 月的 30,000 多个。为此，一个 7 人团队用 5 个月构建了自研版本控制系统 Scion，并把整个 monorepo 从 git 迁移过去。核心原则：客户端始终在线、客户端与服务器不对称、一切可以水平扩展、提交廉价且无锁、工作副本可选且天然稀疏。基础设施规模缩小 200 倍，检出快两个数量级。"
-tags: [source-control, monorepo, infrastructure, scalability, agent-scale, git, ci]
-reading_time: 12
+summary: "写代码不再是瓶颈后，瓶颈转到为人类规模设计的开发基础设施：Anthropic 每天合并的变更从 2026 年 5 月约 2,500 个增至 9 月 3 万多个。7 人团队用 5 个月自研版本控制系统 Scion 并迁移整个 monorepo，客户端始终在线、提交无锁；基础设施缩小 200 倍，检出快两个数量级。"
+tags: [infrastructure, coding-agents]
+reading_time: 17
 source_note: "原文页首注明于 10 月 15 日更新，补充了对 Scion 所借鉴的先驱项目（Google Piper、Meta Sapling / Mononoke）的说明。本笔记依据更新后的版本；发布日期 2026-10-13 取自文章页面。"
 authors_en: ["Nick G.", "the source control team"]
 notes_updated: 2026-10-17
@@ -142,6 +142,8 @@ flowchart LR
     end
 ```
 
+图解：git 是对称、离线优先的，每个客户端都是完整仓库；Scion 是不对称、始终在线的，客户端只保留有界对象缓存，历史、提交、合并等都在服务器端以 API 提供。
+
 ### 图 2：变更集与派生数据
 
 ```mermaid
@@ -209,12 +211,12 @@ flowchart TD
 - 第 23 篇：[我们如何约束 Claude](./how-we-contain-claude.md)
 
 **原文引用的资源**
-- Google Piper（维基百科）：<https://en.wikipedia.org/wiki/Piper_(source_control_system)>
-- Meta Sapling：<https://sapling-scm.com/>
-- Mononoke README：<https://github.com/facebook/sapling/blob/main/eden/mononoke/README.md>
-- Claude Mythos：<https://www.anthropic.com/claude/mythos>
-- Claude Tag 介绍：<https://www.anthropic.com/news/introducing-claude-tag>
+- [Google Piper（维基百科）](https://en.wikipedia.org/wiki/Piper_(source_control_system))
+- [Meta Sapling](https://sapling-scm.com/)
+- [Mononoke README](https://github.com/facebook/sapling/blob/main/eden/mononoke/README.md)
+- [Claude Mythos](https://www.anthropic.com/claude/mythos)
+- [Claude Tag 介绍](https://www.anthropic.com/news/introducing-claude-tag)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《Redesigning source control at Anthropic》, <https://www.anthropic.com/engineering/redesigning-source-control>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《Redesigning source control at Anthropic》](https://www.anthropic.com/engineering/redesigning-source-control)。*

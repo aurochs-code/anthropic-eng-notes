@@ -20,7 +20,7 @@ last_checked: 2026-10-17
 status: active
 summary: "Simon Willison 是独立开发者，几乎每天写博客，长期跟踪 LLM、编码智能体和提示注入。博客内容很多，本页只推荐 4 个入口：编码智能体实践指南、提示注入的“致命三要素”、他对“智能体”的定义，以及两个适合长期订阅的标签页。前沿阶段用它来保持对行业的感知。"
 pairs_with: [claude-code-best-practices, claude-code-sandboxing, claude-code-auto-mode, how-we-contain-claude, redesigning-source-control, building-effective-agents]
-tags: [blog, coding-agents, prompt-injection, security, ongoing]
+tags: [coding-agents, prompt-injection, security]
 source_note: "博客持续更新，标签下的文章数随时变化（文中数字为 2026-10-17 所见）。首页和文章页有赞助内容，阅读时请区分。"
 ---
 
@@ -74,6 +74,8 @@ flowchart TB
     PM["最小权限"] -.收窄.-> D
 ```
 
+图解：访问私有数据、接触不可信内容、对外通信能力三者同时具备时，提示注入就可能窃取数据；沙箱的网络隔离、注入探针或分类器、最小权限分别削弱其中一环。
+
 ## 学习任务
 
 1. 用“致命三要素”审视你在实战阶段搭的智能体：三条各占了吗？如果都占了，参照 Anthropic 沙箱笔记，设计一种切断其中一条的方案。
@@ -115,4 +117,4 @@ flowchart TB
 
 ---
 
-*本导读依据 2026-10-17 访问的在线内容撰写，仅为导读与总结。原文：Simon Willison,《Simon Willison's Weblog》及上述文章与指南, <https://simonwillison.net/>。*
+*本导读依据 2026-10-17 访问的在线内容撰写，仅为导读与总结。原文：Simon Willison,[《Simon Willison's Weblog》](https://simonwillison.net/)及上述文章与指南。*

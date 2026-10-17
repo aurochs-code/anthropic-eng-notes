@@ -7,8 +7,8 @@ order: 2
 source_url: "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents"
 published: 2025-09-29
 summary: "上下文是有限的“注意力预算”。上下文工程关注的是每一轮推理时该把哪些 token 放进窗口：系统提示要找准“高度”、工具要精简、示例要典型，运行时按需检索，长任务则依靠压缩、结构化笔记和子智能体。"
-tags: [context-engineering, prompt-engineering, agents, compaction, memory, sub-agents, just-in-time-retrieval]
-reading_time: 14
+tags: [context-engineering, prompt-engineering, agents, compaction, memory, subagents, retrieval]
+reading_time: 11
 authors_en: ["Prithvi Rajasekaran", "Ethan Dixon", "Carly Ryan", "Jeremy Hadfield"]
 notes_updated: 2026-10-17
 ---
@@ -62,7 +62,7 @@ notes_updated: 2026-10-17
 
 ### 3. 运行时上下文：从“预先检索”到“即时检索”
 
-- 原文提到，自《Building effective agents》之后，他们对智能体的定义收敛为：**LLM 在循环中自主使用工具**。
+- 原文提到，自[《Building effective agents》](./building-effective-agents.md)之后，他们对智能体的定义收敛为：**LLM 在循环中自主使用工具**。
 - 很多应用在推理前用嵌入检索把材料准备好；越来越多团队在此之外增加**即时（just-in-time）**策略：只保留文件路径、查询、链接等轻量引用，需要时用工具加载。
 - Claude Code 的例子：写定向查询、存结果，用 `head`/`tail` 之类命令分析大数据，而不把完整数据装进上下文。
 - **元数据本身就是信号**：文件夹层级、命名、时间戳都能提示用途和相关性。
@@ -117,6 +117,8 @@ sequenceDiagram
     Note over A: 只保留必要信息，<br/>其余写进笔记
 ```
 
+图解：智能体先用 ls / glob 看目录结构和文件名，再用 grep 定位、用 head / tail 读取需要的部分，上下文里只保留轻量引用和必要信息。
+
 ### 图 3：长时任务的三种技术如何选
 
 ```mermaid
@@ -127,6 +129,8 @@ flowchart TD
     Q -- 可并行探索的研究/分析 --> S["子智能体<br/>干净窗口深挖，返回精炼摘要"]
     C --> X[最轻量入口：清理旧工具结果]
 ```
+
+图解：来回对话多的任务用压缩，有清晰里程碑的迭代开发用结构化笔记（写到窗口外、按需读回），可并行的探索用子智能体；最轻量的入口是清理旧工具结果。
 
 ## 关键原话
 
@@ -156,11 +160,11 @@ flowchart TD
 - 第 17 篇：[长时运行智能体的 harness](./effective-harnesses-for-long-running-agents.md)
 
 **原文引用的资源**
-- Context rot 研究（Chroma）：<https://research.trychroma.com/context-rot>
-- 上下文管理功能发布：<https://www.anthropic.com/news/context-management>
-- Memory 与上下文管理 cookbook：<https://platform.claude.com/cookbook/tool-use-memory-cookbook>
-- 提示工程文档：<https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview>
+- [Context rot 研究（Chroma）](https://research.trychroma.com/context-rot)
+- [上下文管理功能发布](https://www.anthropic.com/news/context-management)
+- [Memory 与上下文管理 cookbook](https://platform.claude.com/cookbook/tool-use-memory-cookbook)
+- [提示工程文档](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《Effective context engineering for AI agents》, <https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《Effective context engineering for AI agents》](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)。*

@@ -6,8 +6,8 @@ module: E-evals
 order: 13
 source_url: "https://www.anthropic.com/engineering/infrastructure-noise"
 published: 2026-02-05
-summary: "在 Terminal-Bench 2.0 上，只改变容器资源配置，最宽松和最严格的设置之间成绩就差 6 个百分点（p < 0.01）。资源余量在约 3 倍以内主要是减少基础设施错误；超过 3 倍后，额外资源会真正帮智能体解题，改变评测测量的东西。建议同时给出保证分配和硬上限两个参数并做校准，对小于 3 个百分点的排行榜差距保持怀疑。"
-tags: [evals, terminal-bench, swe-bench, infrastructure, reproducibility, kubernetes]
+summary: "在 Terminal-Bench 2.0 上，只改容器资源配置，最宽松和最严格设置的成绩就差 6 个百分点。资源余量约 3 倍以内主要减少基础设施错误；超过 3 倍后额外资源会帮智能体解题，改变了评测测量的东西。建议同时给出保证分配和硬上限并做校准，对小于 3 个百分点的排行榜差距保持怀疑。"
+tags: [evals, benchmarks, infrastructure]
 reading_time: 9
 authors_en: ["Gian Segato"]
 notes_updated: 2026-10-17
@@ -22,7 +22,7 @@ notes_updated: 2026-10-17
 - **排行榜上前几名常常只差几个百分点**，而这篇证明光是基础设施配置就能制造更大的差距。
 - **区分了“让评测更稳定”和“让评测变容易”**这两种效果，以及它们的分界点。
 - **给出了可以直接采用的方法**：分别设置保证分配和硬上限，并根据经验校准两者之间的区间。
-- 是第 11 篇《揭秘智能体评测》中“稳定的 harness 与环境”这一步最具体的实证。
+- 是[第 11 篇](./demystifying-evals-for-ai-agents.md)《揭秘智能体评测》中“稳定的 harness 与环境”这一步最具体的实证。
 
 ## 核心概念（中英对照）
 
@@ -144,8 +144,8 @@ flowchart TD
 - 第 14 篇：[BrowseComp 中的评测察觉](./eval-awareness-browsecomp.md)
 
 **相关资源**
-- Terminal-Bench：<https://www.tbench.ai/>
+- [Terminal-Bench](https://www.tbench.ai/)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《Quantifying infrastructure noise in agentic coding evals》, <https://www.anthropic.com/engineering/infrastructure-noise>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《Quantifying infrastructure noise in agentic coding evals》](https://www.anthropic.com/engineering/infrastructure-noise)。*

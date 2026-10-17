@@ -7,7 +7,7 @@ order: 1
 source_url: "https://www.anthropic.com/engineering/building-effective-agents"
 published: 2024-12-19
 summary: "Anthropic 把“智能体系统”分为预先编排的工作流和自主决策的智能体，归纳出增强型 LLM 这个基础单元和五种常见工作流模式，核心主张是：从最简单的方案开始，只有当复杂度确实带来可测量的收益时才往上加。"
-tags: [agents, workflows, agentic-systems, design-patterns, tool-design, aci]
+tags: [agents, workflows, tool-design, agent-frameworks]
 reading_time: 15
 source_note: "在线原文顶部已加注：文中描述的工具生态自 2024 年 12 月以来已有很大变化，当前做法请参考 Managed Agents 相关文章与文档；正文里也出现了发表之后才推出的产品名（如 Claude Haiku 4.5、Sonnet 4.5、Claude Agent SDK），说明原文发表后修订过。本笔记以 2026-10-17 读到的在线版本为准。"
 authors_en: ["Erik S.", "Barry Zhang"]
@@ -214,6 +214,8 @@ flowchart LR
     end
 ```
 
+图解：编排者-工作者模式里，编排者 LLM 动态拆分任务并综合各工作者的结果；评估者-优化者模式里，生成者 LLM 出方案，评估者 LLM 给反馈，直到达标。
+
 ### 图 4：自主智能体的运行循环
 
 ```mermaid
@@ -278,12 +280,12 @@ sequenceDiagram
 
 **原文中引用的官方资源**
 
-- 基础工作流模式 cookbook：<https://platform.claude.com/cookbook/patterns-agents-basic-workflows>
-- Claude Agent SDK 文档：<https://platform.claude.com/docs/en/agent-sdk/overview>
-- Managed Agents 文档：<https://platform.claude.com/docs/en/managed-agents/overview>
-- Model Context Protocol 介绍：<https://www.anthropic.com/news/model-context-protocol>
-- Computer use 参考实现：<https://github.com/anthropics/anthropic-quickstarts/tree/main/computer-use-demo>
+- [基础工作流模式 cookbook](https://platform.claude.com/cookbook/patterns-agents-basic-workflows)
+- [Claude Agent SDK 文档](https://platform.claude.com/docs/en/agent-sdk/overview)
+- [Managed Agents 文档](https://platform.claude.com/docs/en/managed-agents/overview)
+- [Model Context Protocol 介绍](https://www.anthropic.com/news/model-context-protocol)
+- [Computer use 参考实现](https://github.com/anthropics/anthropic-quickstarts/tree/main/computer-use-demo)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《Building effective agents》, <https://www.anthropic.com/engineering/building-effective-agents>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《Building effective agents》](https://www.anthropic.com/engineering/building-effective-agents)。*

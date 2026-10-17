@@ -6,9 +6,9 @@ module: E-evals
 order: 15
 source_url: "https://www.anthropic.com/engineering/AI-resistant-technical-evaluations"
 published: 2026-01-21
-summary: "Anthropic 性能工程团队的家庭作业式笔试（在模拟加速器上优化代码）先后被 Claude Opus 4 和 Opus 4.5 追平人类顶尖水平。作者三次重新设计：先把起点移到模型开始吃力的地方并缩短时限，再换成更难的优化题（还是被模型解出），最终改为“足够偏离训练分布”的受限指令集谜题。结论是：原版有效是因为像真实工作，新版有效是因为模拟了全新的工作。"
-tags: [evals, hiring, take-home, ai-resistance, performance-engineering, out-of-distribution]
-reading_time: 11
+summary: "Anthropic 性能工程团队的家庭作业式笔试（在模拟加速器上优化代码）先后被 Opus 4 和 Opus 4.5 追平人类顶尖水平。作者三次重设计，最终改用足够偏离训练分布的受限指令集谜题。结论：原版有效是因为像真实工作，新版有效是因为模拟了全新的工作。"
+tags: [evals, model-capabilities]
+reading_time: 10
 authors_en: ["Tristan Hume"]
 notes_updated: 2026-10-17
 ---
@@ -123,6 +123,8 @@ flowchart TD
     E --> F[同时考察工具投入的判断]
 ```
 
+图解：先看模型能否在时限内追平顶尖人类，再看能否把起点后移，最后看题型在训练数据中是否常见；少见、受限、规则陌生的题目更依赖人的推理。
+
 ## 关键原话
 
 > "The original worked because it resembled real work. The replacement works because it simulates novel work."
@@ -146,8 +148,8 @@ flowchart TD
 - 第 4 篇：[Claude Code 最佳实践](./claude-code-best-practices.md)
 
 **原文引用的资源**
-- 原版笔试（开放挑战）：<https://github.com/anthropics/original_performance_takehome>
+- [原版笔试（开放挑战）](https://github.com/anthropics/original_performance_takehome)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《Designing AI-resistant technical evaluations》, <https://www.anthropic.com/engineering/AI-resistant-technical-evaluations>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《Designing AI-resistant technical evaluations》](https://www.anthropic.com/engineering/AI-resistant-technical-evaluations)。*

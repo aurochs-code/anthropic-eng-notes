@@ -21,9 +21,9 @@ source_url: "https://www.deeplearning.ai/courses/"
 provider: "DeepLearning.AI"
 last_checked: 2026-10-17
 status: active
-summary: "DeepLearning.AI 课程库里有 100 多门课，本页只挑和本路线直接相关的 6 门：4 门与 Anthropic 合作的短课（Computer Use、MCP、Claude Code、Agent Skills），Arize 的智能体评测课，以及 Andrew Ng 的 Agentic AI 长课。每门课只写要点和对照的笔记。"
+summary: "DeepLearning.AI 有上百门课，本页只挑与本路线直接相关的 6 门：4 门与 Anthropic 合作的短课（Computer Use、MCP、Claude Code、Agent Skills）、Arize 的智能体评测课和 Andrew Ng 的 Agentic AI 长课。每门只写要点和对照笔记。"
 pairs_with: [equipping-agents-for-the-real-world-with-agent-skills, code-execution-with-mcp, desktop-extensions, claude-code-best-practices, demystifying-evals-for-ai-agents, building-effective-agents]
-tags: [catalog, video-course, mcp, claude-code, agent-skills, evals, computer-use]
+tags: [mcp, claude-code, agent-skills, evals]
 source_note: "课程页面写着证书或成就需要 PRO，但具体价格和哪些内容免费都未核实，本页不写费用。课时和视频数取自 2026-10-17 的课程页，平台可能调整。"
 ---
 
@@ -111,8 +111,8 @@ flowchart LR
 - [揭秘 AI 智能体评测](./demystifying-evals-for-ai-agents.md)
 
 **原文相关链接**
-- 课程总目录：<https://www.deeplearning.ai/courses/>
+- [课程总目录](https://www.deeplearning.ai/courses/)
 
 ---
 
-*本导读依据 2026-10-17 访问的在线内容撰写，仅为导读与总结。原文：DeepLearning.AI, 课程目录及上述各课程页, <https://www.deeplearning.ai/courses/>。*
+*本导读依据 2026-10-17 访问的在线内容撰写，仅为导读与总结。原文：DeepLearning.AI, [课程目录](https://www.deeplearning.ai/courses/)及上述各课程页。*

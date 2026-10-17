@@ -21,7 +21,7 @@ last_checked: 2026-10-17
 status: archived
 summary: "Anthropic 在 GitHub 上提供的五门 notebook 课程：API 基础、提示工程互动教程、真实场景提示、提示评测、工具使用。仓库已归档，示例多用 Claude 3 Haiku，适合挑章节补基本功，不宜当主线。"
 pairs_with: [building-effective-agents, effective-context-engineering-for-ai-agents, writing-tools-for-agents, demystifying-evals-for-ai-agents, claude-think-tool]
-tags: [course, prompt-engineering, tool-use, evals, archived]
+tags: [prompt-engineering, tool-use, evals]
 source_note: "GitHub 仓库标记为 archived（2026-10-17 查看，最后推送 2026-08-28）。README 说明课程多用最低成本的 Claude 3 Haiku 以节省 API 费用。模型名、SDK 写法和控制台截图都可能过时，以当前官方文档为准。"
 ---
 
@@ -102,4 +102,4 @@ flowchart TB
 
 ---
 
-*本导读依据 2026-10-17 访问的在线内容撰写，仅为导读与总结。原文：Anthropic,《Anthropic courses》, <https://github.com/anthropics/courses>。*
+*本导读依据 2026-10-17 访问的在线内容撰写，仅为导读与总结。原文：Anthropic,[《Anthropic courses》](https://github.com/anthropics/courses)。*

@@ -5,16 +5,15 @@ slug: claude-code-best-practices
 module: D-claude-code
 order: 4
 source_url: "https://www.anthropic.com/engineering/claude-code-best-practices"
-source_url_current: "https://code.claude.com/docs/en/best-practices"
 published: 2025-04-18
 summary: "所有技巧都围绕一个约束：上下文窗口很快会满，满了效果就会下降。核心做法包括：给 Claude 一个能自己运行的检查手段；先探索、再规划、再编码；提示要具体；用 CLAUDE.md、权限、hooks、skills、子智能体配置环境；积极管理上下文；最后用并行会话和非交互模式扩大规模。"
-tags: [claude-code, agentic-coding, context-management, claude-md, hooks, subagents, workflow]
-reading_time: 16
+tags: [claude-code, coding-agents, context-window, subagents, workflows, permissions]
+reading_time: 14
 source_note: "原博文（2025-04-18）的 URL 现已 308 永久重定向到 Claude Code 官方文档 https://code.claude.com/docs/en/best-practices，页面标题改为《Best practices for Claude Code》，内容是持续更新的文档版本。本笔记基于 2026-10-17 读到的文档版本撰写，与 2025 年 4 月的原博文可能有较大差异；文中涉及的命令、版本号和功能状态以官方文档为准。2025-04-18 这个日期只来自博客列表页。"
 notes_updated: 2026-10-17
 ---
 
-> ⚠️ **重要说明**：原博文已改为**持续更新的官方文档**，原 URL 会自动跳转到文档页。本笔记依据 **2026-10-17 读取的文档版本**撰写，并不代表 2025 年 4 月原博文的内容。文档会持续变化，命令、参数、版本号和“实验性 / 研究预览”等状态请以官方文档为准。
+> ⚠️ **重要说明**：原博文已改为**持续更新的官方文档**（[Best practices for Claude Code](https://code.claude.com/docs/en/best-practices)），原 URL 会自动跳转到文档页。本笔记依据 **2026-10-17 读取的文档版本**撰写，并不代表 2025 年 4 月原博文的内容。文档会持续变化，命令、参数、版本号和“实验性 / 研究预览”等状态请以官方文档为准。
 
 ## 一句话总结
 
@@ -211,9 +210,9 @@ flowchart TB
 - 第 19 篇：[用并行 Claude 团队写 C 编译器](./building-c-compiler.md) — 多会话并行的极端案例。
 
 **官方资源**
-- 当前文档：<https://code.claude.com/docs/en/best-practices>
-- 原博文 URL（现重定向）：<https://www.anthropic.com/engineering/claude-code-best-practices>
+- [当前文档](https://code.claude.com/docs/en/best-practices)
+- [原博文 URL（现重定向）](https://www.anthropic.com/engineering/claude-code-best-practices)
 
 ---
 
-*本笔记依据 2026-10-17 读取的 Claude Code 官方文档版本撰写（原博文已改为持续更新的文档）。原链接：<https://www.anthropic.com/engineering/claude-code-best-practices>。*
+*本笔记依据 2026-10-17 读取的 Claude Code 官方文档版本撰写（原博文已改为持续更新的文档）。[原博文链接](https://www.anthropic.com/engineering/claude-code-best-practices)（现重定向到文档）。*

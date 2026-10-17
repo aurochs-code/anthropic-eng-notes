@@ -6,8 +6,8 @@ module: A-agent-design
 order: 19
 source_url: "https://www.anthropic.com/engineering/building-c-compiler"
 published: 2026-02-05
-summary: "16 个 Claude 实例在共享 git 仓库上并行、几乎无人干预地工作，历时约两周、近 2000 个 Claude Code 会话、约 2 万美元，从零写出一个 10 万行的 Rust C 编译器，能构建可启动的 Linux 6.9（x86/ARM/RISC-V）。本文的重点是经验：近乎完美的测试、站在 Claude 的角度设计测试输出、让并行变得容易（GCC 作为对照预言机）、角色专门化，以及这种方式的天花板和风险。"
-tags: [agent-teams, parallel-agents, long-running-agents, testing, claude-code, compiler, capability-benchmark]
+summary: "16 个 Claude 实例在共享 git 仓库上几乎无人干预地并行约两周、近 2000 个会话、约 2 万美元，从零写出 10 万行的 Rust C 编译器，能构建可启动的 Linux 6.9。重点是经验：近乎完美的测试、为 Claude 设计测试输出、用 GCC 当预言机方便并行、角色分工，以及上限与风险。"
+tags: [multi-agent, long-running-agents, coding-agents, testing, claude-code, model-capabilities]
 reading_time: 12
 authors_en: ["Nicholas Carlini"]
 notes_updated: 2026-10-17
@@ -144,6 +144,8 @@ flowchart TD
     PU --> S
 ```
 
+图解：每个智能体在新容器里循环——读进度、挑问题、写锁文件认领任务（推送失败说明已被别人占用），实现后跑 `--fast` 样本测试，合并 upstream、过 CI，再推送、删锁、更新进度。
+
 ### 图 3：用 GCC 作为预言机拆分内核编译
 
 ```mermaid
@@ -189,9 +191,9 @@ flowchart TD
 - 第 15 篇：[抗 AI 的技术评估](./ai-resistant-technical-evaluations.md) — 同样以“推到极限”观察模型能力。
 
 **原文引用的资源**
-- 编译器源码：<https://github.com/anthropics/claudes-c-compiler>
-- GCC torture 测试集：<https://gcc.gnu.org/onlinedocs/gccint/Torture-Tests.html>
+- [编译器源码](https://github.com/anthropics/claudes-c-compiler)
+- [GCC torture 测试集](https://gcc.gnu.org/onlinedocs/gccint/Torture-Tests.html)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《Building a C compiler with a team of parallel Claudes》, <https://www.anthropic.com/engineering/building-c-compiler>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《Building a C compiler with a team of parallel Claudes》](https://www.anthropic.com/engineering/building-c-compiler)。*

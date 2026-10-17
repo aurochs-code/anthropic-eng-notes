@@ -18,7 +18,7 @@ status: active
 estimated_hours: 2.5
 summary: "一篇工程视角的长文，改编自作者的书《AI Engineering》。核心观点：智能体由“所处环境 + 可用工具”定义。文章重点讲工具的三种类型、如何把规划和执行解耦、计划粒度的取舍，以及如何按“规划失败 / 工具失败 / 效率”来评估智能体。"
 pairs_with: [building-effective-agents, writing-tools-for-agents, advanced-tool-use, claude-think-tool, demystifying-evals-for-ai-agents, claude-code-auto-mode]
-tags: [article, planning, tool-selection, failure-modes, evaluation]
+tags: [agents, planning, tool-use, failure-modes, evals]
 source_note: "作者在文中说自己的视角与 Anthropic 的 Building effective agents 概念一致、术语不同，并说明记忆系统会另写一篇。是否已经发表未核实，本导读不涉及。"
 ---
 
@@ -105,4 +105,4 @@ flowchart LR
 
 ---
 
-*本导读依据 2026-10-17 访问的在线内容撰写，仅为导读与总结。原文：Chip Huyen,《Agents》, 2025-01-07, <https://huyenchip.com/2025/01/07/agents.html>。*
+*本导读依据 2026-10-17 访问的在线内容撰写，仅为导读与总结。原文：Chip Huyen,[《Agents》](https://huyenchip.com/2025/01/07/agents.html), 2025-01-07。*

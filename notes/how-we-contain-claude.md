@@ -6,9 +6,9 @@ module: D-claude-code
 order: 23
 source_url: "https://www.anthropic.com/engineering/how-we-contain-claude"
 published: 2026-05-25
-summary: "部署风险 = 失败概率 × 破坏范围；模型和防护让前者下降，但能力和权限扩大让后者上升，工程问题就是给破坏范围设上限。人在回路的审批并不可靠（用户同意约 93% 的请求），所以重点是环境层的约束。文章对比了 claude.ai 的临时容器、Claude Code 的人在回路沙箱、Claude Cowork 的本地虚拟机三种模式，并复盘了几次真实漏洞：信任对话框之前就执行的配置、用户本人成为注入载体、经由已批准域名外泄、虚拟机隔离挡住了 EDR。"
-tags: [agent-security, containment, sandbox, virtual-machine, prompt-injection, egress, claude-code, cowork]
-reading_time: 14
+summary: "部署风险 = 失败概率 × 破坏范围；能力和权限扩大会让后者上升，工程问题就是给破坏范围设上限。人工审批并不可靠（用户同意约 93% 的请求），重点应放在环境层约束。文章对比 claude.ai 临时容器、Claude Code 沙箱、Cowork 本地虚拟机三种模式，并复盘了几次真实漏洞。"
+tags: [security, sandbox, prompt-injection, claude-code]
+reading_time: 17
 authors_en: ["Max McGuinness", "Mikaela Grace", "Jiri De Jonghe", "Jake Eaton", "Abel Ribbink"]
 notes_updated: 2026-10-17
 ---
@@ -22,7 +22,7 @@ notes_updated: 2026-10-17
 - **一份来自一线的智能体安全复盘**：不只讲架构，还讲了哪些地方真的出过问题、怎么修。
 - **把威胁分为三类、防御分为三个组件**，提供了一个清晰的思考框架。
 - **几个反直觉的教训**：白名单域名其实是“能力授予”；自己写的组件最脆弱；用户本人也可能是注入的载体；隔离会降低可见性。
-- **把第 21 篇（沙箱）和第 22 篇（auto 模式）放进了更大的纵深防御图景中。**
+- **把[第 21 篇](./claude-code-sandboxing.md)（沙箱）和[第 22 篇](./claude-code-auto-mode.md)（auto 模式）放进了更大的纵深防御图景中。**
 
 ## 核心概念（中英对照）
 
@@ -177,6 +177,8 @@ sequenceDiagram
     end
 ```
 
+图解：修复前，带着攻击者 API 密钥的上传请求发往已批准的 api.anthropic.com，会被出站白名单放行；修复后，虚拟机内的防御性代理检查令牌，不是本虚拟机会话令牌的请求直接拒绝。
+
 ### 图 4：Cowork 架构从全虚拟机模式到宿主模式
 
 ```mermaid
@@ -227,15 +229,15 @@ flowchart LR
 - 第 10 篇：[Desktop Extensions](./desktop-extensions.md) — 本地 MCP 的分发与管理。
 
 **原文引用的资源**
-- 开源 sandbox-runtime：<https://github.com/anthropic-experimental/sandbox-runtime>
-- Claude Code 参考 devcontainer：<https://code.claude.com/docs/en/devcontainer>
-- 衡量智能体自主性（匿名使用数据）：<https://www.anthropic.com/news/measuring-agent-autonomy>
-- 连接器目录：<https://claude.com/connectors>
-- OTLP 协议：<https://opentelemetry.io/docs/specs/otel/protocol/>
-- NIST 关于软件与 AI 智能体身份和授权的项目：<https://www.nccoe.nist.gov/projects/software-and-ai-agent-identity-and-authorization>
-- ISO/IEC 42001：<https://www.iso.org/standard/42001>
-- Claude Mythos Preview 相关说明：<https://red.anthropic.com/2026/mythos-preview/>
+- [开源 sandbox-runtime](https://github.com/anthropic-experimental/sandbox-runtime)
+- [Claude Code 参考 devcontainer](https://code.claude.com/docs/en/devcontainer)
+- [衡量智能体自主性（匿名使用数据）](https://www.anthropic.com/news/measuring-agent-autonomy)
+- [连接器目录](https://claude.com/connectors)
+- [OTLP 协议](https://opentelemetry.io/docs/specs/otel/protocol/)
+- [NIST 关于软件与 AI 智能体身份和授权的项目](https://www.nccoe.nist.gov/projects/software-and-ai-agent-identity-and-authorization)
+- [ISO/IEC 42001](https://www.iso.org/standard/42001)
+- [Claude Mythos Preview 相关说明](https://red.anthropic.com/2026/mythos-preview/)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《How we contain Claude across products》, <https://www.anthropic.com/engineering/how-we-contain-claude>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《How we contain Claude across products》](https://www.anthropic.com/engineering/how-we-contain-claude)。*

@@ -7,8 +7,8 @@ order: 5
 source_url: "https://www.anthropic.com/engineering/contextual-retrieval"
 published: 2024-09-19
 summary: "传统 RAG 在切块时丢掉了上下文，导致检索失败。Contextual Retrieval 在建索引前让 Claude 为每个块生成一小段说明（Contextual Embeddings + Contextual BM25），再叠加重排序，可把 top-20 检索失败率最多降低 67%。"
-tags: [rag, retrieval, embeddings, bm25, reranking, prompt-caching]
-reading_time: 12
+tags: [retrieval, prompt-caching]
+reading_time: 8
 authors_en: ["Daniel Ford"]
 notes_updated: 2026-10-17
 ---
@@ -22,7 +22,7 @@ notes_updated: 2026-10-17
 - **RAG 最常见的失败点在检索，而不是生成。** 这篇给出了一个只改“预处理”、不改线上架构的提升办法。
 - **数据扎实。** 跨代码库、小说、ArXiv 论文、科学论文等多个领域，多种嵌入模型都做了对比，结论是“各项改进可以叠加”。
 - **展示了提示缓存（prompt caching）的典型用法**：同一篇文档对应很多块时，文档只需缓存一次。
-- **提醒先别急着上 RAG**：知识库很小时直接把全部内容塞进提示更简单。这和《Building effective agents》的“简单优先”一脉相承。
+- **提醒先别急着上 RAG**：知识库很小时直接把全部内容塞进提示更简单。这和[《Building effective agents》](./building-effective-agents.md)的“简单优先”一脉相承。
 
 ## 核心概念（中英对照）
 
@@ -118,6 +118,8 @@ flowchart LR
     end
 ```
 
+图解：传统做法把切块直接写入向量库和 BM25 索引；上下文检索先让 LLM 结合整篇文档给每块写 50–100 token 的定位说明，再把“说明 + 原块”写入上下文向量库和上下文 BM25 索引。
+
 ### 图 2：完整的检索链路（含重排序）
 
 ```mermaid
@@ -167,11 +169,11 @@ flowchart TD
 - 第 1 篇：[构建高效的智能体](./building-effective-agents.md) — “增强型 LLM”中的检索能力。
 
 **原文引用的资源**
-- Contextual Embeddings cookbook：<https://platform.claude.com/cookbook/capabilities-contextual-embeddings-guide>
-- Prompt caching 文档：<https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching>
-- 原文附录 II（PDF）：<https://assets.anthropic.com/m/1632cded0a125333/original/Contextual-Retrieval-Appendix-2.pdf>
-- HyDE 论文：<https://arxiv.org/abs/2212.10496>
+- [Contextual Embeddings cookbook](https://platform.claude.com/cookbook/capabilities-contextual-embeddings-guide)
+- [Prompt caching 文档](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching)
+- [原文附录 II（PDF）](https://assets.anthropic.com/m/1632cded0a125333/original/Contextual-Retrieval-Appendix-2.pdf)
+- [HyDE 论文](https://arxiv.org/abs/2212.10496)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《Introducing Contextual Retrieval》, <https://www.anthropic.com/engineering/contextual-retrieval>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《Introducing Contextual Retrieval》](https://www.anthropic.com/engineering/contextual-retrieval)。*

@@ -81,7 +81,7 @@ flowchart LR
 ### 2.1 Hugging Face AI Agents Course
 - **是什么**：Hugging Face 的免费智能体课程，理论加动手（Spaces 预配环境），有小测验、作业、学生排行榜和证书；用到 smolagents、LlamaIndex、LangGraph。有官方简体中文版。
 - **阶段**：主阶段是**入门**（Unit 0–1）；Unit 2 放在**体系**末尾，Unit 3–4 和附加单元 2 放在**实战**作为结业项目。
-- **理由**：Unit 1 用“思考 → 行动 → 观察”循环、消息与特殊 token、工具、手写的 dummy agent，从零讲清智能体的机制，正好接 Anthropic 偏原则性的第 1 篇。课程跨越多个阶段，适合当“主线练手项目”。
+- **理由**：Unit 1 用“思考 → 行动 → 观察”循环、消息与特殊 token、工具、手写的 dummy agent，从零讲清智能体的机制，正好接 Anthropic 偏原则性的[第 1 篇](./notes/building-effective-agents.md)。课程跨越多个阶段，适合当“主线练手项目”。
 - **建议看**：
   - 入门：Unit 1 全部（What is an Agent、What are LLMs、Messages and Special Tokens、Tools、Thought / Action / Observation、Dummy Agent Library、第一个 smolagents 智能体）。
   - 体系：Unit 2 **三个框架选一个**深入即可（推荐 2.1 smolagents，其中“代码动作 vs JSON 动作”和 Multi-Agent Systems 两节，与笔记 8、16 呼应）。

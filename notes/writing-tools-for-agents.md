@@ -7,8 +7,8 @@ order: 3
 source_url: "https://www.anthropic.com/engineering/writing-tools-for-agents"
 published: 2025-09-11
 summary: "工具是确定性系统和非确定性智能体之间的契约，要为智能体而不是为程序员来设计。做法是先做原型，用真实且复杂的任务跑评测，再让 Claude Code 分析评测记录、改进工具；原则包括少而精、命名空间、返回高信号信息、省 token、把工具描述当提示来写。"
-tags: [tools, mcp, tool-design, evals, token-efficiency, aci]
-reading_time: 14
+tags: [tool-design, mcp, evals, token-efficiency]
+reading_time: 11
 authors_en: ["Ken Aizawa"]
 notes_updated: 2026-10-17
 ---
@@ -19,7 +19,7 @@ notes_updated: 2026-10-17
 
 ## 为什么重要
 
-- **系统展开了《Building effective agents》附录里的“智能体-计算机接口（ACI）”**，从理念变成了可执行的流程。
+- **系统展开了[《Building effective agents》](./building-effective-agents.md)附录里的“智能体-计算机接口（ACI）”**，从理念变成了可执行的流程。
 - **给出了评测驱动的工具开发闭环**，而且让 Claude Code 参与分析评测记录、批量重构工具。原文说文中大部分建议本身就是这样得出的。
 - **原则都很具体**（工具合并、命名空间、`response_format`、截断与错误提示），可以直接拿来审查自家 MCP 服务器。
 
@@ -112,6 +112,8 @@ flowchart TB
     Before == 合并 ==> After
 ```
 
+图解：机械包装 API 时，智能体要自己依次调用 `list_users`、`list_events`、`create_event`；按工作流设计时合成一个 `schedule_event`。
+
 ### 图 3：一次工具调用的“高信号返回”设计
 
 ```mermaid
@@ -125,6 +127,8 @@ flowchart TD
     F -- concise --> C1["只返回内容与可读名称"]
     F -- detailed --> C2["附带后续调用需要的 ID"]
 ```
+
+图解：调用先过参数校验，不通过就返回可操作的错误提示；结果过大就分页或截断并提示如何缩小范围；`response_format` 决定只返回内容还是附带后续调用需要的 ID。
 
 ## 关键原话
 
@@ -154,11 +158,11 @@ flowchart TD
 - 第 11 篇：[揭秘智能体评测](./demystifying-evals-for-ai-agents.md)
 
 **原文引用的资源**
-- 工具评测 cookbook：<https://platform.claude.com/cookbook/tool-evaluation-tool-evaluation>
-- 工具定义最佳实践：<https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/implement-tool-use#best-practices-for-tool-definitions>
-- MCP tool annotations 规范：<https://modelcontextprotocol.io/specification/2025-06-18/server/tools>
-- 交错思考文档：<https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking#interleaved-thinking>
+- [工具评测 cookbook](https://platform.claude.com/cookbook/tool-evaluation-tool-evaluation)
+- [工具定义最佳实践](https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/implement-tool-use#best-practices-for-tool-definitions)
+- [MCP tool annotations 规范](https://modelcontextprotocol.io/specification/2025-06-18/server/tools)
+- [交错思考文档](https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking#interleaved-thinking)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《Writing effective tools for agents — with agents》, <https://www.anthropic.com/engineering/writing-tools-for-agents>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《Writing effective tools for agents — with agents》](https://www.anthropic.com/engineering/writing-tools-for-agents)。*

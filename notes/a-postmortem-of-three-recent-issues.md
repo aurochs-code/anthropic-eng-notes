@@ -6,9 +6,9 @@ module: F-infra
 order: 24
 source_url: "https://www.anthropic.com/engineering/a-postmortem-of-three-recent-issues"
 published: 2025-09-17
-summary: "2025 年 8 月至 9 月初，三个相互重叠的基础设施 bug 间歇性地降低了 Claude 的回答质量：上下文窗口路由错误（最坏时影响 16% 的 Sonnet 4 请求）、TPU 上的输出损坏（英文回答中冒出泰文或中文字符）、近似 top-k 触发 XLA:TPU 编译器潜在 bug。Anthropic 明确表示从不因需求或负载降低模型质量。复盘解释了为何难以发现（评测不敏感、隐私限制、症状混杂），以及改进措施：更敏感的评测、在真实生产环境持续评测、更快的调试工具。"
-tags: [postmortem, infrastructure, reliability, sampling, tpu, xla, evals, incident]
-reading_time: 9
+summary: "2025 年 8–9 月，三个重叠的基础设施 bug 间歇性拉低 Claude 的回答质量：上下文窗口路由错误（最坏影响 16% 的 Sonnet 4 请求）、TPU 输出损坏、近似 top-k 触发编译器 bug。Anthropic 称从不因负载降低质量。复盘讲了为何难发现，以及更敏感的评测、生产环境持续评测等改进。"
+tags: [postmortem, infrastructure, evals]
+reading_time: 11
 authors_en: ["Sam McAllister"]
 notes_updated: 2026-10-17
 ---
@@ -22,7 +22,7 @@ notes_updated: 2026-10-17
 - **少见的、面向公众的推理基础设施技术复盘**，涉及多硬件平台部署、采样实现、混合精度等细节。
 - **回答了用户最关心的问题**：质量下降是否有意为之？原文明确否认。
 - **对任何做 LLM 服务或应用的人都有借鉴**：“粘性路由放大影响”“一个旧的 workaround 掩盖了更深的 bug”“评测不敏感，因为模型能从孤立错误中恢复”。
-- **为第 25 篇（4 月 23 日复盘）提供了对照。**
+- **为[第 25 篇](./april-23-postmortem.md)（4 月 23 日复盘）提供了对照。**
 
 ## 核心概念（中英对照）
 
@@ -163,6 +163,8 @@ flowchart LR
     w3 --> f4
 ```
 
+图解：左边是难发现的四个原因——评测不够敏感、隐私限制让工程师难以查看出问题的交互、三个 bug 症状混杂、网上反馈难以对应到具体变更；右边是逐条对应的改进。
+
 ## 关键原话
 
 > "We never reduce model quality due to demand, time of day, or server load."
@@ -187,12 +189,12 @@ flowchart LR
 - 第 26 篇：[重新设计源代码控制](./redesigning-source-control.md)
 
 **原文引用的资源**
-- 上下文窗口文档（含 1M token）：<https://docs.claude.com/en/docs/build-with-claude/context-windows>
-- XLA 架构：<https://openxla.org/xla/architecture>
-- JAX 近似 top-k（`approx_max_k`）：<https://docs.jax.dev/en/latest/_autosummary/jax.lax.approx_max_k.html>
-- 近似 top-k 算法论文：<https://arxiv.org/pdf/2206.14286>
-- 温度（术语表）：<https://docs.claude.com/en/docs/about-claude/glossary#temperature>
+- [上下文窗口文档（含 1M token）](https://docs.claude.com/en/docs/build-with-claude/context-windows)
+- [XLA 架构](https://openxla.org/xla/architecture)
+- [JAX 近似 top-k（`approx_max_k`）](https://docs.jax.dev/en/latest/_autosummary/jax.lax.approx_max_k.html)
+- [近似 top-k 算法论文](https://arxiv.org/pdf/2206.14286)
+- [温度（术语表）](https://docs.claude.com/en/docs/about-claude/glossary#temperature)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《A postmortem of three recent issues》, <https://www.anthropic.com/engineering/a-postmortem-of-three-recent-issues>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《A postmortem of three recent issues》](https://www.anthropic.com/engineering/a-postmortem-of-three-recent-issues)。*

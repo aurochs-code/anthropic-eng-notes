@@ -6,9 +6,9 @@ module: A-agent-design
 order: 16
 source_url: "https://www.anthropic.com/engineering/multi-agent-research-system"
 published: 2025-06-13
-summary: "Claude 的 Research 功能采用编排者-工作者架构：主研究智能体制定计划，并行派出子智能体搜索，最后由引用智能体补上出处。多智能体之所以有效，主要是能投入足够多的 token（但成本约为聊天的 15 倍）。文章总结了八条提示原则、小样本起步与 LLM 评委相结合的评测方法，以及有状态长流程在生产环境中的可靠性挑战。"
-tags: [multi-agent, orchestrator-workers, research-agent, prompt-engineering, evals, production, subagents]
-reading_time: 16
+summary: "Claude 的 Research 功能采用编排者-工作者架构：主智能体制定计划，并行派出子智能体搜索，再由引用智能体补出处。多智能体有效主要因为能投入更多 token（成本约为聊天的 15 倍）。文章总结了八条提示原则、小样本起步加 LLM 评委的评测方法，以及有状态长流程的生产可靠性挑战。"
+tags: [multi-agent, subagents, workflows, prompt-engineering, evals, production]
+reading_time: 13
 authors_en: ["Jeremy Hadfield", "Barry Zhang", "Kenneth Lien", "Florian Scholz", "Jeremy Fox", "Daniel Ford"]
 notes_updated: 2026-10-17
 ---
@@ -19,7 +19,7 @@ notes_updated: 2026-10-17
 
 ## 为什么重要
 
-- **是“编排者-工作者”模式（第 1 篇）在生产环境中的完整案例**，也是子智能体架构（第 2 篇）的实证来源。
+- **是“编排者-工作者”模式（[第 1 篇](./building-effective-agents.md)）在生产环境中的完整案例**，也是子智能体架构（[第 2 篇](./effective-context-engineering-for-ai-agents.md)）的实证来源。
 - **给出了量化依据**：多智能体为什么有效（token 用量能解释大部分性能差异）、代价多大（约 15 倍于聊天的 token）、适合什么任务。
 - **提示工程经验非常具体**：如何教主智能体分派任务、如何按复杂度分配投入、如何先宽后窄地搜索。
 - **生产可靠性问题讲得透**：有状态、错误累积、非确定性调试、部署时不能打断正在运行的智能体。
@@ -88,7 +88,7 @@ notes_updated: 2026-10-17
 - **人工评估补漏**：人工测试者发现早期智能体总是偏向经过 SEO 优化的内容农场，而不是排名较低但更权威的来源（如学术 PDF、个人博客），于是在提示中加入来源质量启发式。
 - **涌现行为**：主智能体的小改动可能不可预测地改变子智能体的行为，所以最好的提示是“协作框架”：定义分工、解题方法和投入预算。
 
-> 笔者注：关于 LLM 评委，本文发现“单个评委统一评分”更一致；而第 11 篇《揭秘智能体评测》建议“按维度拆开、各用独立评委”。两篇针对的场景和时间不同，实践中可以两种都在自己的数据上试。
+> 笔者注：关于 LLM 评委，本文发现“单个评委统一评分”更一致；而[第 11 篇](./demystifying-evals-for-ai-agents.md)《揭秘智能体评测》建议“按维度拆开、各用独立评委”。两篇针对的场景和时间不同，实践中可以两种都在自己的数据上试。
 
 ### 5. 生产可靠性与工程挑战
 
@@ -144,6 +144,8 @@ flowchart TB
     B --> X[避免重复劳动与遗漏]
 ```
 
+图解：子任务描述至少要写清目标（objective）、输出格式（output format）、工具与信息源指引，以及做什么、不做什么的任务边界。
+
 ### 图 4：同步执行 vs 设想中的异步执行
 
 ```mermaid
@@ -190,9 +192,9 @@ sequenceDiagram
 - 第 14 篇：[BrowseComp 中的评测察觉](./eval-awareness-browsecomp.md) — 多智能体配置会放大意外解法。
 
 **原文引用的资源**
-- 示例提示（Cookbook）：<https://platform.claude.com/cookbook/patterns-agents-basic-workflows>
-- Extended thinking / 交错思考文档：<https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking>
+- [示例提示（Cookbook）](https://platform.claude.com/cookbook/patterns-agents-basic-workflows)
+- [Extended thinking / 交错思考文档](https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《How we built our multi-agent research system》, <https://www.anthropic.com/engineering/multi-agent-research-system>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《How we built our multi-agent research system》](https://www.anthropic.com/engineering/multi-agent-research-system)。*

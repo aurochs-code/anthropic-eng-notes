@@ -7,8 +7,8 @@ order: 8
 source_url: "https://www.anthropic.com/engineering/code-execution-with-mcp"
 published: 2025-11-04
 summary: "连接的 MCP 工具一多，预先加载的工具定义和中间结果都会耗掉大量 token。把 MCP 服务器呈现为文件系统里的代码 API，让智能体写代码调用，就能按需发现工具、在执行环境里过滤数据、用代码表达控制流、保护隐私并保存可复用技能；代价是需要安全的代码执行环境。"
-tags: [mcp, code-execution, token-efficiency, progressive-disclosure, privacy, skills, sandboxing]
-reading_time: 10
+tags: [mcp, code-execution, token-efficiency, progressive-disclosure, agent-skills, sandbox, security]
+reading_time: 8
 authors_en: ["Adam Jones", "Conor Kelly"]
 notes_updated: 2026-10-17
 ---
@@ -106,6 +106,8 @@ flowchart TD
     F -- 是 --> K[保存到 skills/<br/>+ SKILL.md]
 ```
 
+图解：智能体可以列出 `servers/` 目录、只读取需要的工具文件（如 `getDocument`、`updateRecord`），也可以用 `search_tools(query, detail_level)` 按详略程度检索工具；可复用的代码保存为技能。
+
 ### 图 3：PII 令牌化的数据流
 
 ```mermaid
@@ -135,7 +137,7 @@ sequenceDiagram
 - [ ] 统计你的智能体每次请求前光工具定义就占了多少 token；占比高就考虑按需加载。
 - [ ] 找出“大结果原样搬运”的调用链（文档、表格、日志），优先改成代码内部流转。
 - [ ] 提供 `search_tools` 时加一个详细程度参数。
-- [ ] 代码执行环境必须有沙箱、资源上限和监控（参见第 21 篇沙箱笔记）。
+- [ ] 代码执行环境必须有沙箱、资源上限和监控（参见[第 21 篇](./claude-code-sandboxing.md)沙箱笔记）。
 - [ ] 涉及个人信息的流程，评估在客户端层做令牌化，并定义允许的数据流向。
 - [ ] 把多次成功复用的代码沉淀为技能。
 - [ ] **笔者补充**：对比实验时同时记录 token、延迟和成功率三项，避免只因省 token 就牺牲正确性。
@@ -149,10 +151,10 @@ sequenceDiagram
 - 第 2 篇：[上下文工程](./effective-context-engineering-for-ai-agents.md)
 
 **原文引用的资源**
-- MCP 官网：<https://modelcontextprotocol.io/>
-- MCP 服务器列表：<https://github.com/modelcontextprotocol/servers>
-- Cloudflare “Code Mode”：<https://blog.cloudflare.com/code-mode/>
+- [MCP 官网](https://modelcontextprotocol.io/)
+- [MCP 服务器列表](https://github.com/modelcontextprotocol/servers)
+- [Cloudflare “Code Mode”](https://blog.cloudflare.com/code-mode/)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《Code execution with MCP》, <https://www.anthropic.com/engineering/code-execution-with-mcp>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《Code execution with MCP》](https://www.anthropic.com/engineering/code-execution-with-mcp)。*

@@ -6,9 +6,9 @@ module: F-infra
 order: 25
 source_url: "https://www.anthropic.com/engineering/april-23-postmortem"
 published: 2026-04-23
-summary: "2026 年 3–4 月，部分用户感到 Claude 变差了。原因不是模型或 API，而是 Claude Code / Agent SDK / Cowork 产品层的三处改动：默认推理强度从 high 降到 medium；闲置会话清理旧思考内容的缓存优化出 bug，导致每一轮都丢弃推理历史；为降低 Opus 4.7 冗长度加入的系统提示长度限制损害了编码质量。三者均已在 4 月 20 日（v2.1.116）前修复，并为所有订阅用户重置用量额度。"
-tags: [postmortem, claude-code, reasoning-effort, prompt-caching, extended-thinking, system-prompt, evals]
-reading_time: 7
+summary: "2026 年 3–4 月部分用户觉得 Claude 变差，原因在 Claude Code 等产品层的三处改动，而非模型或 API：默认推理强度从 high 降到 medium；清理旧思考内容的缓存优化出 bug，每轮都丢推理历史；限制冗长度的系统提示损害编码质量。三者已在 4 月 20 日前修复并重置订阅用户用量额度。"
+tags: [postmortem, claude-code, prompt-caching, extended-thinking, prompt-engineering, evals]
+reading_time: 11
 notes_updated: 2026-10-17
 ---
 
@@ -18,7 +18,7 @@ notes_updated: 2026-10-17
 
 ## 为什么重要
 
-- **与第 24 篇形成对照**：上次是推理基础设施的 bug，这次是产品 / harness 层的改动——说明“同一个模型”的体验同样取决于外面那层。
+- **与[第 24 篇](./a-postmortem-of-three-recent-issues.md)形成对照**：上次是推理基础设施的 bug，这次是产品 / harness 层的改动——说明“同一个模型”的体验同样取决于外面那层。
 - **三个非常具体的教训**：默认值的选择本身就是产品决策；与缓存、上下文管理、扩展思考交叉的 bug 很难被常规测试发现；一行系统提示就能明显影响智能。
 - **展示了排查方法**：用更广的评测集做系统提示消融、用新模型回测代码审查。
 
@@ -168,10 +168,10 @@ flowchart LR
 - 第 13 篇：[基础设施噪声](./infrastructure-noise.md)
 
 **原文引用的资源**
-- Claude Code Code Review 文档：<https://code.claude.com/docs/en/code-review>
-- 提示缓存经验（Claude 博客）：<https://claude.com/blog/lessons-from-building-claude-code-prompt-caching-is-everything>
-- Claude Opus 4.7 发布说明：<https://www.anthropic.com/news/claude-opus-4-7>
+- [Claude Code Code Review 文档](https://code.claude.com/docs/en/code-review)
+- [提示缓存经验（Claude 博客）](https://claude.com/blog/lessons-from-building-claude-code-prompt-caching-is-everything)
+- [Claude Opus 4.7 发布说明](https://www.anthropic.com/news/claude-opus-4-7)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《An update on recent Claude Code quality reports》, <https://www.anthropic.com/engineering/april-23-postmortem>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《An update on recent Claude Code quality reports》](https://www.anthropic.com/engineering/april-23-postmortem)。*

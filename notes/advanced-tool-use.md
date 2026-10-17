@@ -6,9 +6,9 @@ module: B-tools-mcp
 order: 9
 source_url: "https://www.anthropic.com/engineering/advanced-tool-use"
 published: 2025-11-24
-summary: "发布三项测试版功能：Tool Search Tool 按需发现工具，解决工具定义撑爆上下文的问题；Programmatic Tool Calling 让 Claude 写 Python 编排工具调用，中间结果不进上下文；Tool Use Examples 在工具定义里放示例调用，教会模型 schema 表达不了的用法。三者可以按瓶颈逐个叠加。"
-tags: [tool-use, tool-search, programmatic-tool-calling, tool-use-examples, mcp, context-efficiency]
-reading_time: 13
+summary: "发布三项测试版功能：Tool Search Tool 按需发现工具，避免工具定义撑爆上下文；Programmatic Tool Calling 让 Claude 写 Python 编排工具调用，中间结果不进上下文；Tool Use Examples 用示例调用教会模型 schema 表达不了的用法。可按瓶颈叠加。"
+tags: [tool-use, tool-design, mcp, token-efficiency, code-execution, progressive-disclosure]
+reading_time: 10
 authors_en: ["Bin Wu"]
 notes_updated: 2026-10-17
 ---
@@ -21,7 +21,7 @@ notes_updated: 2026-10-17
 
 ## 为什么重要
 
-- **它是第 8 篇《用代码执行调用 MCP》思路的产品化**：按需发现和代码编排都成了 API 原生能力。
+- **它是[第 8 篇](./code-execution-with-mcp.md)《用代码执行调用 MCP》思路的产品化**：按需发现和代码编排都成了 API 原生能力。
 - **给出了可以量化的收益**，并且每项功能都写明了“什么时候用、什么时候不必用”。
 - **提出“按最大瓶颈逐层叠加”的方法**，避免一上来就堆复杂度，与“简单优先”一脉相承。
 
@@ -103,6 +103,8 @@ flowchart LR
     F3 --> I[调得对]
 ```
 
+图解：三项功能各对一个瓶颈——工具定义太多造成上下文膨胀和选错工具，中间结果太多造成推理轮次多、易出错，参数格式与搭配则是 schema 表达不了的。
+
 ### 图 2：Tool Search Tool 的加载过程
 
 ```mermaid
@@ -116,6 +118,8 @@ sequenceDiagram
     API-->>C: 结果
     Note over C: 其余几十个工具从未进入上下文
 ```
+
+图解：以搜索 “github” 为例，只有命中的 `createPullRequest`、`listIssues` 等工具展开完整定义，其余几十个工具始终不进上下文（示意）。
 
 ### 图 3：Programmatic Tool Calling 的请求-响应循环
 
@@ -131,6 +135,8 @@ sequenceDiagram
     end
     X-->>C: 只返回最终 stdout（如 2–3 名超预算人员）
 ```
+
+图解：Claude 在代码执行沙箱里生成编排代码，沙箱逐个向你的应用发起工具请求，中间结果由脚本处理，最后只把 stdout 交回 Claude。
 
 ## 关键原话
 
@@ -155,11 +161,11 @@ sequenceDiagram
 - 第 2 篇：[上下文工程](./effective-context-engineering-for-ai-agents.md)
 
 **原文引用的资源**
-- Tool Search Tool 文档：<https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool>
-- Programmatic Tool Calling 文档：<https://platform.claude.com/docs/en/agents-and-tools/tool-use/programmatic-tool-calling>
-- Tool Use Examples 文档：<https://platform.claude.com/docs/en/agents-and-tools/tool-use/implement-tool-use#providing-tool-use-examples>
-- GIA 基准论文：<https://arxiv.org/abs/2311.12983>
+- [Tool Search Tool 文档](https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool)
+- [Programmatic Tool Calling 文档](https://platform.claude.com/docs/en/agents-and-tools/tool-use/programmatic-tool-calling)
+- [Tool Use Examples 文档](https://platform.claude.com/docs/en/agents-and-tools/tool-use/implement-tool-use#providing-tool-use-examples)
+- [GIA 基准论文](https://arxiv.org/abs/2311.12983)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《Introducing advanced tool use on the Claude Developer Platform》, <https://www.anthropic.com/engineering/advanced-tool-use>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《Introducing advanced tool use on the Claude Developer Platform》](https://www.anthropic.com/engineering/advanced-tool-use)。*

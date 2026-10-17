@@ -6,9 +6,9 @@ module: E-evals
 order: 12
 source_url: "https://www.anthropic.com/engineering/swe-bench-sonnet"
 published: 2025-01-06
-summary: "SWE-bench 评测的是“模型 + 脚手架”组成的整个智能体。升级版 Claude 3.5 Sonnet 只用一个简洁提示加 Bash 和编辑两个通用工具，就在 SWE-bench Verified 上拿到 49%（此前最好成绩 45%）。关键在于把控制权交给模型，并下大力气打磨工具描述和防错设计。文中还总结了运行这类评测的难点。"
-tags: [swe-bench, evals, coding-agent, scaffold, tool-design]
-reading_time: 10
+summary: "SWE-bench 评测的是“模型 + 脚手架”组成的整个智能体。升级版 Claude 3.5 Sonnet 只用简洁提示加 Bash 和编辑两个通用工具，就在 SWE-bench Verified 上拿到 49%（此前最好 45%）。关键是把控制权交给模型，并打磨工具描述和防错设计。文中还总结了运行这类评测的难点。"
+tags: [benchmarks, evals, coding-agents, harness, tool-design]
+reading_time: 9
 authors_en: ["Erik Schluntz"]
 notes_updated: 2026-10-17
 ---
@@ -22,7 +22,7 @@ notes_updated: 2026-10-17
 ## 为什么重要
 
 - **一个具体的、完全公开的编码智能体设计**：提示词和工具 schema 都在原文中公开，可以直接对照学习。
-- **印证了《Building effective agents》中的观点**：智能体就是在循环里使用工具；花在工具上的功夫比花在提示上的更值。
+- **印证了[《Building effective agents》](./building-effective-agents.md)中的观点**：智能体就是在循环里使用工具；花在工具上的功夫比花在提示上的更值。
 - **介绍了 SWE-bench 的评测机制和坑**：隐藏测试、环境问题、成本，都是后续评测类文章反复讨论的主题。
 
 ## 核心概念（中英对照）
@@ -152,8 +152,8 @@ flowchart LR
 - 第 13 篇：[智能体编码评测中的基础设施噪声](./infrastructure-noise.md)
 
 **原文引用的资源**
-- SWE-bench 官网：<https://www.swebench.com/>
+- [SWE-bench 官网](https://www.swebench.com/)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《Raising the bar on SWE-bench Verified with Claude 3.5 Sonnet》, <https://www.anthropic.com/engineering/swe-bench-sonnet>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《Raising the bar on SWE-bench Verified with Claude 3.5 Sonnet》](https://www.anthropic.com/engineering/swe-bench-sonnet)。*

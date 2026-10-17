@@ -7,8 +7,8 @@ order: 11
 source_url: "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents"
 published: 2026-01-09
 summary: "系统讲解智能体评测：基本术语（任务、试验、评分器、记录、结果、harness、评测套件），三类评分器的取舍，能力评测与回归评测的区别，编码 / 对话 / 研究 / 电脑使用四类智能体怎么评，pass@k 与 pass^k，以及一条从零建立可信评测的八步路线，最后说明评测和线上监控、A/B 测试、人工审阅如何互补。"
-tags: [evals, agents, graders, llm-as-judge, pass-at-k, regression, eval-driven-development]
-reading_time: 20
+tags: [evals, agents]
+reading_time: 15
 authors_en: ["Mikaela Grace", "Jeremy Hadfield", "Rodrigo Olivares", "Jiri De Jonghe"]
 notes_updated: 2026-10-17
 ---
@@ -133,6 +133,8 @@ flowchart TB
     G --> S[得分 → 汇总指标<br/>pass@k、pass^k、成本、延迟]
 ```
 
+图解：每次试验都在隔离环境中运行智能体 harness 和模型，记录 transcript 与环境最终状态，再交给评分器（graders）打分并汇总指标。
+
 ### 图 2：从零到一的八步路线
 
 ```mermaid
@@ -160,6 +162,8 @@ stateDiagram-v2
     能力评测 --> 已饱和: 能解的题全部通过
     已饱和 --> 新建更难的能力评测
 ```
+
+图解：能力评测起步时通过率低，靠迭代智能体逐步“爬山”；通过率稳定后“毕业”为回归评测，分数下降就告警；能解的题全部通过说明评测已饱和，需要更难的新题。
 
 ### 图 4：多层评估的“瑞士奶酪”
 
@@ -203,11 +207,11 @@ flowchart LR
 - 第 6 篇：[think 工具](./claude-think-tool.md) — pass^k 的实际应用。
 
 **原文引用的资源**
-- τ2-bench：<https://github.com/sierra-research/tau2-bench>
-- Terminal-Bench：<https://www.tbench.ai/>
-- OSWorld：<https://os-world.github.io/>
-- Harbor 评测框架：<https://harborframework.com/>
+- [τ2-bench](https://github.com/sierra-research/tau2-bench)
+- [Terminal-Bench](https://www.tbench.ai/)
+- [OSWorld](https://os-world.github.io/)
+- [Harbor 评测框架](https://harborframework.com/)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《Demystifying evals for AI agents》, <https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《Demystifying evals for AI agents》](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents)。*

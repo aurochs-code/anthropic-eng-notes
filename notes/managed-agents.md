@@ -6,9 +6,9 @@ module: A-agent-design
 order: 20
 source_url: "https://www.anthropic.com/engineering/managed-agents"
 published: 2026-04-08
-summary: "harness 编码了对模型能力的假设，而这些假设会随模型升级过时。Managed Agents 借鉴操作系统“虚拟化硬件”的思路，把智能体拆成三个稳定接口：会话（只追加的事件日志）、harness（大脑）、沙箱（双手）。解耦后容器和 harness 都变成可替换的“牲畜”，凭证永远不进沙箱，会话成为上下文窗口之外可回溯的上下文对象，p50 首 token 延迟下降约 60%、p95 下降超过 90%。"
-tags: [managed-agents, meta-harness, architecture, sandbox, session, security, latency]
-reading_time: 9
+summary: "harness 编码了对模型能力的假设，这些假设会随模型升级过时。Managed Agents 借鉴操作系统虚拟化硬件的思路，把智能体拆成会话（只追加的事件日志）、harness（大脑）、沙箱（双手）三个稳定接口。解耦后各部分可替换，凭证不进沙箱，p50 首 token 延迟降约 60%、p95 降超过 90%。"
+tags: [harness, long-running-agents, sandbox, security, infrastructure]
+reading_time: 11
 authors_en: ["Lance Martin", "Gabe Cemaj", "Michael Cohen"]
 notes_updated: 2026-10-17
 ---
@@ -104,6 +104,8 @@ flowchart LR
     Before ==> After
 ```
 
+图解：之前会话、harness 与沙箱挤在一个容器里；之后拆成三个独立接口——只追加的会话日志、无状态的 harness、以 `execute(name, input) → string` 调用的沙箱与工具。
+
 ### 图 2：故障恢复
 
 ```mermaid
@@ -135,6 +137,8 @@ flowchart TD
     H["Harness"] -. "从不接触凭证" .- V
 ```
 
+图解：沙箱里的 git 操作走初始化时已用仓库令牌配置好的本地 remote，MCP 调用经代理从凭证保险库取令牌，harness 和沙箱里的代码都接触不到凭证。
+
 ## 关键原话
 
 > "We're opinionated about the shape of these interfaces, not about what runs behind them."
@@ -165,12 +169,12 @@ flowchart TD
 - 第 23 篇：[我们如何约束 Claude](./how-we-contain-claude.md)
 
 **原文引用的资源**
-- Managed Agents 文档：<https://platform.claude.com/docs/en/managed-agents/overview>
-- 《The Bitter Lesson》：<http://www.incompleteideas.net/IncIdeas/BitterLesson.html>
-- 宠物与牲畜类比的历史：<https://cloudscaling.com/blog/cloud-computing/the-history-of-pets-vs-cattle/>
-- 《The Art of Unix Programming》相关章节：<http://www.catb.org/esr/writings/taoup/html/ch03s01.html>
-- 将上下文作为外部对象的相关研究：<https://arxiv.org/pdf/2512.24601>
+- [Managed Agents 文档](https://platform.claude.com/docs/en/managed-agents/overview)
+- [《The Bitter Lesson》](http://www.incompleteideas.net/IncIdeas/BitterLesson.html)
+- [宠物与牲畜类比的历史](https://cloudscaling.com/blog/cloud-computing/the-history-of-pets-vs-cattle/)
+- [《The Art of Unix Programming》相关章节](http://www.catb.org/esr/writings/taoup/html/ch03s01.html)
+- [将上下文作为外部对象的相关研究](https://arxiv.org/pdf/2512.24601)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《Scaling Managed Agents: Decoupling the brain from the hands》, <https://www.anthropic.com/engineering/managed-agents>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《Scaling Managed Agents: Decoupling the brain from the hands》](https://www.anthropic.com/engineering/managed-agents)。*

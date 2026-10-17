@@ -6,9 +6,9 @@ module: D-claude-code
 order: 21
 source_url: "https://www.anthropic.com/engineering/claude-code-sandboxing"
 published: 2025-10-20
-summary: "频繁点“同意”会导致审批疲劳，反而不安全。Claude Code 引入基于操作系统原语的沙箱：文件系统隔离（只能写当前工作目录）+ 网络隔离（只能经代理连接获批域名），两者缺一不可。在此之上推出沙箱化 bash 工具（开源的 sandbox-runtime）和在云端隔离沙箱中运行的 Claude Code on the web（git 凭证不进沙箱，由代理校验后代为认证）。内部使用中权限弹窗减少 84%。"
-tags: [claude-code, sandboxing, security, prompt-injection, permissions, network-isolation]
-reading_time: 6
+summary: "频繁点“同意”会造成审批疲劳，反而不安全。Claude Code 用操作系统原语做沙箱：文件系统隔离（只写当前工作目录）加网络隔离（只经代理连获批域名），缺一不可。在此基础上推出开源的沙箱化 bash 工具和云端运行、git 凭证不进沙箱的 Claude Code on the web。内部权限弹窗减少 84%。"
+tags: [claude-code, sandbox, security, prompt-injection, permissions, human-in-the-loop]
+reading_time: 8
 authors_en: ["David Dworken", "Oliver Weller-Davies"]
 notes_updated: 2026-10-17
 ---
@@ -22,7 +22,7 @@ notes_updated: 2026-10-17
 - **指出了权限弹窗模式的内在缺陷**：审批疲劳会让人不看就点，安全性反而下降。
 - **给出“文件系统 + 网络”双重隔离缺一不可的清晰论证**，适用于任何智能体。
 - **开源了沙箱运行时**，可以用于任意进程、智能体和 MCP 服务器。
-- **是第 22 篇（auto 模式）和第 23 篇（我们如何约束 Claude）的基础。**
+- **是[第 22 篇](./claude-code-auto-mode.md)（auto 模式）和[第 23 篇](./how-we-contain-claude.md)（我们如何约束 Claude）的基础。**
 
 ## 核心概念（中英对照）
 
@@ -100,6 +100,8 @@ flowchart LR
     P -. 拒绝 .-> E[攻击者服务器]
 ```
 
+图解：文件系统边界只允许读写当前工作目录；网络边界把出站流量经 unix domain socket 交给沙箱外的代理服务器，由域名白名单和自定义规则决定放行，新域名需要用户确认。
+
 ### 图 3：Claude Code on the web 的 git 代理
 
 ```mermaid
@@ -142,12 +144,12 @@ sequenceDiagram
 - 第 10 篇：[Desktop Extensions](./desktop-extensions.md)
 
 **原文引用的资源**
-- Claude Code 沙箱文档：<https://docs.claude.com/en/docs/claude-code/sandboxing>
-- 开源 sandbox-runtime：<https://github.com/anthropic-experimental/sandbox-runtime>
-- Linux bubblewrap：<https://github.com/containers/bubblewrap>
-- Claude Code on the web 文档：<https://docs.claude.com/en/docs/claude-code/claude-code-on-the-web>
-- 发布博文：<https://www.anthropic.com/news/claude-code-on-the-web>
+- [Claude Code 沙箱文档](https://docs.claude.com/en/docs/claude-code/sandboxing)
+- [开源 sandbox-runtime](https://github.com/anthropic-experimental/sandbox-runtime)
+- [Linux bubblewrap](https://github.com/containers/bubblewrap)
+- [Claude Code on the web 文档](https://docs.claude.com/en/docs/claude-code/claude-code-on-the-web)
+- [发布博文](https://www.anthropic.com/news/claude-code-on-the-web)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《Beyond permission prompts: making Claude Code more secure and autonomous》, <https://www.anthropic.com/engineering/claude-code-sandboxing>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《Beyond permission prompts: making Claude Code more secure and autonomous》](https://www.anthropic.com/engineering/claude-code-sandboxing)。*

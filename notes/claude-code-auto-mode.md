@@ -6,9 +6,9 @@ module: D-claude-code
 order: 22
 source_url: "https://www.anthropic.com/engineering/claude-code-auto-mode"
 published: 2026-03-25
-summary: "auto 模式把权限审批交给基于模型的分类器，介于人工审批和完全跳过权限之间。两层防御：输入层的提示注入探针扫描工具输出；输出层的转录分类器（Sonnet 4.6）在执行前判定每个动作，先用单 token 快速过滤，被标记时再用思维链复核，并且刻意看不到助手文本和工具结果。三级权限、二十多条默认阻止规则、子智能体交接检查、“拒绝后继续”。真实流量误报率 0.4%，对真实越权行为的漏报率为 17%。"
-tags: [claude-code, auto-mode, permissions, classifier, prompt-injection, agent-safety, overeager-behavior]
-reading_time: 12
+summary: "auto 模式把权限审批交给模型分类器，介于人工审批和完全跳过权限之间。两层防御：输入层用提示注入探针扫描工具输出；输出层的转录分类器在执行前判定每个动作，先单 token 快速过滤，被标记再用思维链复核。另有子智能体交接检查和“拒绝后继续”。真实流量误报率 0.4%，对真实越权行为漏报率 17%。"
+tags: [claude-code, permissions, human-in-the-loop, prompt-injection, security, failure-modes]
+reading_time: 14
 authors_en: ["John Hughes"]
 notes_updated: 2026-10-17
 ---
@@ -151,6 +151,8 @@ flowchart LR
     S2 -- 阻止 --> NO[拒绝并说明原因]
 ```
 
+图解：阶段 1 是单 token 的快速过滤，宁可错拦；只有被标记的动作才进入阶段 2，用同一输入加思维链再判一次。
+
 ### 图 3：拒绝后继续与升级给人
 
 ```mermaid
@@ -177,6 +179,8 @@ sequenceDiagram
     S->>CL: 返回结果 + 完整动作历史
     CL-->>O: 结果（如有问题，前面加安全警告，不丢弃）
 ```
+
+图解：编排智能体委派任务时，分类器先检查任务是否符合用户意图；子智能体返回时，分类器再看结果和完整动作历史，有问题就在结果前加安全警告，而不是丢弃结果。
 
 ## 关键原话
 
@@ -207,9 +211,9 @@ sequenceDiagram
 - 第 16 篇：[多智能体研究系统](./multi-agent-research-system.md)
 
 **原文引用的资源**
-- auto 模式文档：<http://code.claude.com/docs/en/permission-modes#eliminate-prompts-with-auto-mode>
-- Claude Opus 4.6 系统卡（PDF）：<https://www-cdn.anthropic.com/14e4fb01875d2a69f646fa5e574dea2b1c0ff7b5.pdf>
+- [auto 模式文档](http://code.claude.com/docs/en/permission-modes#eliminate-prompts-with-auto-mode)
+- [Claude Opus 4.6 系统卡（PDF）](https://www-cdn.anthropic.com/14e4fb01875d2a69f646fa5e574dea2b1c0ff7b5.pdf)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《How we built Claude Code auto mode: a safer way to skip permissions》, <https://www.anthropic.com/engineering/claude-code-auto-mode>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《How we built Claude Code auto mode: a safer way to skip permissions》](https://www.anthropic.com/engineering/claude-code-auto-mode)。*

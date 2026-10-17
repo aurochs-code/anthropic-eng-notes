@@ -14,7 +14,7 @@ authors_en: ["Barry Zhang", "Keith Lazuka", "Mahesh Murag"]
 notes_updated: 2026-10-17
 ---
 
-> 🔄 **原文后续更新（2025-12-18）**：Agent Skills 已作为开放标准发布，目标是跨平台可移植（见 <https://agentskills.io/>）。本文介绍的结构和原则不变，但它已经不只是 Claude 专属的格式。
+> 🔄 **原文后续更新（2025-12-18）**：Agent Skills 已作为开放标准发布，目标是跨平台可移植（见 [agentskills.io](https://agentskills.io/)）。本文介绍的结构和原则不变，但它已经不只是 Claude 专属的格式。
 
 ## 一句话总结
 
@@ -101,6 +101,8 @@ flowchart TB
     SK -- "直接运行，不进上下文" --> PY["extract_fields.py<br/>（示意：抽取表单字段脚本）"]
 ```
 
+图解：启动时系统提示里只有各技能的 name 和 description；判断相关时才读 SKILL.md 正文，forms.md、reference.md 等再按需读取；`extract_fields.py`（示意）这类脚本直接运行，代码本身不进上下文。
+
 ### 图 2：一次任务中上下文窗口的变化
 
 ```mermaid
@@ -130,6 +132,8 @@ flowchart LR
     E --> A
 ```
 
+图解：先在代表性任务上观察智能体哪里吃力，再编写或拆分技能，然后看真实使用轨迹（重点是有没有正确触发），把模型总结的经验写回技能。
+
 ## 关键原话
 
 > "Building a skill for an agent is like putting together an onboarding guide for a new hire."
@@ -155,12 +159,12 @@ flowchart LR
 - 第 3 篇：[为智能体编写高效工具](./writing-tools-for-agents.md)
 
 **原文引用的资源**
-- Agent Skills 开放标准：<https://agentskills.io/>
-- 产品发布：<https://www.anthropic.com/news/skills>
-- 文档：<https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview>
-- PDF 技能示例：<https://github.com/anthropics/skills/tree/main/document-skills/pdf>
-- Skills cookbook：<https://github.com/anthropics/claude-cookbooks/tree/main/skills>
+- [Agent Skills 开放标准](https://agentskills.io/)
+- [产品发布](https://www.anthropic.com/news/skills)
+- [文档](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview)
+- [PDF 技能示例](https://github.com/anthropics/skills/tree/main/document-skills/pdf)
+- [Skills cookbook](https://github.com/anthropics/claude-cookbooks/tree/main/skills)
 
 ---
 
-*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,《Equipping agents for the real world with Agent Skills》, <https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills>。*
+*本笔记依据 2026-10-17 抓取的在线原文撰写。原文：Anthropic,[《Equipping agents for the real world with Agent Skills》](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills)。*

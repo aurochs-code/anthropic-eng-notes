@@ -17,7 +17,7 @@ license_note: "Cookbook 源码仓库 openai/openai-cookbook 采用 MIT 许可。
 estimated_hours: 6
 summary: "OpenAI 官方的 notebook 示例集合。本页把它当作“另一家厂商的做法”来对照阅读：挑出 8 篇与 Anthropic 笔记主题重合的示例（会话记忆、长期记忆、压缩、沙箱化 harness、Skills、改进闭环、宏观评测、成本优化），每篇说明它和哪篇 Anthropic 笔记可以对照、两家做法有什么异同。"
 pairs_with: [effective-context-engineering-for-ai-agents, managed-agents, equipping-agents-for-the-real-world-with-agent-skills, demystifying-evals-for-ai-agents, advanced-tool-use, claude-code-sandboxing, effective-harnesses-for-long-running-agents, building-effective-agents]
-tags: [cookbook, cross-vendor, agents-sdk, memory, compaction, sandbox, skills, evals, cost]
+tags: [agent-frameworks, memory, compaction, sandbox, agent-skills, evals]
 source_note: "cookbook.openai.com 已跳转到 developers.openai.com/cookbook。示例使用 OpenAI 的 Agents SDK、Responses API 和当时的模型名，API 和模型会频繁变化。旧示例会标注 archived；部分示例只有在设置 API key 后才会实际调用模型。"
 ---
 
@@ -90,6 +90,8 @@ flowchart LR
     B["OpenAI：沙箱迁移示例<br/>harness 在沙箱外"] -.对照.-> Host
 ```
 
+图解：harness 在受信任一侧负责编排、凭据和审计，沙箱只拿到最小工作区；沙箱返回的补丁先做主机侧校验，再交人审阅。
+
 ## 学习任务
 
 1. 选一个主题（记忆、沙箱或评测），各用一段话写出 Anthropic 和 OpenAI 的做法，再列出两家的一个共识和一个分歧。
@@ -121,4 +123,4 @@ flowchart LR
 
 ---
 
-*本导读依据 2026-10-17 访问的在线内容撰写，仅为导读与总结。原文：OpenAI,《OpenAI Cookbook》及上述各示例页, <https://developers.openai.com/cookbook>。*
+*本导读依据 2026-10-17 访问的在线内容撰写，仅为导读与总结。原文：OpenAI,[《OpenAI Cookbook》](https://developers.openai.com/cookbook)及上述各示例页。*
