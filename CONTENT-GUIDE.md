@@ -20,8 +20,8 @@
 | `source_url` | URL | 必填 | 笔记页“原文链接 ↗” | `"https://www.anthropic.com/engineering/building-effective-agents"` |
 | `published` | 日期 `YYYY-MM-DD` | 必填 | 笔记页“原文发布” | `2024-12-19` |
 | `summary` | 字符串 | 必填 | 首页卡片（全文显示，不截断）、`<meta name="description">` 和 `og:description`、标签页条目 | 见第二节长度建议 |
-| `tags` | 字符串数组 | 必填（可为空数组） | 笔记页、首页的标签胶囊；`/tags/` 和 `/tags/<slug>/` | `[agents, workflows, agentic-systems, design-patterns, tool-design, aci]` |
-| `reading_time` | 正数（分钟） | 必填 | 笔记页“阅读约 N 分钟”、首页、路线页、标签页。**手填，不自动计算** | `15` |
+| `tags` | 字符串数组 | 必填（可为空数组） | 笔记页、首页的标签胶囊；`/tags/` 和 `/tags/<slug>/` | `[agents, workflows, tool-design, agent-frameworks]`（从下方“现行标签表”里选） |
+| `reading_time` | 正数（分钟） | 必填 | 笔记页“阅读约 N 分钟”、首页、路线页、标签页。**手填，不自动计算**，按第二节的公式算 | `15` |
 | `source_note` | 字符串 | 可选 | 笔记页顶部的 ⚠️ 提示框 | `"原文顶部已加注：……"` |
 | `authors_en` | 字符串数组 | 可选 | 只做校验，**目前没有页面显示** | `["Erik S.", "Barry Zhang"]` |
 | `notes_updated` | 日期 | 可选 | 只做校验，**目前没有页面显示** | `2026-10-17` |
@@ -43,7 +43,7 @@
 | `status` | `active` / `archived` / `dated` | 必填 | 资源列表、资源页“状态” | `active` |
 | `summary` | 字符串 | 必填 | 资源列表、meta description、标签页 | — |
 | `pairs_with` | 笔记 slug 数组（可为空） | 必填 | 资源页“搭配笔记”；**被搭配的笔记页底部的反向链接**（标注“搭配笔记”） | `[building-effective-agents]` |
-| `tags` | 字符串数组 | 必填 | 资源页标签胶囊、`/tags/` | `[papers, transformer]` |
+| `tags` | 字符串数组 | 必填 | 资源页标签胶囊、`/tags/` | `[ml-foundations, papers]`（从下方“现行标签表”里选） |
 | `title_en` | 字符串 | 可选 | 资源页标题下方 | `"30u30: 30 Foundational AI Papers in 30 Days"` |
 | `optional` | 布尔 | 可选 | 整个资源都是选读：所有 route 条目都不占步号 | `true` |
 | `source_url_zh` | URL | 可选 | 资源页“中文版 ↗” | — |
@@ -75,17 +75,66 @@
 | 项 | 现状（代码怎么用） | 建议 |
 |---|---|---|
 | summary 长度 | 首页卡片全文显示、不截断；同时作为 meta description 和分享摘要。现有长度 98–238 字，中位数 161 | **建议** 80–160 字；超过 160 字的首页卡片会很长，搜索引擎和分享卡片也只显示前面一段 |
-| 标签 | 162 个标签，其中 128 个只用了 1 次；`/tags/` 每个标签一页（162 页，不进搜索） | **建议** 合并 5 组近义写法；资源的标签不要重复 `kind`/`status`/许可类信息（这些已有专门字段显示）；只出现一次、以后也不会复用的细粒度标签可以删掉或并入大类。不合并也不影响构建和检查 |
+| 标签 | 现有 40 个标签（见下方“现行标签表”）；`/tags/` 每个标签一页（不进搜索） | **建议**优先从现行标签表里选；确需新标签时，先确认没有近义写法（单复数、连字符差异），也不要用 kind、status、许可这类已有专门字段的信息做标签 |
 | 标题层级 | 正文 h2–h4 自动生成锚点 id；**本页目录只收 h2、h3**（右栏、折叠目录、手机抽屉三处一致）；页面 h1 由 `title_zh` 生成 | **必须**不写正文 `# H1`、不跳级（h2 后直接 h4）。现有内容已全部符合，无需改 |
 | mermaid | 站点按浅色/深色主题渲染，切换主题时重新渲染；点击可放大；图里的文字**不进搜索** | **必须**不写 `%%{init: ...}`（会覆盖站点主题），不写死 `fill`/`color`/`stroke` 颜色或 `classDef`（深色下可能看不清）。现有 97 个图均符合。**建议**图中的关键术语在正文里也出现一次，否则搜不到 |
 | 长 URL | 全站已设 `overflow-wrap:anywhere`，手机 390px 不会溢出（检查脚本逐页核对） | **建议**写成 `[描述](URL)` 或 `<URL>`；现有内容没有超过 60 字符的裸 URL |
-| 阅读时长 | `reading_time` 手填，不自动计算 | **建议**按实际估。按中文约 400 字/分钟、英文约 200 词/分钟粗估，现有值是估算的 1–2.2 倍（笔记较密，可以理解）；偏差超过 2 倍的 3 篇可核对一下。是否改成自动计算需要改代码，内容侧不用动 |
+| 阅读时长 | `reading_time` 手填，不自动计算 | **约定公式**：`reading_time = ⌈中文字数 ÷ 300 + 英文词数 ÷ 200 + mermaid 图数 × 0.5⌉`（向上取整，单位分钟）。字数不含代码块；中文字数按汉字计，英文词数按连续字母串计。审计脚本按同一公式复核，与公式相差超过 1 分钟会列出 |
 | 站内链接 | 正文里指向 `xxx.md` / `notes/xxx.md` / `resources/r-xxx.md` 的链接，构建时改写为站内网址；**这些链接加上资源的 `pairs_with` 就是“反向链接”的数据来源** | 想让 A 页底部显示“B 引用了本篇”，就在 B 的正文里用 `.md` 相对链接指向 A，不要写站点绝对网址 |
 | 搜索 | Pagefind 索引笔记页、资源页和路线页的正文；首页、资源列表、标签页不进索引；面包屑、翻页、反向链接、标记已读等页面框架不进索引 | 不用管 |
 
+### 现行标签表（40 个，2026-10-18 从内容统计）
+
+按使用次数排列；数字为使用该标签的笔记数、资源数。
+
+| 标签 | 笔记 | 资源 | 合计 |
+|---|---|---|---|
+| `evals` | 9 | 4 | 13 |
+| `agents` | 3 | 4 | 7 |
+| `claude-code` | 6 | 1 | 7 |
+| `security` | 6 | 1 | 7 |
+| `benchmarks` | 4 | 1 | 5 |
+| `coding-agents` | 4 | 1 | 5 |
+| `mcp` | 4 | 1 | 5 |
+| `sandbox` | 4 | 1 | 5 |
+| `tool-use` | 2 | 3 | 5 |
+| `agent-frameworks` | 2 | 2 | 4 |
+| `agent-skills` | 2 | 2 | 4 |
+| `harness` | 4 | 0 | 4 |
+| `infrastructure` | 4 | 0 | 4 |
+| `long-running-agents` | 4 | 0 | 4 |
+| `multi-agent` | 4 | 0 | 4 |
+| `prompt-engineering` | 3 | 1 | 4 |
+| `prompt-injection` | 3 | 1 | 4 |
+| `tool-design` | 4 | 0 | 4 |
+| `workflows` | 3 | 1 | 4 |
+| `code-execution` | 3 | 0 | 3 |
+| `context-window` | 2 | 1 | 3 |
+| `human-in-the-loop` | 2 | 1 | 3 |
+| `memory` | 1 | 2 | 3 |
+| `model-capabilities` | 3 | 0 | 3 |
+| `permissions` | 3 | 0 | 3 |
+| `planning` | 1 | 2 | 3 |
+| `production` | 2 | 1 | 3 |
+| `progressive-disclosure` | 3 | 0 | 3 |
+| `subagents` | 3 | 0 | 3 |
+| `testing` | 3 | 0 | 3 |
+| `token-efficiency` | 3 | 0 | 3 |
+| `compaction` | 1 | 1 | 2 |
+| `context-engineering` | 2 | 0 | 2 |
+| `extended-thinking` | 2 | 0 | 2 |
+| `failure-modes` | 1 | 1 | 2 |
+| `papers` | 0 | 2 | 2 |
+| `postmortem` | 2 | 0 | 2 |
+| `prompt-caching` | 2 | 0 | 2 |
+| `retrieval` | 2 | 0 | 2 |
+| `ml-foundations` | 0 | 1 | 1 |
+
 ## 三、现有内容问题清单（脚本统计，2026-10-18）
 
-统计脚本：`/workspace/content-audit/audit.mjs`（仓库外，只读内容文件）。共 **27 条**：必须改 1 条，建议 26 条（summary 18、阅读时长 3、标签近义 5 组）。另外标题跳级、正文 H1、mermaid 写死主题或颜色、长裸 URL 均为 0 条。
+> **2026-10-18 复查：以下 27 条已在内容 v2 中全部处理，审计脚本复查为 0 项**（summary 98–160 字、标签 40 个且无近义写法、26 篇 reading_time 均与公式一致）。下面保留首次审计的记录。
+
+统计脚本：`/workspace/content-audit/audit.mjs`（仓库外，只读内容文件）。首次审计共 **27 条**：必须改 1 条，建议 26 条（summary 18、阅读时长 3、标签近义 5 组）。另外标题跳级、正文 H1、mermaid 写死主题或颜色、长裸 URL 均为 0 条。
 
 ### 必须改（1 条）
 
