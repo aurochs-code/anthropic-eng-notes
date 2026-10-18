@@ -65,13 +65,13 @@ params:
     text: 论文表 1（第 6.1 节，7 个连续控制环境 × 21 次运行的平均归一化分数）：ε = 0.1 → 0.76，ε = 0.2 → 0.82，ε = 0.3 → 0.70；不截断也不加惩罚 → −0.39。
 steps:
   - text: r = 1 表示新旧策略给出同样的概率，三条线在这里重合
-    state: { r: 1, advantage: 1 }
+    state: { r: 1, advantage: 1, epsilon: 0.2 }
   - text: 好动作超过 1+ε 后目标不再增加，梯度为 0，不会一步把概率拉得太高
-    state: { r: 1.5, advantage: 1 }
+    state: { r: 1.5, advantage: 1, epsilon: 0.2 }
   - text: 好动作的 r 掉到 1−ε 以下时不截断，目标变差会被如实计入
-    state: { r: 0.5, advantage: 1 }
+    state: { r: 0.5, advantage: 1, epsilon: 0.2 }
   - text: 坏动作反过来；只截断“会让目标变好”的那一侧，所以 L^CLIP 是未截断目标的下界
-    state: { r: 0.5, advantage: -1 }
+    state: { r: 0.5, advantage: -1, epsilon: 0.2 }
 ```
 
 ### 2. 另一种做法：自适应 KL 惩罚

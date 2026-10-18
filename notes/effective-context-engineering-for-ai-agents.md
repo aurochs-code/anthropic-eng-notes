@@ -151,6 +151,7 @@ params:
     Σ: 压缩摘要
     F: 最近访问的文件
     N: 从笔记读回
+    C: 子智能体交回的摘要
   states:
     - { label: 开局, main: { S: 10 } }
     - { label: 前三轮, main: { S: 10, U: 4, A: 8, R: 30 } }
@@ -158,7 +159,7 @@ params:
     - { label: 清理工具结果, main: { S: 10, U: 8, A: 16, R: 10, P: 4 } }
     - { label: 压缩, main: { S: 10, Σ: 8, F: 15 }, transition_from: { S: 10, U: 8, A: 16, R: 56, P: 4 } }
     - { label: 结构化笔记, main: { S: 10, N: 5 }, outside: [NOTES.md] }
-    - { label: 子智能体, main: { S: 10, A: 5, Σ: 4 }, children: [40, 40], returns: [2, 2] }
+    - { label: 子智能体, main: { S: 10, A: 5, C: 4 }, children: [40, 40], returns: [2, 2] }
     - { label: 怎么选, table: true }
   fallback_steps: [3, 4, 5, 6, 7]
   choose:

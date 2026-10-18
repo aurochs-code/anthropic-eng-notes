@@ -589,6 +589,52 @@ await interact('阅读进度条', async (pg) => {
     return { pass: out.every((o) => o.ok), detail: out.map((o) => `${o.id}：${o.state}，末步 ${o.last}，← 后 ${o.back}，scrollWidth ${o.sw}${o.ok ? '' : ' ✗'}`).join('；') };
   }, { viewport: { width: 390, height: 844 } });
 
+  // 390px：每张图里 svg 文字的实际显示字号（计算字号 × svg 实际宽度 / viewBox 宽度）不小于 11px，逐步检查
+  await interact('动画：390px 下图内文字显示 ≥ 11px', async (pg) => {
+    const out = [];
+    const measure = (s) => pg.$eval(s, (f) => {
+      let min = Infinity, n = 0, worst = '';
+      for (const svg of f.querySelectorAll('.anim-stage svg')) {
+        const vb = svg.viewBox?.baseVal; const w = svg.getBoundingClientRect().width; if (!vb || !vb.width || !w) continue;
+        const k = w / vb.width;
+        for (const t of svg.querySelectorAll('text')) { if (!t.textContent.trim() || t.getClientRects().length === 0) continue; const px = parseFloat(getComputedStyle(t).fontSize) * k; n++; if (px < min) { min = px; worst = t.textContent.slice(0, 16); } }
+      }
+      return { min, n, worst };
+    });
+    for (const b of animBlocks) {
+      await pg.goto(U(b), { waitUntil: 'networkidle' }); await pg.waitForSelector('html[data-anim="ready"]');
+      const f = pg.locator(sel(b)); await f.scrollIntoViewIfNeeded();
+      let min = Infinity, n = 0, worst = '';
+      const lis = f.locator('ol.anim-steps > li');
+      for (let i = 0; i < Math.max(1, b.steps); i++) { if (b.steps) await lis.nth(i).click(); await pg.waitForTimeout(450); const r = await measure(sel(b)); n += r.n; if (r.min < min) { min = r.min; worst = `第 ${i + 1} 步「${r.worst}」`; } }
+      out.push({ id: b.id, ok: n > 0 && min >= 11, s: `最小 ${min.toFixed(1)}px（${worst}，共量 ${n} 处）` });
+    }
+    return { pass: out.every((o) => o.ok), detail: out.map((o) => `${o.id}：${o.s}${o.ok ? '' : ' ✗'}`).join('；') };
+  }, { viewport: { width: 390, height: 844 } });
+
+  // 自由调节：拖滑块后参数与当前步不一致 → 去掉步骤高亮、计数显示「自由调节」；点下一步恢复成那一步；GPipe 预设 i = 第 i 步
+  await interact('动画：滑块自由调节与预设跳步', async (pg) => {
+    const out = [];
+    for (const b of animBlocks.filter((x) => ['function-plot', 'pipeline-grid'].includes(x.comp))) {
+      await pg.goto(U(b), { waitUntil: 'networkidle' }); await pg.waitForSelector('html[data-anim="ready"]');
+      const f = pg.locator(sel(b)); await f.scrollIntoViewIfNeeded();
+      const r = f.locator('input[type=range]').last(); await r.focus(); await pg.keyboard.press('ArrowRight');
+      const pos = await f.locator('.anim-pos').textContent(); const cur = await f.locator('ol.anim-steps > li[aria-current]').count();
+      await f.locator('[data-act="next"]').click();
+      const pos2 = await f.locator('.anim-pos').textContent(); const cur2 = await f.locator('ol.anim-steps > li[aria-current]').count();
+      let extra = '', ok = pos === '自由调节' && cur === 0 && /第 2 \//.test(pos2) && cur2 === 1;
+      if (b.comp === 'pipeline-grid') {
+        const got = [];
+        for (const [i, v] of ['1', 'K', '4K'].entries()) { await f.locator(`button[data-preset="${v}"]`).click(); got.push(`${v}→${await f.getAttribute('data-step')}/M=${await f.getAttribute('data-m')}`); ok &&= (await f.getAttribute('data-step')) === String(i + 1); }
+        extra = `；预设 ${got.join('、')}`;
+      } else {
+        const st = await f.getAttribute('data-r'); extra = `；第 2 步 r = ${st}`; ok &&= st === '1.50';
+      }
+      out.push({ id: b.id, ok, s: `拖动后「${pos}」、高亮 ${cur} 个；下一步后「${pos2}」、高亮 ${cur2} 个${extra}` });
+    }
+    return { pass: out.length === 2 && out.every((o) => o.ok), detail: out.map((o) => `${o.id}：${o.s}${o.ok ? '' : ' ✗'}`).join('；') };
+  });
+
   // 时序图分步：引用解析（参与者上下两框、消息、块），换主题重渲染后仍高亮
   for (const b of stepBlocks) await interact(`动画：mermaid 分步高亮（${b.id}）`, async (pg) => {
     await pg.goto(U(b), { waitUntil: 'networkidle' }); await waitM(pg);

@@ -2,7 +2,8 @@
 // 只在有动画的页面由 src/lib/client/anim.ts 动态加载。模块顶层不访问 DOM（构建期也会被导入）。
 export type Step = { text: string; [k: string]: any };
 export type Cfg = { id: string; component: string; caption: string; alt: string; params: any; steps: Step[] };
-export type Stepper = { go(i: number): void; cur(): number };
+/** free(true)：读者手动调节后参数与当前步不一致——去掉步骤高亮，计数处显示「自由调节」；free(false) 恢复当前步的高亮（不重画） */
+export type Stepper = { go(i: number): void; cur(): number; free(on: boolean): void };
 export type Ticker = { start(): void; stop(): void; playing(): boolean };
 export type Ctx = {
   fig: HTMLElement; stage: HTMLElement; controls: HTMLElement; reduced: boolean;
@@ -14,6 +15,10 @@ export type Ctx = {
   playButton(t: Ticker, labels?: [string, string]): HTMLButtonElement;
   /** 自动播放：减少动态效果时什么都不做 */
   autoplay(t: Ticker): void;
+  /** 内容宽度 < 560px（窄屏布局：画布宽取 360、字号放大） */
+  narrow(): boolean;
+  /** 窄 / 宽切换时回调（ResizeObserver） */
+  onNarrow(cb: (narrow: boolean) => void): void;
 };
 export type Component = {
   validate(params: any, steps: Step[]): string[];
@@ -52,15 +57,22 @@ export function makeCtx(fig: HTMLElement, cfg: Cfg, reduced: boolean): Ctx {
       nav.append(prev, pos, next); controls.prepend(nav);
       const items = list ? [...list.children] as HTMLElement[] : [];
       items.forEach((li, k) => { li.tabIndex = 0; li.setAttribute('role', 'button'); li.addEventListener('click', () => go(k)); li.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(k); } }); });
-      function go(k: number) {
-        i = Math.max(0, Math.min(n - 1, k));
-        pos.textContent = `第 ${i + 1} / ${n} 步`;
-        prev.disabled = i === 0; next.disabled = i === n - 1;
-        items.forEach((li, j) => (j === i ? li.setAttribute('aria-current', 'step') : li.removeAttribute('aria-current')));
+      let isFree = false;
+      const mark = () => {
+        pos.textContent = isFree ? '自由调节' : `第 ${i + 1} / ${n} 步`;
+        // 自由调节时上一步 / 下一步都可用：在边界上点它就恢复成当前这一步
+        prev.disabled = !isFree && i === 0; next.disabled = !isFree && i === n - 1;
+        items.forEach((li, j) => (j === i && !isFree ? li.setAttribute('aria-current', 'step') : li.removeAttribute('aria-current')));
         fig.dataset.step = String(i + 1);
+        if (isFree) fig.dataset.free = '1'; else delete fig.dataset.free;
+      };
+      function go(k: number) {
+        i = Math.max(0, Math.min(n - 1, k)); isFree = false;
+        mark();
         onChange(i);
         ctx.announce(`第 ${i + 1} 步：${cfg.steps[i]?.text ?? ''}`);
       }
+      const free = (on: boolean) => { if (on === isFree) return; isFree = on; mark(); if (on) ctx.announce('自由调节'); };
       prev.addEventListener('click', () => go(i - 1));
       next.addEventListener('click', () => go(i + 1));
       fig.addEventListener('keydown', (e) => {
@@ -69,7 +81,7 @@ export function makeCtx(fig: HTMLElement, cfg: Cfg, reduced: boolean): Ctx {
         if (e.key === 'ArrowRight') { e.preventDefault(); go(i + 1); } else if (e.key === 'ArrowLeft') { e.preventDefault(); go(i - 1); }
       });
       go(0);
-      return { go, cur: () => i };
+      return { go, cur: () => i, free };
     },
     ticker(fn, ms) {
       let want = false, h: ReturnType<typeof setTimeout> | null = null;
@@ -90,6 +102,11 @@ export function makeCtx(fig: HTMLElement, cfg: Cfg, reduced: boolean): Ctx {
       return b;
     },
     autoplay(t) { if (!reduced) { fig.dataset.autoplay = '1'; t.start(); } },
+    narrow: () => (stage.clientWidth || fig.clientWidth) < 560,
+    onNarrow(cb) {
+      let last = ctx.narrow();
+      new ResizeObserver(() => { const now = ctx.narrow(); if (now !== last) { last = now; cb(now); } }).observe(fig);
+    },
   };
   fig.tabIndex = fig.tabIndex >= 0 ? fig.tabIndex : 0;
   return ctx;

@@ -14,51 +14,53 @@ export function attention(Q: number[][], K: number[][], V: number[][], scale = t
 }
 const vec = (v: number[], d = 0) => `[${v.map((x) => fx(x, d)).join(', ')}]`;
 
-const W = 600, H = 400;
-/** step: 1–6；qi: 查询词下标 */
-function scene(p: any, step: number, qi: number, scale: boolean, label: string): string {
+/** step: 1–6；qi: 查询词下标。宽屏画布 600×400（左右分栏）；内容宽度 < 560px 时画布 360 宽、上下排列：词行 → q/k 列表 → 3×3 矩阵（占满宽度）→ v 向量图 */
+function scene(p: any, step: number, qi: number, scale: boolean, label: string, narrow = false): string {
   const { tokens, Q, K, V } = p.data;
   const a = attention(Q, K, V, scale);
+  const W = narrow ? 360 : 600;
   let b = '';
-  // 顶部 token 卡片
+  // 词行
+  const tw = narrow ? 100 : 100, tg = narrow ? 18 : 20, tx0 = narrow ? (W - 3 * tw - 2 * tg) / 2 : 40;
   tokens.forEach((t: string, i: number) => {
-    const x = 40 + i * 120;
-    b += rect(x, 10, 100, 34, i === qi ? 'box-on' : 'box', `rx="6" data-token="${i}"`) + text(x + 50, 32, t, i === qi ? 't-accent' : '', 'middle');
+    const x = tx0 + i * (tw + tg);
+    b += rect(x, 10, tw, 34, i === qi ? 'box-on' : 'box', `rx="6" data-token="${i}"`) + text(x + tw / 2, 32, t, i === qi ? 't-accent' : '', 'middle');
   });
-  b += text(W - 8, 22, '示意数据', 't-small t-muted', 'end');
-  // 中左：q 与 k、点积、缩放
-  b += text(20, 72, `查询 q（${tokens[qi]}）= ${vec(Q[qi])}`, step >= 1 ? 't-accent' : '');
+  if (!narrow) b += text(W - 8, 22, '示意数据', 't-small t-muted', 'end');
+  // q/k 列表
+  const lx = narrow ? 8 : 20, ly = narrow ? 72 : 72, lh = narrow ? 24 : 26;
+  b += text(lx, ly, `查询 q（${tokens[qi]}）= ${vec(Q[qi])}`, step >= 1 ? 't-accent' : '');
   tokens.forEach((t: string, j: number) => {
-    const y = 98 + j * 26;
+    const y = ly + 26 + j * lh;
     let s = `k（${t}）= ${vec(K[j])}`;
     if (step >= 2) s += `　q·k = ${fx(a.dots[qi][j], 0)}`;
     if (step >= 3) s += `　÷${scale ? fx(Math.sqrt(a.dk), 0) : '1'} = ${fx(a.scaled[qi][j], 1)}`;
-    b += text(20, y, s, step >= 2 ? '' : 't-muted');
+    b += text(lx, y, s, (step >= 2 ? '' : 't-muted') + (narrow ? ' t-small' : ''));
   });
-  if (step === 1) tokens.forEach((t: string, j: number) => { b += text(20, 186 + j * 18, `v（${t}）= ${vec(V[j])}`, 't-small t-muted'); });
-  // 中右：3×3 权重网格（行 = 查询，列 = 键），只用强调色深浅
-  const gx = 400, gy = 70, cs = 52;
-  b += text(gx + 1.5 * cs, gy - 6, step >= 4 ? (scale ? '注意力权重' : '注意力权重（不缩放）') : '权重（第 4 步起）', 't-small t-muted', 'middle');
-  tokens.forEach((t: string, j: number) => { b += text(gx + j * cs + cs / 2, gy + 3 * cs + 14, t, 't-small t-muted', 'middle'); b += text(gx - 4, gy + j * cs + cs / 2 + 4, t, 't-small t-muted', 'end'); });
+  if (step === 1) tokens.forEach((t: string, j: number) => { b += text(lx, (narrow ? 182 : 186) + j * 18, `v（${t}）= ${vec(V[j])}`, 't-small t-muted'); });
+  // 3×3 权重矩阵（行 = 查询，列 = 键），只用强调色深浅
+  const gx = narrow ? 52 : 400, gy = narrow ? 262 : 70, cw = narrow ? (W - 52 - 8) / 3 : 52, ch = narrow ? 44 : 52;
+  b += text(gx + 1.5 * cw, gy - 8, step >= 4 ? (scale ? '注意力权重' : '注意力权重（不缩放）') : '权重（第 4 步起）', 't-small t-muted', 'middle');
+  tokens.forEach((t: string, j: number) => { b += text(gx + j * cw + cw / 2, gy + 3 * ch + 14, t, 't-small t-muted', 'middle'); b += text(gx - 6, gy + j * ch + ch / 2 + 4, t, 't-small t-muted', 'end'); });
   for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) {
     const shown = step >= 6 || (step >= 4 && i === qi);
     const w = a.weights[i][j];
-    b += rect(gx + j * cs, gy + i * cs, cs - 2, cs - 2, shown ? 'cell' : 'box', shown ? `fill-opacity="${(0.12 + 0.88 * w).toFixed(3)}" data-w="${fx(w, 3)}"` : '');
-    if (shown) b += text(gx + j * cs + cs / 2 - 1, gy + i * cs + cs / 2 + 4, fx(w, 3), w > 0.45 ? 't-small t-onacc' : 't-small', 'middle');
+    b += rect(gx + j * cw, gy + i * ch, cw - 2, ch - 2, shown ? 'cell' : 'box', shown ? `fill-opacity="${(0.12 + 0.88 * w).toFixed(3)}" data-w="${fx(w, 3)}"` : '');
+    if (shown) b += text(gx + j * cw + cw / 2 - 1, gy + i * ch + ch / 2 + 4, fx(w, 3), w > 0.45 ? 't-small t-onacc' : 't-small', 'middle');
   }
-  // 底部：二维坐标系里的值向量与加权和
-  const ox = 60, oy = 380, s = 120; const P = (v: number[]) => [ox + v[0] * s, oy - v[1] * s] as const;
+  // 二维坐标系里的值向量与加权和
+  const s = narrow ? 120 : 120, ox = narrow ? 50 : 60, oy = narrow ? gy + 3 * ch + 36 + 1.3 * s : 380;
+  const P = (v: number[]) => [ox + v[0] * s, oy - v[1] * s] as const;
   b += line(ox, oy, ox + 1.25 * s, oy, 'axis') + line(ox, oy, ox, oy - 1.25 * s, 'axis');
   b += text(ox + 1.25 * s, oy + 14, '1.2', 't-small t-muted', 'end') + text(ox - 4, oy - 1.2 * s + 4, '1.2', 't-small t-muted', 'end');
   b += `<polygon points="${V.map((v: number[]) => P(v).join(',')).join(' ')}" class="soft"/>`;
   V.forEach((v: number[], j: number) => { const [x, y] = P(v); b += circle(x, y, 4.5, 'acc') + text(x + 8, y - 6, `v（${tokens[j]}）`, 't-small'); });
-  if (step >= 5) {
-    const [x, y] = P(a.out[qi]);
-    b += `<line x1="${ox}" y1="${oy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" class="ref"/>` + circle(x, y, 6, 'knob');
-  }
-  b += text(250, 300, step >= 5 ? `○ 输出（${tokens[qi]}）= Σ 权重 × v = ${vec(a.out[qi], 3)}` : '', 't-small t-accent');
-  b += text(250, 320, step >= 4 ? `权重：${a.weights[qi].map((w) => fx(w, 3)).join('、')}（和为 1，四舍五入）` : '', 't-small t-muted');
-  return svg(W, H, b, label);
+  if (step >= 5) { const [x, y] = P(a.out[qi]); b += `<line x1="${ox}" y1="${oy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" class="ref"/>` + circle(x, y, 6, 'knob'); }
+  const sx = narrow ? 8 : 250, sy = narrow ? oy + 34 : 300;
+  b += text(sx, sy, step >= 5 ? `○ 输出（${tokens[qi]}）= Σ 权重 × v = ${vec(a.out[qi], 3)}` : '', 't-small t-accent');
+  b += text(sx, sy + 20, step >= 4 ? `权重：${a.weights[qi].map((w) => fx(w, 3)).join('、')}（和为 1，四舍五入）` : '', 't-small t-muted');
+  if (narrow) b += text(W - 4, sy + 40, '示意数据', 't-small t-muted', 'end');
+  return svg(W, narrow ? sy + 48 : 400, b, label, narrow ? 'narrow' : '');
 }
 
 const comp: Component = {
@@ -92,19 +94,18 @@ const comp: Component = {
   },
   mount(ctx: Ctx, cfg: Cfg) {
     const p = cfg.params, toks: string[] = p.data.tokens;
-    let step = 1, qi = toks.indexOf(p.query.default), scale = p.scale.default as boolean;
+    const q0 = toks.indexOf(p.query.default), s0 = p.scale.default as boolean;
+    let step = 1, qi = q0, scale = s0;
     const host = el('div'); ctx.stage.replaceChildren(host); ctx.stage.insertAdjacentHTML('beforeend', notesHtml(p.notes));
     const qg = el('div', { class: 'anim-seg', role: 'group', 'aria-label': '查询词' });
-    const qb = toks.map((t, i) => { const b = el('button', { type: 'button', class: 'anim-btn', 'data-query': t }, `查询：${esc(t)}`); b.addEventListener('click', () => { qi = i; draw(); }); qg.append(b); return b; });
+    const qb = toks.map((t, i) => { const b = el('button', { type: 'button', class: 'anim-btn', 'data-query': t }, `查询：${esc(t)}`); b.addEventListener('click', () => { qi = i; manual(); }); qg.append(b); return b; });
     const sb = el('button', { type: 'button', class: 'anim-btn', 'data-act': 'scale' });
-    sb.addEventListener('click', () => { scale = !scale; draw(); });
+    sb.addEventListener('click', () => { scale = !scale; manual(); });
     const hint = el('p', { class: 'anim-hint' });
     ctx.controls.append(qg, sb, hint);
     function draw() {
       const qFrom = p.query.selectable_from_step ?? 1, sFrom = p.scale.enabled_from_step ?? 1;
-      if (step < qFrom) qi = toks.indexOf(p.query.default);
-      if (step < sFrom) scale = p.scale.default;
-      host.innerHTML = scene(p, step, qi, scale, cfg.alt);
+      host.innerHTML = scene(p, step, qi, scale, cfg.alt, ctx.narrow());
       qb.forEach((b, i) => { b.disabled = step < qFrom; b.setAttribute('aria-pressed', String(i === qi)); });
       sb.disabled = step < sFrom;
       sb.textContent = scale ? p.scale.labels?.[0] ?? '除以 √d_k' : p.scale.labels?.[1] ?? '不缩放';
@@ -113,7 +114,10 @@ const comp: Component = {
       hint.hidden = !hint.textContent;
       ctx.fig.dataset.query = toks[qi]; ctx.fig.dataset.scale = String(scale);
     }
-    ctx.stepper((i) => { step = i + 1; draw(); });
+    // 每一步的状态 = 默认查询词 + 默认缩放；手动改了且与之不一致就进入「自由调节」，上一步 / 下一步恢复
+    function manual() { draw(); stepper.free(qi !== q0 || scale !== s0); }
+    ctx.onNarrow(draw);
+    const stepper = ctx.stepper((i) => { step = i + 1; qi = q0; scale = s0; draw(); });
   },
 };
 export default comp;

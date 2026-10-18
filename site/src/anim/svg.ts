@@ -16,7 +16,7 @@ export const poly = (pts: [number, number][], cls = ''): string =>
 export const circle = (x: number, y: number, r: number, cls = ''): string => `<circle cx="${n(x)}" cy="${n(y)}" r="${r}" class="${cls}"/>`;
 /** 斜线花纹（颜色走 CSS 变量，见 .anim-hatch） */
 export const hatchDef = (id: string): string =>
-  `<defs><pattern id="${id}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" class="anim-hatch"/></pattern><pattern id="${id}-dot" width="5" height="5" patternUnits="userSpaceOnUse"><circle cx="2.5" cy="2.5" r="1.1" class="anim-dot"/></pattern></defs>`;
+  `<defs><pattern id="${id}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" class="anim-hatch"/></pattern><pattern id="${id}-dot" width="5" height="5" patternUnits="userSpaceOnUse"><circle cx="2.5" cy="2.5" r="1.1" class="anim-dot"/></pattern><pattern id="${id}-acc" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" class="anim-hatch-acc"/></pattern></defs>`;
 export const notesHtml = (notes: unknown): string =>
   Array.isArray(notes) && notes.length ? `<ul class="anim-notes">${notes.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : '';
 export const table = (head: string[], rows: (string | number)[][], cap = ''): string =>

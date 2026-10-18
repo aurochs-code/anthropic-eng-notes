@@ -312,3 +312,21 @@ pre.mermaid svg.ms-active line.ms-on, pre.mermaid svg.ms-active path.ms-on, pre.
 @media (prefers-reduced-motion: reduce) { pre.mermaid svg.ms-active .ms-dim, pre.mermaid svg.ms-active .ms-on { transition:none; } }
 .anim-svg .t-onacc { fill:var(--bg); }
 .anim-stack > svg + svg { margin-top:10px; }
+/* 窄屏（内容宽度 < 560px）：组件按 360 宽画布重画，字号放大，保证 390px 下显示不小于 11px */
+.anim-svg.narrow { font-size:13.5px; }
+.anim-svg.narrow .t-small { font-size:12.5px; }
+.anim-svg.narrow .t-big { font-size:15px; }
+.anim-svg .seg-C { fill:var(--bg); stroke:var(--accent); stroke-width:2; }
+.anim-svg .anim-hatch-acc { stroke:var(--accent); stroke-width:1.6; }
+.anim-svg .child { fill:none; stroke:var(--muted); stroke-width:1.5; }
+/* pipeline-grid：甘特网格横向滚动 */
+.pg-wrap { container: pgw / inline-size; margin:0 0 8px; }
+.pg-title { margin:0 0 4px; font-size:13px; font-weight:600; color:var(--accent); }
+.pg-scroll { overflow-x:auto; overscroll-behavior-x:contain; max-width:100%; }
+.pg-scroll:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.pg-inner { display:flex; width:max-content; }
+.anim-svg.pg-svg { width:auto; max-width:none; margin:0; flex:none; font-size:12px; }
+.anim-svg.pg-svg .t-small { font-size:11.5px; }
+.pg-labels { position:sticky; left:0; z-index:1; background:var(--bg); }
+.pg-hint { display:none; margin:2px 0 0; font-size:12.5px; color:var(--muted); text-align:center; }
+@media (max-width: 600px) { pre.mermaid svg.ms-active .ms-dim { opacity:.45; } }

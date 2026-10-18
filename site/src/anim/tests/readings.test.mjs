@@ -50,7 +50,16 @@ test('GPipe 排程：每格至多一个任务，每设备 M 次前向 + M 次反
 });
 
 test('上下文窗口各步合计', () => {
-  const st = [{ S: 10 }, { S: 10, U: 4, A: 8, R: 30 }, { S: 10, U: 8, A: 16, R: 62 }, { S: 10, U: 8, A: 16, R: 10, P: 4 }, { S: 10, Σ: 8, F: 15 }, { S: 10, N: 5 }, { S: 10, A: 5, Σ: 4 }];
+  const st = [{ S: 10 }, { S: 10, U: 4, A: 8, R: 30 }, { S: 10, U: 8, A: 16, R: 62 }, { S: 10, U: 8, A: 16, R: 10, P: 4 }, { S: 10, Σ: 8, F: 15 }, { S: 10, N: 5 }, { S: 10, A: 5, C: 4 }];
   assert.deepEqual(st.map(total), [10, 52, 96, 48, 33, 15, 19]);
   assert.equal(total({ S: 10, U: 8, A: 16, R: 56, P: 4 }), 94);
+});
+
+test('上下文窗口校验：sum(returns) 须等于 main.C', async () => {
+  const comp = (await import('../components/token-timeline.ts')).default;
+  const base = { capacity: 100, warn_at: 90, segments: { S: 's', A: 'a', C: 'c' } };
+  const ok = comp.validate({ ...base, states: [{ label: 'x', main: { S: 10, A: 5, C: 4 }, children: [40, 40], returns: [2, 2] }] }, [{ text: 't' }]);
+  assert.deepEqual(ok, []);
+  const bad = comp.validate({ ...base, states: [{ label: 'x', main: { S: 10, A: 5, C: 3 }, children: [40, 40], returns: [2, 2] }] }, [{ text: 't' }]);
+  assert.ok(bad.some((m) => m.includes('sum(returns)')));
 });

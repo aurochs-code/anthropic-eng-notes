@@ -10,9 +10,11 @@ export function clipObjective(r: number, eps: number, A: number) {
   return { un, cl, min: Math.min(un, cl) };
 }
 
-const W = 560, H = 300, L = 52, R = 16, T = 18, B = 40;
-const X = (r: number) => L + (r / 2) * (W - L - R);
-function plot(eps: number, A: number, r: number | null, label: string, lbl: Labels): string {
+// 宽屏画布 560；内容宽度 < 560px 时画布取 360 重画（字号见 .anim-svg.narrow），保证 390px 下字不小于 11px
+const geo = (narrow: boolean) => ({ W: narrow ? 360 : 560, H: narrow ? 280 : 300, L: narrow ? 34 : 52, R: 14, T: 18, B: 40 });
+function plot(eps: number, A: number, r: number | null, label: string, lbl: Labels, narrow = false): string {
+  const { W, H, L, R, T, B } = geo(narrow);
+  const X = (r: number) => L + (r / 2) * (W - L - R);
   const [y0, y1] = A > 0 ? [-0.2, 2.2] : [-2.2, 0.2];
   const Y = (v: number) => T + ((y1 - v) / (y1 - y0)) * (H - T - B);
   const xs = Array.from({ length: 81 }, (_, i) => i / 40);
@@ -20,24 +22,25 @@ function plot(eps: number, A: number, r: number | null, label: string, lbl: Labe
   const lo = 1 - eps, hi = 1 + eps;
   const [p0, p1] = A > 0 ? [hi, 2] : [0, lo]; // 平台区
   let b = rect(X(p0), T, X(p1) - X(p0), H - T - B, 'soft');
-  b += text((X(p0) + X(p1)) / 2, T + 14, lbl.plateau, 't-small t-accent', 'middle');
+  b += text((X(p0) + X(p1)) / 2, T + 14, narrow ? lbl.plateauShort : lbl.plateau, 't-small t-accent', 'middle');
   for (let v = Math.ceil(y0); v <= Math.floor(y1); v++) { b += line(L, Y(v), W - R, Y(v), 'grid'); b += text(L - 6, Y(v) + 4, v, 't-small t-muted', 'end'); }
   b += line(L, Y(0), W - R, Y(0), 'axis');
   for (const x of [0, 0.5, 1, 1.5, 2]) b += text(X(x), H - B + 16, x, 't-small t-muted', 'middle');
   b += line(L, T, L, H - B, 'axis');
-  b += line(X(1), T, X(1), H - B, 'ref-faint') + text(X(1), H - B + 30, lbl.old, 't-small t-muted', 'middle');
-  b += line(X(lo), T, X(lo), H - B, 'ref') + text(X(lo) - 3, T + 30, '1−ε', 't-small', 'end');
-  b += line(X(hi), T, X(hi), H - B, 'ref') + text(X(hi) + 3, T + 30, '1+ε', 't-small', 'start');
+  // 「旧策略（r = 1）」放在 r = 1 虚线顶端、图内离上边约 4px，与 1−ε、1+ε 同样式
+  b += line(X(1), T, X(1), H - B, 'ref-faint') + text(X(1), T + 4 + 10, lbl.old, 't-small t-muted', 'middle');
+  b += line(X(lo), T, X(lo), H - B, 'ref') + text(X(lo) - 3, T + 30, '1−ε', 't-small t-muted', 'end');
+  b += line(X(hi), T, X(hi), H - B, 'ref') + text(X(hi) + 3, T + 30, '1+ε', 't-small t-muted', 'start');
   b += poly(pts((x) => clipObjective(x, eps, A).un), 'l-un');
   b += poly(pts((x) => clipObjective(x, eps, A).cl), 'l-clip');
   b += poly(pts((x) => clipObjective(x, eps, A).min), 'l-main');
   b += text(W - R, H - 4, lbl.xAxis, 't-small t-muted', 'end');
   b += text(L + 4, T - 4, `${A > 0 ? '好动作 Â = +1' : '坏动作 Â = −1'} · ε = ${fx(eps, 2)}`, 't-small t-muted');
   if (r !== null) b += circle(X(r), Y(clipObjective(r, eps, A).min), 7, 'knob');
-  return svg(W, H, b, label);
+  return svg(W, H, b, label, narrow ? 'narrow' : '');
 }
-type Labels = { plateau: string; old: string; xAxis: string };
-const LBL: Labels = { plateau: '这里梯度为 0：不再推动 r', old: '旧策略（r = 1）', xAxis: '概率比 r' };
+type Labels = { plateau: string; plateauShort: string; old: string; xAxis: string };
+const LBL: Labels = { plateau: '这里梯度为 0：不再推动 r', plateauShort: '梯度为 0', old: '旧策略（r = 1）', xAxis: '概率比 r' };
 const legend = `<ul class="anim-legend"><li><i style="border-style:dashed"></i>未截断项 r·Â</li><li><i style="border-style:dotted"></i>截断项 clip(r, 1−ε, 1+ε)·Â</li><li><i style="background:var(--accent);border-color:var(--accent)"></i>最终目标 min(…)</li><li><i style="background:var(--accent-soft)"></i>平台区</li></ul>`;
 
 const comp: Component = {
@@ -69,14 +72,14 @@ const comp: Component = {
     const seg = el('div', { class: 'anim-seg', role: 'group', 'aria-label': '优势的符号' });
     const advBtns = (p.advantage.options as number[]).map((v, i) => {
       const b = el('button', { type: 'button', class: 'anim-btn', 'data-adv': String(v) }, esc(p.advantage.labels[i]));
-      b.addEventListener('click', () => { st.A = v; draw(); }); seg.append(b); return b;
+      b.addEventListener('click', () => { st.A = v; manual(); }); seg.append(b); return b;
     });
     const mk = (spec: any, key: 'eps' | 'r') => {
       const wrap = el('label', { class: 'anim-range' });
       const inp = el('input', { type: 'range', min: String(spec.min), max: String(spec.max), step: String(spec.step), 'data-param': key });
       const out = el('output');
       wrap.append(document.createTextNode(spec.label), inp, out);
-      inp.addEventListener('input', () => { st[key] = +inp.value; draw(); });
+      inp.addEventListener('input', () => { st[key] = +inp.value; manual(); });
       return { wrap, inp, out };
     };
     const eS = mk(p.epsilon, 'eps'), rS = mk(p.r, 'r');
@@ -84,7 +87,7 @@ const comp: Component = {
     const paper = el('p', { class: 'anim-hint' });
     ctx.controls.append(seg, eS.wrap, rS.wrap, readout, paper);
     function draw() {
-      host.innerHTML = plot(st.eps, st.A, st.r, cfg.alt, LBL);
+      host.innerHTML = plot(st.eps, st.A, st.r, cfg.alt, LBL, ctx.narrow());
       const o = clipObjective(st.r, st.eps, st.A);
       readout.innerHTML = `<span>r = <b data-v="r">${fx(st.r, 2)}</b></span><span>r·Â = <b data-v="un">${fx(o.un, 2)}</b></span><span>clip·Â = <b data-v="cl">${fx(o.cl, 2)}</b></span><span>min = <b data-v="min">${fx(o.min, 2)}</b></span>`;
       eS.inp.value = String(st.eps); rS.inp.value = String(st.r);
@@ -98,15 +101,26 @@ const comp: Component = {
     // 在图上拖动 r 点（指针或触屏）
     const toR = (ev: PointerEvent) => {
       const s = host.querySelector('svg')!; const b = s.getBoundingClientRect();
+      const { W, L, R } = geo(ctx.narrow());
       const x = ((ev.clientX - b.left) / b.width) * W;
       return Math.round(Math.min(2, Math.max(0, ((x - L) / (W - L - R)) * 2)) / p.r.step) * p.r.step;
     };
     let drag = false;
-    host.addEventListener('pointerdown', (ev) => { drag = true; host.setPointerCapture(ev.pointerId); st.r = toR(ev); draw(); });
-    host.addEventListener('pointermove', (ev) => { if (drag) { st.r = toR(ev); draw(); } });
+    host.addEventListener('pointerdown', (ev) => { drag = true; host.setPointerCapture(ev.pointerId); st.r = toR(ev); manual(); });
+    host.addEventListener('pointermove', (ev) => { if (drag) { st.r = toR(ev); manual(); } });
     host.addEventListener('pointerup', () => { drag = false; });
     host.style.touchAction = 'pan-y';
-    if (cfg.steps.length) ctx.stepper((i) => { const s = cfg.steps[i].state ?? {}; if (s.r !== undefined) st.r = s.r; if (s.advantage !== undefined) st.A = s.advantage; if (s.epsilon !== undefined) st.eps = s.epsilon; draw(); });
+    // 手动调节（滑块、拖动、优势按钮）后与当前步的状态比对：不一致就进入「自由调节」
+    let stepper: ReturnType<Ctx['stepper']> | null = null;
+    const same = (a: number, b: number | undefined) => b === undefined || Math.abs(a - b) < 1e-9;
+    function manual() {
+      draw();
+      if (!stepper) return;
+      const s = cfg.steps[stepper.cur()].state ?? {};
+      stepper.free(!(same(st.r, s.r) && same(st.A, s.advantage) && same(st.eps, s.epsilon)));
+    }
+    ctx.onNarrow(draw);
+    if (cfg.steps.length) stepper = ctx.stepper((i) => { const s = cfg.steps[i].state ?? {}; if (s.r !== undefined) st.r = s.r; if (s.advantage !== undefined) st.A = s.advantage; if (s.epsilon !== undefined) st.eps = s.epsilon; draw(); });
     else draw();
   },
 };
