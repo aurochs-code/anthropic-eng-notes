@@ -1,8 +1,9 @@
 // 用法：先 npm run build && npm run preview（默认 http://localhost:4321），再 node scripts/screenshots.mjs
 import { chromium } from 'playwright';
+import config from '../astro.config.mjs'; // base 以站点配置为准（BASE_PATH 环境变量可覆盖，与构建一致）
 import { mkdirSync, existsSync, readdirSync } from 'node:fs';
 const origin = process.env.PREVIEW_ORIGIN ?? 'http://localhost:4321';
-const base = (process.env.BASE_PATH ?? '/anthropic-eng-notes').replace(/\/$/, '');
+const base = (config.base ?? '/').replace(/\/$/, '');
 const out = new URL('../screenshots/', import.meta.url).pathname;
 const prefix = process.env.SHOT_PREFIX ?? '';
 const dist = process.env.DIST_DIR ?? new URL('../dist/', import.meta.url).pathname;

@@ -10,12 +10,13 @@ import { chromium } from 'playwright';
 import { createServer } from 'node:http';
 import { readFileSync, existsSync, statSync, readdirSync } from 'node:fs';
 import { join, extname, resolve } from 'node:path';
+import config from '../astro.config.mjs'; // base 以站点配置为准（BASE_PATH 环境变量可覆盖，与构建一致）
 import yaml from 'js-yaml'; // astro 的依赖，已在 node_modules 中
 import { readPapers, readUnitLinks, validatePaper, SEGMENT_KEYS, unitUrl } from '../src/lib/paper-rules.mjs';
 import { TAG_WHITELIST } from '../src/data/tags.mjs';
 
 const dist = process.argv[2] ?? new URL('../dist/', import.meta.url).pathname;
-const base = (process.env.BASE_PATH ?? '/anthropic-eng-notes').replace(/\/$/, '');
+const base = (config.base ?? '/').replace(/\/$/, '');
 const EXPECT_PAGES = process.env.EXPECT_PAGES ? +process.env.EXPECT_PAGES : null;
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png' };
 const results = []; const ok = (name, pass, detail = '') => results.push({ name, pass, detail });

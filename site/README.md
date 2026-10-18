@@ -32,16 +32,16 @@ Astro 静态站，内容直接读取上级目录 `../notes/*.md`（不复制）�
 ```bash
 npm ci
 npm run build          # astro build + 建搜索索引（scripts/pagefind-index.mjs → dist/pagefind/）
-npm run preview        # http://localhost:4321/anthropic-eng-notes/
+npm run preview        # http://localhost:4321/
 npm run screenshots    # 需 preview 运行中；截图到 screenshots/ 并校验 mermaid 渲染成 svg
 npm run check          # 自检：order、mermaid、站内死链、首页分组、路线/资源页（自带静态服务，读 dist/）
 ```
-环境变量：`BASE_PATH`（默认 `/anthropic-eng-notes`，根域名部署用 `BASE_PATH=/`）、`SITE_URL`、`NOTES_DIR`（默认 `../notes`）、`RESOURCES_DIR`（默认 `../resources`）。
+环境变量（一般不需要）：`BASE_PATH`（默认 `/`，站点部署在自定义域名根路径）、`SITE_URL`（默认 `https://learn.thinkloop.dev`）、`PAPERS_DIR`（默认 `../papers`）、`NOTES_DIR`（默认 `../notes`）、`RESOURCES_DIR`（默认 `../resources`）。
 
 ## 部署到 GitHub Pages
 - 工作流在仓库根目录 `.github/workflows/deploy.yml`（构建 `site/` 子目录），目前**只允许手动触发**（Actions → Deploy to GitHub Pages → Run workflow）。
 - 先在仓库 Settings → Pages → Source 选 “GitHub Actions”。确认要自动发布时，可在 `on:` 下加回 `push: branches: [main]`。
-- base 默认取 `/<仓库名>`，可用仓库变量 `BASE_PATH` 覆盖。
+- 站点地址 https://learn.thinkloop.dev/（根路径，`site`/`base` 写在 `astro.config.mjs`）。`site/public/CNAME` 随构建进入 dist；Pages 是 workflow 部署，自定义域名仍需在仓库 Settings → Pages → Custom domain 填写，CNAME 文件只是备份说明。工作流不再设置 `BASE_PATH`/`SITE_URL`。
 
 ## 页面功能与实现位置
 - 布局（`src/layouts/Base.astro`）：≥1200px 三栏（左侧栏 `components/Sidebar.astro` + 正文 + 右侧本页目录 `components/Toc.astro`）；768–1199px 侧栏收进菜单抽屉、目录折叠在正文顶部；<768px 菜单抽屉 + 底部“本页目录”抽屉。

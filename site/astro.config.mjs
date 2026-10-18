@@ -3,10 +3,10 @@ import { resolve } from 'node:path';
 import { rehypeHeadingIds } from '@astrojs/markdown-remark';
 import { remarkMermaid, remarkNoteLinks, remarkPaperLinks, rehypeHeadingAnchors } from './src/lib/remark-plugins.mjs';
 
-// GitHub Pages 项目页：BASE_PATH 默认 /anthropic-eng-notes，SITE_URL 可选
-const base = process.env.BASE_PATH ?? '/anthropic-eng-notes';
+// 自定义域名根路径部署：https://learn.thinkloop.dev/（site/public/CNAME）。BASE_PATH、SITE_URL 仅供临时覆盖
+const base = process.env.BASE_PATH ?? '/';
 const papersDir = resolve(process.env.PAPERS_DIR ?? '../papers');
-const site = process.env.SITE_URL ?? 'https://example.github.io';
+const site = process.env.SITE_URL ?? 'https://learn.thinkloop.dev';
 
 export default defineConfig({
   output: 'static',

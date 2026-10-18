@@ -1,4 +1,4 @@
-# 部署到 GitHub Pages 项目页（站点源码在 site/ 子目录）。
+# 部署到 GitHub Pages，自定义域名 learn.thinkloop.dev 根路径（站点源码在 site/ 子目录）。
 # 目前仅允许手动触发（workflow_dispatch）；确认发布后可恢复 push 触发。
 name: Deploy to GitHub Pages
 on:
@@ -16,10 +16,7 @@ jobs:
     defaults:
       run:
         working-directory: site
-    env:
-      # 项目页路径：/<仓库名>；可在仓库 Settings → Variables 设置 BASE_PATH 覆盖
-      BASE_PATH: ${{ vars.BASE_PATH || format('/{0}', github.event.repository.name) }}
-      SITE_URL: https://${{ github.repository_owner }}.github.io
+    # site / base 写在 site/astro.config.mjs（https://learn.thinkloop.dev，base /），这里不再用环境变量覆盖
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
