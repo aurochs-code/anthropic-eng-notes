@@ -6,8 +6,9 @@ import Toc, { type Heading } from '../components/Toc.astro';
 const SITE_DESC = 'Anthropic 工程博客 26 篇文章的中文学习笔记（非翻译），附外部资源导读与 4 阶段学习路线。';
 // searchable=false：不进搜索索引（首页、资源列表只是摘要汇总，会挤占真正的笔记结果）
 // readProgress：页顶阅读进度条（笔记 / 资源页）
-const { title, description = SITE_DESC, ogType = 'website', headings = [], searchable = true, readProgress = false } = Astro.props as {
-  title: string; description?: string; ogType?: string; headings?: Heading[]; searchable?: boolean; readProgress?: boolean;
+// noindex：加 <meta name="robots" content="noindex">（404 页）；具名插槽 head：页面在 <head> 最前面插入内联脚本
+const { title, description = SITE_DESC, ogType = 'website', headings = [], searchable = true, readProgress = false, noindex = false } = Astro.props as {
+  title: string; description?: string; ogType?: string; headings?: Heading[]; searchable?: boolean; readProgress?: boolean; noindex?: boolean;
 };
 const desc = description.replace(/\s+/g, ' ').trim();
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
@@ -19,6 +20,7 @@ const hasToc = tocList.length > 0;
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <slot name="head" />
   <script is:inline>
     // 首屏前确定主题，避免闪烁：theme = auto | light | dark（localStorage），html[data-theme] 为实际生效的 light/dark
     (function () {
@@ -32,7 +34,7 @@ const hasToc = tocList.length > 0;
   </script>
   <title>{title}</title>
   <meta name="description" content={desc} />
-  <link rel="canonical" href={canonical} />
+  {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
   <link rel="icon" type="image/svg+xml" href={url('/favicon.svg')} />
   <meta property="og:type" content={ogType} />
   <meta property="og:title" content={title} />

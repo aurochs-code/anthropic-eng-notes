@@ -1,0 +1,18 @@
+---
+// GitHub Pages 对不存在的路径返回 dist/404.html。
+// 旧项目页地址兼容：aurochs-code.github.io/anthropic-eng-notes/... 会被 301 到 learn.thinkloop.dev/anthropic-eng-notes/...，
+// 这里在 <head> 最前面用内联脚本去掉 /anthropic-eng-notes 前缀（保留查询参数和锚点）并 location.replace 跳转。
+import Base from '../layouts/Base.astro';
+import { url } from '../lib/notes';
+---
+<Base title="页面不存在 · 学习笔记" description="页面不存在：这个地址没有对应的页面，可以回到首页或用搜索查找。" searchable={false} noindex={true}>
+  <script is:inline slot="head">
+    (function () {
+      var p = location.pathname, pre = '/anthropic-eng-notes';
+      if (p === pre || p.indexOf(pre + '/') === 0) location.replace((p.slice(pre.length) || '/') + location.search + location.hash);
+    })();
+  </script>
+  <h1>页面不存在</h1>
+  <p>这个地址没有对应的页面，可能已移动或输错了。</p>
+  <p><a href={url('/')} data-home-link>← 回到首页</a>，或用右上角的搜索查找。</p>
+</Base>

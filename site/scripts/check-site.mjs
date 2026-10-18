@@ -26,7 +26,8 @@ const server = createServer((req, res) => {
   if (!p.startsWith(base + '/')) { res.writeHead(404).end(); return; }
   let f = join(dist, p.slice(base.length));
   if (existsSync(f) && statSync(f).isDirectory()) f = join(f, 'index.html');
-  if (!existsSync(f)) { res.writeHead(404).end(); return; }
+  // 模拟 GitHub Pages：不存在的路径返回 404.html（状态码 404）
+  if (!existsSync(f)) { const nf = join(dist, '404.html'); if (existsSync(nf)) res.writeHead(404, { 'content-type': types['.html'] }).end(readFileSync(nf)); else res.writeHead(404).end(); return; }
   res.writeHead(200, { 'content-type': types[extname(f)] ?? 'application/octet-stream' }).end(readFileSync(f));
 }).listen(0);
 const origin = `http://127.0.0.1:${server.address().port}`;
@@ -439,6 +440,24 @@ const pathPapers = new Set([...trackSec.matchAll(/data-paper-link="([^"]+)"/g)].
 const missP = goodPapers.filter((x) => !pathPapers.has(x.d.slug)).map((x) => x.d.slug);
 if (missP.length) linkBad.push(`路线页原理支线缺：${missP.join(', ')}`);
 ok('论文站内链接', linkBad.length === 0, `r-30u30 页 ${(rHtml.match(/data-paper-link=/g) ?? []).length} 个单元链接指向站内论文笔记；路线页原理支线列出 ${pathPapers.size} 篇` + (linkBad.length ? '；问题：' + linkBad.join('，') : ''));
+
+// 旧地址兼容：/anthropic-eng-notes/... → 去前缀跳转（保留查询与锚点）；普通不存在路径显示 404、不跳转、不进索引
+await interact('404 页与旧地址跳转', async (pg) => {
+  const nf = existsSync(join(dist, '404.html')) ? readFileSync(join(dist, '404.html'), 'utf8') : '';
+  const meta = /<meta name="robots" content="noindex"/.test(nf) && !/data-pagefind-body/.test(nf);
+  const early = nf.indexOf('/anthropic-eng-notes') > -1 && nf.indexOf('/anthropic-eng-notes') < nf.indexOf('<title>');
+  await pg.goto(`${origin}/anthropic-eng-notes/papers/p-13-attention-is-all-you-need/?q=1#x`, { waitUntil: 'networkidle' });
+  const jumped = await pg.evaluate(() => location.pathname + location.search + location.hash);
+  const h1 = await pg.$eval('h1', (e) => e.textContent).catch(() => '');
+  await pg.goto(`${origin}/anthropic-eng-notes`, { waitUntil: 'networkidle' });
+  const bare = await pg.evaluate(() => location.pathname);
+  const resp = await pg.goto(`${origin}${base}/no-such-page/?a=1#b`, { waitUntil: 'networkidle' });
+  const stay = await pg.evaluate(() => location.pathname + location.search + location.hash);
+  const shown = await pg.$eval('main h1', (e) => e.textContent.trim()).catch(() => '');
+  const home = await pg.$eval('main a[data-home-link]', (a) => a.getAttribute('href')).catch(() => null);
+  const pass = meta && early && jumped === `${base}/papers/p-13-attention-is-all-you-need/?q=1#x` && /Attention Is All You Need/.test(h1) && bare === `${base}/` && resp.status() === 404 && stay === `${base}/no-such-page/?a=1#b` && shown === '页面不存在' && home === `${base}/`;
+  return { pass, detail: `404.html noindex 且不进索引 ${meta}、跳转脚本在 <title> 之前 ${early}；旧地址 → ${jumped}（${h1.slice(0, 30)}）；/anthropic-eng-notes → ${bare}；不存在路径 状态 ${resp.status()}、停留 ${stay}、显示「${shown}」、回首页链接 ${home}` };
+});
 
 const PATH = `${origin}${base}/path/`;
 const theoryCount = resData.filter((r) => r.d.track === 'theory').reduce((n, r) => n + (r.d.route ?? []).length, 0);
