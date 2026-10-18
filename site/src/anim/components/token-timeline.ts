@@ -22,7 +22,7 @@ function bar(p: any, uid: string, y: number, m: Record<string, number>, s: State
     if (k === 'R') b += rect(X(at), y, X(at + n) - X(at), h, '', `fill="url(#${uid})"`);
     if (k === 'C') b += rect(X(at), y, X(at + n) - X(at), h, '', `fill="url(#${uid}-acc)"`);
     if (k === 'N') b += rect(X(at), y, X(at + n) - X(at), h, '', `fill="url(#${uid}-dot)"`);
-    if (X(at + n) - X(at) >= 16) b += text((X(at) + X(at + n)) / 2, y + h / 2 + 4, k, segText(k), 'middle');
+    if (X(at + n) - X(at) >= (g.narrow ? 11 : 16)) b += text((X(at) + X(at + n)) / 2, y + h / 2 + 4, k, segText(k), 'middle');
     at += n;
   }
   b += line(X(p.warn_at), y - 6, X(p.warn_at), y + h + 6, 'warn') + line(X(cap), y - 8, X(cap), y + h + 8, 'limit');
@@ -88,7 +88,7 @@ const comp: Component = {
       b += bar(p, uid, y, s.main!, s, WIDE, `${n} ${s.label}`);
       y += 30 + 22 + extraH(s, WIDE);
     }
-    return svg(WIDE.W, y, b, cfg.alt) + legend(p, uid) + (p.choose ? chooseTable(p) : '') + notesHtml(p.notes);
+    return `<div class="anim-static-scroll">${svg(WIDE.W, y, b, cfg.alt)}</div>` + legend(p, uid) + (p.choose ? chooseTable(p) : '') + notesHtml(p.notes);
   },
   mount(ctx: Ctx, cfg: Cfg) {
     const p = cfg.params, uid = `${cfg.id}-i`;

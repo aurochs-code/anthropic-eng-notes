@@ -22,25 +22,27 @@ function plot(eps: number, A: number, r: number | null, label: string, lbl: Labe
   const lo = 1 - eps, hi = 1 + eps;
   const [p0, p1] = A > 0 ? [hi, 2] : [0, lo]; // 平台区
   let b = rect(X(p0), T, X(p1) - X(p0), H - T - B, 'soft');
-  b += text((X(p0) + X(p1)) / 2, T + 14, narrow ? lbl.plateauShort : lbl.plateau, 't-small t-accent', 'middle');
+  // 平台区窄于约 150 画布单位时（窄屏或 ε 较大）改用短标签
+  b += text((X(p0) + X(p1)) / 2, T + 14, narrow || X(p1) - X(p0) < 150 ? lbl.plateauShort : lbl.plateau, 't-small t-accent', 'middle');
   for (let v = Math.ceil(y0); v <= Math.floor(y1); v++) { b += line(L, Y(v), W - R, Y(v), 'grid'); b += text(L - 6, Y(v) + 4, v, 't-small t-muted', 'end'); }
   b += line(L, Y(0), W - R, Y(0), 'axis');
   for (const x of [0, 0.5, 1, 1.5, 2]) b += text(X(x), H - B + 16, x, 't-small t-muted', 'middle');
   b += line(L, T, L, H - B, 'axis');
-  // 「旧策略（r = 1）」放在 r = 1 虚线顶端、图内离上边约 4px，与 1−ε、1+ε 同样式
-  b += line(X(1), T, X(1), H - B, 'ref-faint') + text(X(1), T + 4 + 10, lbl.old, 't-small t-muted', 'middle');
-  b += line(X(lo), T, X(lo), H - B, 'ref') + text(X(lo) - 3, T + 30, '1−ε', 't-small t-muted', 'end');
-  b += line(X(hi), T, X(hi), H - B, 'ref') + text(X(hi) + 3, T + 30, '1+ε', 't-small t-muted', 'start');
+  b += line(X(1), T, X(1), H - B, 'ref-faint') + line(X(lo), T, X(lo), H - B, 'ref') + line(X(hi), T, X(hi), H - B, 'ref');
+  // 三条参考线的标签在所有线之后再画，带底色描边（t-halo），不被虚线穿过；「旧策略（r = 1）」在 r = 1 线顶端、图内离上边约 4px，窄屏用短标签
+  const refLabels = text(X(1), T + 4 + 10, narrow ? lbl.oldShort : lbl.old, 't-small t-muted t-halo', 'middle') +
+    text(X(lo) - 3, T + 30, '1−ε', 't-small t-muted t-halo', 'end') + text(X(hi) + 3, T + 30, '1+ε', 't-small t-muted t-halo', 'start');
   b += poly(pts((x) => clipObjective(x, eps, A).un), 'l-un');
   b += poly(pts((x) => clipObjective(x, eps, A).cl), 'l-clip');
   b += poly(pts((x) => clipObjective(x, eps, A).min), 'l-main');
   b += text(W - R, H - 4, lbl.xAxis, 't-small t-muted', 'end');
   b += text(L + 4, T - 4, `${A > 0 ? '好动作 Â = +1' : '坏动作 Â = −1'} · ε = ${fx(eps, 2)}`, 't-small t-muted');
+  b += refLabels;
   if (r !== null) b += circle(X(r), Y(clipObjective(r, eps, A).min), 7, 'knob');
   return svg(W, H, b, label, narrow ? 'narrow' : '');
 }
-type Labels = { plateau: string; plateauShort: string; old: string; xAxis: string };
-const LBL: Labels = { plateau: '这里梯度为 0：不再推动 r', plateauShort: '梯度为 0', old: '旧策略（r = 1）', xAxis: '概率比 r' };
+type Labels = { plateau: string; plateauShort: string; old: string; oldShort: string; xAxis: string };
+const LBL: Labels = { plateau: '这里梯度为 0：不再推动 r', plateauShort: '梯度为 0', old: '旧策略（r = 1）', oldShort: 'r = 1', xAxis: '概率比 r' };
 const legend = `<ul class="anim-legend"><li><i style="border-style:dashed"></i>未截断项 r·Â</li><li><i style="border-style:dotted"></i>截断项 clip(r, 1−ε, 1+ε)·Â</li><li><i style="background:var(--accent);border-color:var(--accent)"></i>最终目标 min(…)</li><li><i style="background:var(--accent-soft)"></i>平台区</li></ul>`;
 
 const comp: Component = {
@@ -61,7 +63,7 @@ const comp: Component = {
   },
   renderStatic(cfg) {
     const p = cfg.params, eps = p.epsilon.default;
-    return `<div class="anim-stack">${plot(eps, 1, null, `${cfg.alt}（上图：优势为正）`, LBL)}${plot(eps, -1, null, `${cfg.alt}（下图：优势为负）`, LBL)}</div>${legend}${notesHtml(p.notes)}`;
+    return `<div class="anim-static-scroll"><div class="anim-stack">${plot(eps, 1, null, `${cfg.alt}（上图：优势为正）`, LBL)}${plot(eps, -1, null, `${cfg.alt}（下图：优势为负）`, LBL)}</div></div>${legend}${notesHtml(p.notes)}`;
   },
   mount(ctx: Ctx, cfg: Cfg) {
     const p = cfg.params;

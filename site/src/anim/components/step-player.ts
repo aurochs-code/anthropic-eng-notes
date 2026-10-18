@@ -86,7 +86,7 @@ const comp: Component = {
     const qi = tokens.indexOf(p.query.default);
     const a = attention(Q, K, V, true);
     const rows = (m: number[][], d: number) => m.map((r, i) => [tokens[i], ...r.map((x) => fx(x, d))]);
-    return scene(p, 6, qi, true, cfg.alt) + notesHtml(p.notes) +
+    return `<div class="anim-static-scroll">${scene(p, 6, qi, true, cfg.alt)}</div>` + notesHtml(p.notes) +
       table(['', ...tokens], rows(a.dots, 0), '点积 Q·Kᵀ（行 = 查询，列 = 键）') +
       table(['', ...tokens], rows(a.scaled, 1), `除以 √d_k = √${a.dk} = ${fx(Math.sqrt(a.dk), 0)}`) +
       table(['', ...tokens], rows(a.weights, 3), '按行 softmax 后的注意力权重') +

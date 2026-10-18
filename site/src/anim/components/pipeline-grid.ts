@@ -23,11 +23,12 @@ const SHADES = [1, 0.72, 0.5, 0.34];
 // 甘特网格放在可横向滚动的容器里，按实际像素绘制（不随容器缩放，字号恒定）：格子最小 16×22px，
 // 左侧「设备 k」标签列 sticky 固定；内容超宽时（容器查询，JS 关闭也有效）显示「← 左右滑动 →」。
 const LW = 76, CH = 22;
-export const cellW = (cols: number, avail: number) => Math.max(16, Math.min(28, Math.floor(avail / cols)));
-function grid(K: number, M: number, uid: string, label: string, opts: { upTo?: number; syncOn?: boolean; title?: string; avail?: number } = {}): string {
+export const cellW = (cols: number, avail: number, max = 28) => Math.max(16, Math.min(max, Math.floor(avail / cols)));
+function grid(K: number, M: number, uid: string, label: string, opts: { upTo?: number; syncOn?: boolean; title?: string; avail?: number; maxCell?: number } = {}): string {
   const { cols, grid: g } = schedule(K, M);
-  const cw = cellW(cols, (opts.avail ?? 640) - LW - 30), top = 8;
-  const gh = K * (CH + 4) - 4, yb = top + gh + 30, H = yb + 22, GW = cols * cw + 28;
+  // 画布宽 = 格子 + 22（同步列：间隔 6 + 宽 14 + 余量 2），与计算格宽时扣掉的 LW + 22 一致
+  const cw = cellW(cols, (opts.avail ?? 640) - LW - 22, opts.maxCell), top = 8;
+  const gh = K * (CH + 4) - 4, yb = top + gh + 30, H = yb + 22, GW = cols * cw + 22;
   const showNum = M <= 8 && cw >= 14;
   let b = hatchDef(uid), lb = '';
   for (let k = 0; k < K; k++) {
@@ -49,7 +50,7 @@ function grid(K: number, M: number, uid: string, label: string, opts: { upTo?: n
   for (let t = 0; t < cols; t++) { const n = g.filter((r) => !r[t]).length; if (n) b += text(t * cw + cw / 2, yb, n, 't-small t-muted', 'middle'); }
   b += line(0, top + gh + 18, cols * cw, top + gh + 18, 'grid') + text(0, yb + 16, '时间 →', 't-small t-muted', 'start') + text(sx + 14, yb + 16, '同步更新', 't-small t-muted', 'end');
   if (opts.upTo !== undefined) b += line((opts.upTo + 1) * cw, top - 4, (opts.upTo + 1) * cw, top + gh + 4, 'pointer');
-  const W = GW + 24;
+  const W = GW;
   return `<div class="pg-wrap" id="${uid}-w">${opts.title ? `<p class="pg-title">${esc(opts.title)}</p>` : ''}<div class="pg-scroll" tabindex="0" aria-label="${esc(label)}（可左右滚动）"><div class="pg-inner">` +
     `<svg class="anim-svg pg-svg pg-labels" width="${LW}" height="${H}" viewBox="0 0 ${LW} ${H}" aria-hidden="true">${lb}</svg>` +
     `<svg class="anim-svg pg-svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}" data-cw="${cw}">${b}</svg>` +
@@ -73,7 +74,7 @@ const comp: Component = {
   renderStatic(cfg) {
     const p = cfg.params, fb: { K: number; M: number }[] = p.fallback ?? [{ K: p.K.default, M: p.M.default }];
     const ref = p.reference ? table(['M', '空等占比', '理想加速比'], p.reference.M.map((m: number) => { const r = bubble(p.reference.K, m); return [m, pct(r.idle), fx(r.speedup, 2)]; }), `参考值（K = ${p.reference.K}）`) : '';
-    return fb.map((f, i) => grid(f.K, f.M, `${cfg.id}-s${i}`, `${cfg.alt}（K = ${f.K}，M = ${f.M}）`, { title: `K = ${f.K}，M = ${f.M}：空等 ${pct(bubble(f.K, f.M).idle)}` })).join('') + legend + ref + notesHtml(p.notes);
+    return fb.map((f, i) => grid(f.K, f.M, `${cfg.id}-s${i}`, `${cfg.alt}（K = ${f.K}，M = ${f.M}）`, { title: `K = ${f.K}，M = ${f.M}：空等 ${pct(bubble(f.K, f.M).idle)}`, maxCell: 24 })).join('') + legend + ref + notesHtml(p.notes);
   },
   mount(ctx: Ctx, cfg: Cfg) {
     const p = cfg.params, K0 = p.K.default as number;
@@ -91,7 +92,11 @@ const comp: Component = {
     const kS = mk(p.K, 'K'), mS = mk(p.M, 'M');
     const pre = el('div', { class: 'anim-seg', role: 'group', 'aria-label': '预设' });
     // 第 i 个预设 = 第 i 步（1–3 步：M = 1、M = K、M = 4K）
-    const pb = (p.presets as any[]).map((x, i) => { const b = el('button', { type: 'button', class: 'anim-btn', 'data-preset': String(x.M) }, esc(x.label)); b.addEventListener('click', () => { stepper.go(i); runSweep(); }); pre.append(b); return b; });
+    const pb = (p.presets as any[]).map((x, i) => { const b = el('button', { type: 'button', class: 'anim-btn', 'data-preset': String(x.M) }, esc(x.label)); b.addEventListener('click', () => {
+      // K 是默认值：跳到对应的步；否则只按当前 K 设 M，进入自由调节
+      if (st.K === K0) { stepper.go(i); runSweep(); return; }
+      st.M = Math.min(maxM(), presetM(x.M, st.K)); manual();
+    }); pre.append(b); return b; });
     const readout = el('div', { class: 'anim-readout', 'aria-live': 'polite' });
     // 时间扫描：每格 200ms；M、K 大时超过 5 秒，可暂停，滚出视口自动暂停；指针自动滚进可视区
     const sweep = ctx.ticker(() => { const cols = 2 * (st.M + st.K - 1); st.upTo = (st.upTo ?? -1) + 1; if (st.upTo >= cols) { st.upTo = undefined; draw(); return false; } draw(); follow(); }, 200);

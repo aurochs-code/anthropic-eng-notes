@@ -635,6 +635,25 @@ await interact('阅读进度条', async (pg) => {
     return { pass: out.length === 2 && out.every((o) => o.ok), detail: out.map((o) => `${o.id}：${o.s}${o.ok ? '' : ' ✗'}`).join('；') };
   });
 
+  // GPipe 网格：桌面 M = 16、390px 下 M = 1 都应正好放下——不出现横向滚动，也不显示「← 左右滑动 →」（实测）
+  for (const b of animBlocks.filter((x) => x.comp === 'pipeline-grid')) {
+    const out = [];
+    for (const [vw, preset] of [[1440, '4K'], [390, '1']]) {
+      await interact(`__pg_${vw}`, async (pg) => {
+        await pg.goto(U(b), { waitUntil: 'networkidle' }); await pg.waitForSelector('html[data-anim="ready"]');
+        const f = pg.locator(sel(b)); await f.scrollIntoViewIfNeeded();
+        await f.locator(`button[data-preset="${preset}"]`).click();
+        const pause = f.locator('.anim-btn', { hasText: '暂停' }); if (await pause.count()) await pause.click();
+        await pg.waitForTimeout(200);
+        const r = await f.evaluate((fig) => { const sc = fig.querySelector('.pg-scroll'); const h = fig.querySelector('.pg-hint'); return { sw: sc.scrollWidth, cw: sc.clientWidth, hint: getComputedStyle(h).display !== 'none', m: fig.dataset.m }; });
+        out.push({ ok: r.sw <= r.cw && !r.hint, s: `${vw}px M=${r.m}：内容 ${r.sw} / 容器 ${r.cw}，滑动提示${r.hint ? '显示' : '隐藏'}` });
+        return { pass: true, detail: '' };
+      }, { viewport: { width: vw, height: 900 }, reducedMotion: 'reduce' });
+    }
+    results.splice(results.findIndex((x) => x.name === '__pg_1440'), 2);
+    ok('动画：GPipe 网格恰好放下（无多余滚动与提示）', out.length === 2 && out.every((o) => o.ok), out.map((o) => o.s + (o.ok ? '' : ' ✗')).join('；'));
+  }
+
   // 时序图分步：引用解析（参与者上下两框、消息、块），换主题重渲染后仍高亮
   for (const b of stepBlocks) await interact(`动画：mermaid 分步高亮（${b.id}）`, async (pg) => {
     await pg.goto(U(b), { waitUntil: 'networkidle' }); await waitM(pg);
