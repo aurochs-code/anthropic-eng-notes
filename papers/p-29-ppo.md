@@ -10,7 +10,7 @@ source_url: "https://arxiv.org/abs/1707.06347"
 published: 2017-07-20
 summary: "OpenAI 2017 年提出的策略梯度方法：普通策略梯度每批数据只能更新一次，多更新几次就容易一步走太远。PPO 把新旧策略的概率比截断在 1±ε 之间，取截断前后的较小值作为目标，于是可以在同一批数据上做多轮小批量更新。它实现简单，在连续控制和 Atari 上表现稳健，后来成为 RLHF 的常用优化器。"
 tags: [reinforcement-learning, ml-foundations]
-reading_time: 7
+reading_time: 8
 authors_en: ["John Schulman", "Filip Wolski", "Prafulla Dhariwal", "Alec Radford", "Oleg Klimov"]
 notes_updated: 2026-10-18
 source_note: "arXiv 首版 2017-07-20，现行为第 2 版（2017-08-28），未见正式会议发表信息（待核实）。"
@@ -47,6 +47,32 @@ source_note: "arXiv 首版 2017-07-20，现行为第 2 版（2017-08-28），未
 
 - 优势为正（好动作）：概率比涨过 1+ε 后不再有额外奖励，阻止一步把概率拉得太高。
 - 优势为负（坏动作）：概率比降过 1−ε 后不再有额外奖励，阻止一步把概率压得太低。
+
+```anim
+id: ppo-clip
+component: function-plot
+caption: PPO 单个样本的截断目标随概率比 r 的变化（Â 取 ±1 为示意）
+alt: 折线图：横轴是新旧策略的概率比 r，纵轴是单个样本的目标值。优势为正时，目标随 r 线性上升，到 r = 1+ε 后变平；优势为负时，目标在 r 小于 1−ε 时保持平坦，r 增大时线性下降。平坦段表示梯度为零。
+params:
+  epsilon: { min: 0.05, max: 0.5, step: 0.05, default: 0.2, label: "ε", note: 论文实验取值 }
+  advantage: { options: [1, -1], default: 1, labels: ["好动作 Â = +1", "坏动作 Â = −1"] }
+  r: { min: 0, max: 2, step: 0.05, default: 1, label: "概率比 r", draggable: true }
+  notes:
+    - Â 取 ±1 为示意；真实优势是估计出来的任意实数
+    - 单个样本的目标；实际是一批样本的平均（论文第 3 节）
+  paper_note:
+    at: [0.1, 0.2, 0.3]
+    text: 论文表 1（第 6.1 节，7 个连续控制环境 × 21 次运行的平均归一化分数）：ε = 0.1 → 0.76，ε = 0.2 → 0.82，ε = 0.3 → 0.70；不截断也不加惩罚 → −0.39。
+steps:
+  - text: r = 1 表示新旧策略给出同样的概率，三条线在这里重合
+    state: { r: 1, advantage: 1 }
+  - text: 好动作超过 1+ε 后目标不再增加，梯度为 0，不会一步把概率拉得太高
+    state: { r: 1.5, advantage: 1 }
+  - text: 好动作的 r 掉到 1−ε 以下时不截断，目标变差会被如实计入
+    state: { r: 0.5, advantage: 1 }
+  - text: 坏动作反过来；只截断“会让目标变好”的那一侧，所以 L^CLIP 是未截断目标的下界
+    state: { r: 0.5, advantage: -1 }
+```
 
 ### 2. 另一种做法：自适应 KL 惩罚
 

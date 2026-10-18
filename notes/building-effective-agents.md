@@ -8,7 +8,7 @@ source_url: "https://www.anthropic.com/engineering/building-effective-agents"
 published: 2024-12-19
 summary: "Anthropic 把“智能体系统”分为预先编排的工作流和自主决策的智能体，归纳出增强型 LLM 这个基础单元和五种常见工作流模式，核心主张是：从最简单的方案开始，只有当复杂度确实带来可测量的收益时才往上加。"
 tags: [agents, workflows, tool-design, agent-frameworks]
-reading_time: 15
+reading_time: 16
 source_note: "在线原文顶部已加注：文中描述的工具生态自 2024 年 12 月以来已有很大变化，当前做法请参考 Managed Agents 相关文章与文档；正文里也出现了发表之后才推出的产品名（如 Claude Haiku 4.5、Sonnet 4.5、Claude Agent SDK），说明原文发表后修订过。本笔记以 2026-10-17 读到的在线版本为准。"
 authors_en: ["Erik S.", "Barry Zhang"]
 notes_updated: 2026-10-17
@@ -236,6 +236,21 @@ sequenceDiagram
         end
     end
     A-->>H: 交付结果
+```
+
+```anim-steps
+id: agent-loop-steps
+caption: 自主智能体运行循环的分步演示
+alt: 时序图：人类用户、智能体和工具 / 环境三方。人类下达任务，智能体规划后进入循环：调用工具，拿到真实反馈，评估进展；遇到检查点或阻碍时向人类请求确认。循环直到任务完成或触发停止条件（如最大迭代次数），最后把结果交付给人类。
+steps:
+  - { highlight: [H, A, "msg:1"], text: "起点：智能体从人类的一条指令或一次讨论开始，先把任务说清楚" }
+  - { highlight: [A, "msg:2"], text: "规划：任务清楚后，智能体自己规划下一步" }
+  - { highlight: ["block:1", A, T, "msg:3"], text: "进入循环：调用工具或执行代码" }
+  - { highlight: ["block:1", T, A, "msg:4"], text: "每一步都从环境拿回真实结果（ground truth）" }
+  - { highlight: ["block:1", A, "msg:5"], text: "根据反馈评估进展，调整计划" }
+  - { highlight: ["block:1"], sequence: ["msg:3", "msg:4", "msg:5"], repeat: 2, counter: "第 {n} 轮", text: "步数事先无法预估，循环一轮接一轮（轮数为示意）" }
+  - { highlight: ["block:2", A, H, "msg:6", "msg:7"], text: "到检查点或遇到阻碍时，停下来请人确认或补充信息" }
+  - { highlight: ["block:1", A, H, "msg:8"], text: "完成即结束，也常设最大迭代次数等停止条件；最后交付结果" }
 ```
 
 ## 关键原话

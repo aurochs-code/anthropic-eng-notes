@@ -53,6 +53,39 @@ GPipe 把连续的若干层合成一个“单元”（cell），第 k 个单元�
 
 流水线开头和结尾会有一些设备空闲的时间，论文称为**气泡**（bubble）开销，分摊到 M 个微步上是 `O((K − 1) / (M + K − 1))`。实验中，当 **M ≥ 4K** 时气泡开销几乎可以忽略。
 
+```anim
+id: gpipe-bubble
+component: pipeline-grid
+caption: GPipe 流水线的气泡（理想化示意：各段耗时相同，不含重算和通信）
+alt: 甘特图示意：纵轴是 K 个设备，横轴是时间。小批量切成 M 个微批次后，各设备错开一格依次处理，中间时段所有设备同时工作，开头和结尾呈阶梯状空白，即气泡。K = 4 时，M = 1 的空等占比是 75%，M = 16 时降到约 16%。最后所有设备同步更新参数。
+params:
+  K: { min: 1, max: 8, step: 1, default: 4, label: "设备数 K" }
+  M: { min: 1, max: 32, step: 1, default: 4, label: "微批次数 M" }
+  presets:
+    - { label: "M = 1：没有流水线", M: 1 }
+    - { label: "M = K", M: "K" }
+    - { label: "M = 4K", M: "4K" }
+  schedule:
+    forward: "t = k + m"
+    backward: "t = (M + K − 1) + (K − 1 − k) + (M − 1 − m)"   # 倒序，待核实
+    final_column: 同步更新参数
+  readouts:
+    - { label: 总时间, formula: "2(M+K−1) 格" }
+    - { label: 空等占比, formula: "(K−1)/(M+K−1)", format: percent1 }
+    - { label: 理想加速比, formula: "K·M/(M+K−1)", format: fixed2, note: 笔者推导，不是论文数字 }
+  fallback: [{ K: 4, M: 1 }, { K: 4, M: 16 }]
+  reference: { K: 4, M: [1, 4, 8, 16, 32] }
+  notes:
+    - 理想化示意：各段耗时相同、前向与反向耗时相同，不含重算和通信
+    - 论文写的是量级 O((K−1)/(M+K−1))
+    - 论文实验：M ≥ 4K 时气泡几乎可以忽略（部分得益于重算可提前调度，本图未画）
+steps:
+  - text: 不切分时同一时刻只有一个设备在算，K = 4 时空等 75%
+  - text: 切成 M = K 个微批次，中间时段所有设备同时忙，但灌满和排空仍有约 43% 空等
+  - text: M = 4K 时降到约 16%；论文实验中几乎可以忽略，部分因为重算可以提前调度
+  - text: 所有微批次的梯度累加后同步更新，结果与不切分一致
+```
+
 由于只在分段边界传递激活张量，通信量很小，即使设备之间没有高速互联也能高效扩展。
 
 ## 关键公式或机制

@@ -11,7 +11,7 @@ source_url: "https://arxiv.org/abs/1706.03762"
 published: 2017-06-12
 summary: "Transformer 的原始论文：去掉循环和卷积，只用缩放点积注意力、多头注意力、位置编码和逐位置前馈层搭出编码器—解码器。任意两个位置一步相连、训练可完全并行，代价是计算量随序列长度平方增长。今天的大模型都从这里来。"
 tags: [transformer, attention, context-window, ml-foundations]
-reading_time: 9
+reading_time: 10
 authors_en: ["Ashish Vaswani", "Noam Shazeer", "Niki Parmar", "Jakob Uszkoreit", "Llion Jones", "Aidan N. Gomez", "Lukasz Kaiser", "Illia Polosukhin"]
 notes_updated: 2026-10-18
 source_note: "arXiv 首版 2017-06-12，现行为第 7 版；论文发表于 NIPS 2017。本笔记依据现行版本撰写，数字均出自论文。"
@@ -47,6 +47,37 @@ source_note: "arXiv 首版 2017-06-12，现行为第 7 版；论文发表于 NIP
 为什么要除以 √d_k：论文的脚注给了理由——如果 q、k 的各分量是均值 0、方差 1 的独立随机变量，它们的点积方差就是 d_k；维度大时点积数值很大，softmax 会被推到梯度极小的区域。缩放把方差拉回 1 左右。
 
 论文也解释了为什么选点积而不是 Day 15 的加性打分：两者理论复杂度相近，但点积可以用高度优化的矩阵乘法实现，实际快得多、省内存；不缩放时，维度大了加性打分反而更好，这正是要缩放的原因。
+
+```anim
+id: attention-weights
+component: step-player
+caption: 缩放点积注意力的计算过程（示意数据，d_k = 4，d_v = 2）
+alt: 示意图：句子“小狗 追 皮球”的自注意力计算。以“追”为查询，它与三个词的键做点积得到 2、1、3，除以 2 后经 softmax 得到权重 0.31、0.19、0.51，再对三个值向量加权求和得到新表示。三个词的权重组成一个 3×3 的注意力矩阵。
+params:
+  data:
+    tokens: [小狗, 追, 皮球]
+    Q: [[1, 0, 1, 0], [1, 1, 0, 1], [0, 1, 0, 0]]
+    K: [[2, 0, 1, 0], [0, 1, 0, 0], [0, 2, 0, 1]]
+    V: [[1, 0], [0, 1], [1, 1]]
+  query: { options: [小狗, 追, 皮球], default: 追, selectable_from_step: 6 }
+  scale:
+    options: [true, false]
+    default: true
+    labels: ["除以 √d_k", "不缩放（对比）"]
+    enabled_from_step: 3
+    note: 不缩放时分布更尖。这个小例子里 d_k 只有 4，差别还不算大；论文里每个头的 d_k 是 64，点积的方差会随 d_k 增大，不缩放时 softmax 更容易饱和。
+  notes:
+    - 示意数据：手工设定的小整数，非训练所得
+    - 论文每个头 d_k = d_v = 64，共 8 个头
+    - 权重显示三位小数，每行之和因四舍五入可能为 0.999
+steps:
+  - text: 每个词有查询 q、键 k、值 v 三个向量
+  - text: 以“追”为查询，与三个键的点积是 2、1、3
+  - text: 除以 √d_k = 2，得到 1.0、0.5、1.5
+  - text: softmax 得到权重 0.307、0.186、0.506，和为 1
+  - text: 对值向量加权求和，得到 [0.814, 0.693]
+  - text: 每个词都做一遍，三行权重组成 3×3 注意力矩阵；可点选任意词作为查询
+```
 
 ### 2. 多头
 

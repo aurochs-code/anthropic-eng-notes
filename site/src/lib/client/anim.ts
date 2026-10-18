@@ -3,7 +3,12 @@
 import { makeCtx, type Cfg, type Component } from '../../anim/core.ts';
 
 /** 浏览器端组件表（与 src/anim/static.ts、rules.mjs 的 COMPONENT_NAMES 一致） */
-export const REGISTRY: Record<string, () => Promise<{ default: Component }>> = {};
+export const REGISTRY: Record<string, () => Promise<{ default: Component }>> = {
+  'function-plot': () => import('../../anim/components/function-plot.ts'),
+  'step-player': () => import('../../anim/components/step-player.ts'),
+  'token-timeline': () => import('../../anim/components/token-timeline.ts'),
+  'pipeline-grid': () => import('../../anim/components/pipeline-grid.ts'),
+};
 
 export async function initAnim() {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;

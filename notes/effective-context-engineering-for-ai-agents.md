@@ -132,6 +132,54 @@ flowchart TD
 
 图解：来回对话多的任务用压缩，有清晰里程碑的迭代开发用结构化笔记（写到窗口外、按需读回），可并行的探索用子智能体；最轻量的入口是清理旧工具结果。
 
+### 图 4：长时任务中上下文窗口的变化
+
+```anim
+id: context-window
+component: token-timeline
+caption: 长时任务中上下文窗口的变化（示意，格数不代表真实 token 数）
+alt: 示意图：一条代表上下文窗口的长条。随着对话轮数增加，工具原始结果占据大部分空间，接近上限。之后依次演示四种做法：清理旧工具结果后占用减半；压缩后只剩系统提示、摘要和最近访问的文件；结构化笔记把信息存到窗口外，重置后读回一小段；子智能体在各自的窗口里探索，只把简短摘要交回主窗口。
+params:
+  capacity: 100
+  warn_at: 90
+  segments:
+    S: 系统提示 + 工具定义
+    U: 用户消息
+    A: 模型回复与推理
+    R: 工具原始结果
+    P: 已清理的占位
+    Σ: 压缩摘要
+    F: 最近访问的文件
+    N: 从笔记读回
+  states:
+    - { label: 开局, main: { S: 10 } }
+    - { label: 前三轮, main: { S: 10, U: 4, A: 8, R: 30 } }
+    - { label: 接近上限, main: { S: 10, U: 8, A: 16, R: 62 } }
+    - { label: 清理工具结果, main: { S: 10, U: 8, A: 16, R: 10, P: 4 } }
+    - { label: 压缩, main: { S: 10, Σ: 8, F: 15 }, transition_from: { S: 10, U: 8, A: 16, R: 56, P: 4 } }
+    - { label: 结构化笔记, main: { S: 10, N: 5 }, outside: [NOTES.md] }
+    - { label: 子智能体, main: { S: 10, A: 5, Σ: 4 }, children: [40, 40], returns: [2, 2] }
+    - { label: 怎么选, table: true }
+  fallback_steps: [3, 4, 5, 6, 7]
+  choose:
+    - { technique: 压缩, when: 需要大量来回对话、保持连贯的任务 }
+    - { technique: 结构化笔记, when: 有清晰里程碑的迭代开发 }
+    - { technique: 子智能体, when: 能从并行探索中获益的复杂研究和分析 }
+  notes:
+    - 示意：格数不代表真实 token 数，比例未按实际
+    - 第 5 步以 Claude Code 为例（原文）
+    - 子智能体“数万 token → 约 1,000–2,000 token”为原文数字，图中长度不按比例
+steps:
+  - text: 系统提示和工具定义每次调用都要占一块窗口
+  - text: 用户消息、模型回复、工具原始结果不断追加，工具结果往往最多
+  - text: 接近上限；token 越多，模型越难准确找回其中的信息
+  - text: 最轻量的做法：把深处已用过的工具原始结果换成占位
+  - text: 压缩：总结历史，用摘要加最近访问的五个文件开新窗口（Claude Code 的做法）
+  - text: 结构化笔记：写到窗口外的 NOTES.md，重置后读回
+  - text: 子智能体：各用干净窗口探索，只交回约 1,000–2,000 token 的摘要
+  - text: 来回对话多用压缩，有里程碑的迭代用笔记，可并行的研究用子智能体
+```
+
 ## 关键原话
 
 > "find the smallest possible set of high-signal tokens that maximize the likelihood of some desired outcome."
