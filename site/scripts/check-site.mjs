@@ -5,7 +5,8 @@
 // 移动端 390px 无横向溢出、meta description/favicon/回到顶部、标题锚点、代码块复制按钮；
 // B2：侧栏、三处目录、两种翻页与面包屑、布局断点、目录高亮、抽屉、Pagefind 搜索、暗色切换与 mermaid 重渲染、图表放大；
 // B3：标签页、反向链接、路线勾选与阶段完成度、笔记标记已读联动、阅读进度条；
-// 论文笔记（papers/）：字段、unit 与 r-30u30 单元链接、day 不重复、标签白名单、合规篇目全部渲染、资源页与路线页的站内论文链接。
+// 论文笔记（papers/）：字段、unit 与 r-30u30 单元链接、day 不重复、标签白名单、合规篇目全部渲染、资源页与路线页的站内论文链接；
+// 动画（anim / anim-steps）：字段与 id、JS 关闭兜底、挂载与键盘、mermaid 分步高亮、减少动态效果、暂停、暗色、体积预算、无动画页不加载、单元测试。
 import { chromium } from 'playwright';
 import { createServer } from 'node:http';
 import { readFileSync, existsSync, statSync, readdirSync } from 'node:fs';
@@ -520,6 +521,179 @@ await interact('阅读进度条', async (pg) => {
   const onPath = existsSync(join(dist, 'path/index.html')) && !readFileSync(join(dist, 'path/index.html'), 'utf8').includes('class="read-progress"');
   return { pass: top === 0 && mid >= 40 && mid <= 60 && end === 100 && onPath, detail: `顶部 ${top}%、正文中部 ${mid}%、正文末尾 ${end}%；路线页无进度条 ${onPath}` };
 });
+
+// ── 动画（anim / anim-steps）：语法与 id、静态兜底、减少动态效果、暂停、390px、暗色、体积预算、无动画页不加载 ──
+{
+  const { findBlocks, parseBlock, validateAnim, validateAnimSteps } = await import('../src/anim/rules.mjs');
+  const { COMPONENTS } = await import('../src/anim/static.ts');
+  const srcFiles = [];
+  for (const d of ['notes', 'resources', 'papers']) { const dir = resolve(siteDir, '..', d); if (existsSync(dir)) for (const f of readdirSync(dir)) if (f.endsWith('.md')) srcFiles.push(join(dir, f)); }
+  if (existsSync(resolve(siteDir, '../learning-path.md'))) srcFiles.push(resolve(siteDir, '../learning-path.md'));
+  const blocks = []; const bad = []; const ids = new Map();
+  for (const f of srcFiles) {
+    const rel = f.slice(resolve(siteDir, '..').length + 1);
+    for (const b of findBlocks(readFileSync(f, 'utf8'))) {
+      const r = parseBlock(b.body);
+      if (r.error) { bad.push(`${rel}:${b.line + (r.line ?? 0)} ${r.error}`); continue; }
+      let errs = b.lang === 'anim' ? validateAnim(r.data, Object.keys(COMPONENTS)).map((e) => e.msg) : validateAnimSteps(r.data, b.prevMermaid).map((e) => e.msg);
+      if (b.lang === 'anim' && !errs.length) errs = COMPONENTS[r.data.component].validate(r.data.params ?? {}, r.data.steps ?? []);
+      errs.forEach((m) => bad.push(`${rel}:${b.line} ${m}`));
+      if (ids.has(r.data.id)) bad.push(`${rel}:${b.line} id「${r.data.id}」与 ${ids.get(r.data.id)} 重复`); else ids.set(r.data.id, `${rel}:${b.line}`);
+      blocks.push({ rel, lang: b.lang, id: r.data.id, comp: r.data.component, steps: (r.data.steps ?? []).length, page: rel.replace(/\.md$/, '/') });
+    }
+  }
+  const clientSrc = readFileSync(resolve(siteDir, 'src/lib/client/anim.ts'), 'utf8');
+  const regKeys = [...clientSrc.matchAll(/'([a-z-]+)': \(\) => import\(/g)].map((m) => m[1]).sort();
+  const regOk = JSON.stringify(regKeys) === JSON.stringify(Object.keys(COMPONENTS).sort());
+  let rendered = 0; const missingR = [];
+  for (const b of blocks) { const p = join(dist, b.page, 'index.html'); const h = existsSync(p) ? readFileSync(p, 'utf8') : ''; const hit = b.lang === 'anim' ? h.includes(`data-anim-id="${b.id}"`) : h.includes(`data-anim-steps="${b.id}"`); if (hit) rendered++; else missingR.push(`${b.rel}#${b.id}`); }
+  ok('动画：块字段与 id', bad.length === 0 && regOk && missingR.length === 0, `源文件 ${blocks.length} 个块（anim ${blocks.filter((b) => b.lang === 'anim').length}、anim-steps ${blocks.filter((b) => b.lang !== 'anim').length}），id 唯一，构建期与浏览器端组件表一致 ${regOk}，已渲染 ${rendered}` + (bad.length ? '；问题：\n  ' + bad.join('\n  ') : '') + (missingR.length ? `；未渲染：${missingR}` : ''));
+
+  const U = (b) => `${origin}${base}/${b.page}`;
+  const animBlocks = blocks.filter((b) => b.lang === 'anim'); const stepBlocks = blocks.filter((b) => b.lang !== 'anim');
+  const sel = (b) => (b.lang === 'anim' ? `figure[data-anim-id="${b.id}"]` : `figure[data-anim-steps="${b.id}"]`);
+
+  // JS 关闭：静态 SVG（role=img + aria-label）+ figcaption + 步骤列表齐全
+  await interact('动画：JS 关闭时静态兜底完整', async (pg) => {
+    const out = [];
+    for (const b of blocks) {
+      await pg.goto(U(b), { waitUntil: 'load' });
+      const r = await pg.$eval(sel(b), (f) => ({ svg: f.querySelectorAll('svg[role="img"][aria-label]').length, cap: (f.querySelector('figcaption')?.textContent ?? '').trim().length, li: f.querySelectorAll('ol.anim-steps > li').length, mer: !!f.previousElementSibling?.matches?.('pre.mermaid, .mermaid') }));
+      out.push({ id: b.id, ok: (b.lang === 'anim' ? r.svg >= 1 : r.mer) && r.cap > 0 && r.li === b.steps, ...r });
+    }
+    return { pass: out.length > 0 && out.every((o) => o.ok), detail: out.map((o) => `${o.id}：svg ${o.svg} 图注 ${o.cap > 0 ? '有' : '无'} 步骤 ${o.li}${o.ok ? '' : ' ✗'}`).join('；') };
+  }, { javaScriptEnabled: false });
+
+  // 挂载 + 逐步点击无报错 + 键盘左右切步 + 交互后 390px 无溢出
+  await interact('动画：挂载、键盘切步、交互后 390px 无溢出', async (pg) => {
+    const out = [];
+    for (const b of blocks) {
+      await pg.goto(U(b), { waitUntil: 'networkidle' });
+      await pg.waitForSelector('html[data-anim="ready"]', { timeout: 20000 });
+      if (b.lang !== 'anim') await waitM(pg);
+      const f = pg.locator(sel(b));
+      await f.scrollIntoViewIfNeeded();
+      try {
+      const state = b.lang === 'anim' ? await f.getAttribute('data-anim-state') : 'mounted';
+      const lis = f.locator('ol.anim-steps > li');
+      for (let i = 0; i < b.steps; i++) await lis.nth(i).click({ timeout: 5000 });
+      const last = await f.getAttribute('data-step');
+      await f.focus(); await pg.keyboard.press('ArrowLeft');
+      const back = await f.getAttribute('data-step');
+      const btns = f.locator('.anim-controls button:not([disabled]):visible');
+      const nb = await btns.count(); for (let i = 0; i < Math.min(nb, 6); i++) await btns.nth(i).click({ timeout: 5000 });
+      const sw = await pg.evaluate(() => document.documentElement.scrollWidth);
+      out.push({ id: b.id, ok: state === 'mounted' && +last === b.steps && +back === b.steps - 1 && sw <= 390, state, last, back, sw });
+      } catch (e) { out.push({ id: b.id, ok: false, state: '异常 ' + e.message.split('\n')[0].slice(0, 160) }); }
+    }
+    return { pass: out.every((o) => o.ok), detail: out.map((o) => `${o.id}：${o.state}，末步 ${o.last}，← 后 ${o.back}，scrollWidth ${o.sw}${o.ok ? '' : ' ✗'}`).join('；') };
+  }, { viewport: { width: 390, height: 844 } });
+
+  // 时序图分步：引用解析（参与者上下两框、消息、块），换主题重渲染后仍高亮
+  for (const b of stepBlocks) await interact(`动画：mermaid 分步高亮（${b.id}）`, async (pg) => {
+    await pg.goto(U(b), { waitUntil: 'networkidle' }); await waitM(pg);
+    await pg.waitForSelector(`${sel(b)} .anim-controls`, { timeout: 20000 });
+    const f = pg.locator(sel(b)); const lis = f.locator('ol.anim-steps > li');
+    const per = [];
+    for (let i = 0; i < b.steps; i++) { await lis.nth(i).click(); per.push(await f.getAttribute('data-lit')); }
+    await lis.nth(0).click();
+    const n0 = await pg.$$eval('pre.mermaid svg.ms-active .ms-on:is(g, text.messageText)', (e) => e.length);
+    await pg.click('.theme-btn'); await pg.click('.theme-btn'); // auto → light → dark
+    await pg.waitForSelector('html[data-theme="dark"][data-mermaid="done"][data-mermaid-theme="dark"]', { timeout: 20000 }); await pg.waitForTimeout(200);
+    const n1 = await pg.$$eval('pre.mermaid svg.ms-active .ms-on:is(g, text.messageText)', (e) => e.length);
+    const unresolved = per.some((x) => !x || /!/.test(x));
+    return { pass: !unresolved && n0 > 0 && n1 === n0, detail: `各步高亮元素 [${per.join(' | ')}]；第 1 步高亮参与者框与消息文字 ${n0} 个，切换主题重渲染后 ${n1} 个` };
+  });
+
+  // 减少动态效果：不自动播放（分步时序图第 6 步的循环、流水线改参数后的扫描）
+  await interact('动画：减少动态效果时不自动播放', async (pg) => {
+    const out = [];
+    for (const b of stepBlocks) {
+      await pg.goto(U(b), { waitUntil: 'networkidle' }); await waitM(pg); await pg.waitForSelector(`${sel(b)} .anim-controls`);
+      const f = pg.locator(sel(b)); const seqI = await f.locator('ol.anim-steps > li').count();
+      for (let i = 0; i < seqI; i++) { await f.locator('ol.anim-steps > li').nth(i).click(); await pg.waitForTimeout(100); if ((await f.getAttribute('data-playing')) === '1') break; }
+      out.push(`${b.id} playing=${await f.getAttribute('data-playing') ?? '无'}`);
+    }
+    for (const b of animBlocks) {
+      await pg.goto(U(b), { waitUntil: 'networkidle' }); await pg.waitForSelector('html[data-anim="ready"]');
+      const f = pg.locator(sel(b)); await f.scrollIntoViewIfNeeded();
+      const r = f.locator('input[type=range]').first(); if (await r.count()) { await r.focus(); await pg.keyboard.press('ArrowRight'); }
+      await pg.waitForTimeout(300);
+      out.push(`${b.id} playing=${await f.getAttribute('data-playing') ?? '无'}`);
+    }
+    return { pass: out.every((s) => !/playing=1$/.test(s)), detail: out.join('；') };
+  }, { reducedMotion: 'reduce' });
+
+  // 正常动态：会自动播放的动画可暂停，滚出视口自动暂停
+  await interact('动画：超过 5 秒可暂停、滚出视口自动暂停', async (pg) => {
+    const out = [];
+    const probe = async (b, start) => {
+      await pg.goto(U(b), { waitUntil: 'networkidle' }); if (b.lang !== 'anim') await waitM(pg);
+      await pg.waitForSelector(`${sel(b)} .anim-controls`);
+      const f = pg.locator(sel(b)); await f.scrollIntoViewIfNeeded();
+      await start(f); await pg.waitForTimeout(250);
+      const p0 = await f.getAttribute('data-playing');
+      await pg.evaluate(() => scrollTo(0, 0)); await pg.waitForTimeout(400);
+      const off = await f.getAttribute('data-playing');
+      await f.scrollIntoViewIfNeeded(); await pg.waitForTimeout(400);
+      const back = await f.getAttribute('data-playing');
+      const play = f.locator('.anim-btn[aria-pressed]', { hasText: '暂停' }).first();
+      if (await play.count()) await play.click();
+      const paused = await f.getAttribute('data-playing');
+      out.push({ id: b.id, ok: p0 === '1' && off === 'paused' && back === '1' && paused === '0', s: `${p0}→出视口 ${off}→回到视口 ${back}→点暂停 ${paused}` });
+    };
+    for (const b of stepBlocks) await probe(b, async (f) => { const lis = f.locator('ol.anim-steps > li'); const n = await lis.count(); for (let i = 0; i < n; i++) { await lis.nth(i).click(); if ((await f.getAttribute('data-playing')) === '1') break; } });
+    for (const b of animBlocks.filter((x) => x.comp === 'pipeline-grid')) await probe(b, async (f) => { await f.locator('button[data-preset="4K"]').click(); });
+    return { pass: out.length > 0 && out.every((o) => o.ok), detail: out.map((o) => `${o.id}：${o.s}${o.ok ? '' : ' ✗'}`).join('；') };
+  });
+
+  // 暗色 / 亮色：颜色来自 CSS 变量，切换后随之变化
+  await interact('动画：亮色与暗色主题配色', async (pg) => {
+    const out = [];
+    for (const b of animBlocks) {
+      await pg.goto(U(b), { waitUntil: 'networkidle' }); await pg.waitForSelector('html[data-anim="ready"]');
+      const read = () => pg.$eval(sel(b), (f) => { const s = getComputedStyle(document.documentElement); const acc = f.querySelector('.anim-stage svg .l-main, .anim-stage svg .cell, .anim-stage svg .box-on, .anim-stage svg .knob, .anim-stage svg [class^="seg-"]'); const t = f.querySelector('.anim-stage svg text'); const cs = acc ? getComputedStyle(acc) : null; return { acc: cs ? (cs.stroke !== 'none' && acc.matches('.l-main') ? cs.stroke : cs.fill) : '', text: t ? getComputedStyle(t).fill : '', bg: getComputedStyle(document.body).backgroundColor, theme: document.documentElement.dataset.theme ?? 'light' }; });
+      const a = await read(); for (let k = 0; k < 3 && (await pg.evaluate(() => document.documentElement.dataset.theme)) === a.theme; k++) await pg.click('.theme-btn'); await pg.waitForTimeout(100); const c = await read();
+      out.push({ id: b.id, ok: a.acc && c.acc && a.text !== c.text && a.theme !== c.theme, s: `${a.theme} 文字 ${a.text} → ${c.theme} 文字 ${c.text}` });
+    }
+    return { pass: out.every((o) => o.ok), detail: out.map((o) => `${o.id}：${o.s}${o.ok ? '' : ' ✗'}`).join('；') };
+  });
+
+  // 体积预算：每个动画 = 加载器 + 组件块 + 其静态依赖闭包（不含 Base 公共脚本），gzip ≤ 15 KB
+  {
+    const { gzipSync } = await import('node:zlib');
+    const astroDir = join(dist, '_astro'); const files = readdirSync(astroDir);
+    const gz = (f) => gzipSync(readFileSync(join(astroDir, f)), { level: 9 }).length;
+    const deps = (f, seen = new Set()) => { if (seen.has(f) || /^Base\.astro/.test(f)) return seen; seen.add(f); for (const m of readFileSync(join(astroDir, f), 'utf8').matchAll(/from"\.\/([^"]+)"/g)) deps(m[1], seen); return seen; };
+    const loader = files.find((f) => /^anim\.[\w-]+\.js$/.test(f));
+    const rows = []; const BUDGET = 15 * 1024;
+    const names = [...new Set(animBlocks.map((b) => b.comp))].map((c) => [c, files.find((f) => f.startsWith(c + '.') && f.endsWith('.js'))]);
+    if (stepBlocks.length) names.push(['mermaid-steps', files.find((f) => /^mermaid-steps\./.test(f))]);
+    for (const [c, f] of names) { const set = loader && f ? deps(f, deps(loader)) : new Set(); const size = [...set].reduce((n, x) => n + gz(x), 0); rows.push({ c, size, ok: !!f && size <= BUDGET }); }
+    ok('动画：体积预算（每个 ≤ 15 KB gzip）', !!loader && rows.every((r) => r.ok), rows.map((r) => `${r.c} ${(r.size / 1024).toFixed(1)} KB`).join('、') + '（含加载器与共享模块）');
+  }
+
+  // 无动画页：不请求任何动画脚本
+  await interact('动画：无动画页不加载动画脚本', async (pg) => {
+    const animPages = new Set(blocks.map((b) => b.page));
+    const sample = ['', 'path/', 'notes/', 'papers/', 'tags/', ...notePages.slice(0, 4), ...resPages.slice(0, 2), ...paperPages.slice(0, 3)].filter((p) => !animPages.has(p));
+    const hits = []; let animHit = 0;
+    pg.on('request', (r) => { const u = r.url(); if (/\/_astro\/(anim|mermaid-steps|svg|function-plot|step-player|token-timeline|pipeline-grid)\.[\w-]+\.js/.test(u)) hits.push(u.split('/').pop()); });
+    for (const p of sample) { const before = hits.length; await pg.goto(`${origin}${base}/${p}`, { waitUntil: 'networkidle' }); if (hits.length > before) hits.push(`← ${p || '/'}`); }
+    const n = hits.length;
+    const ab = blocks[0]; if (ab) { await pg.goto(U(ab), { waitUntil: 'networkidle' }); animHit = hits.length - n; }
+    return { pass: n === 0 && animHit > 0, detail: `抽查 ${sample.length} 个无动画页，动画脚本请求 ${n} 次${n ? '：' + hits.join(' ') : ''}；对照：动画页请求 ${animHit} 个` };
+  });
+
+  // 单元测试（分镜读数快照、语法规则）
+  {
+    const { spawnSync } = await import('node:child_process');
+    const tdir = resolve(siteDir, 'src/anim/tests'); const tf = existsSync(tdir) ? readdirSync(tdir).filter((f) => f.endsWith('.test.mjs')).map((f) => join(tdir, f)) : [];
+    const t = spawnSync(process.execPath, ['--test', ...tf], { encoding: 'utf8' });
+    const pass = /# pass (\d+)/.exec(t.stdout)?.[1], fail = /# fail (\d+)/.exec(t.stdout)?.[1];
+    ok('动画：单元测试', t.status === 0, `通过 ${pass}，失败 ${fail}`);
+  }
+}
 
 await browser.close(); server.close();
 for (const r of results) console.log(`${r.pass ? 'PASS' : 'FAIL'}  ${r.name}：${r.detail}`);

@@ -1,6 +1,7 @@
 import { defineConfig } from 'astro/config';
 import { resolve } from 'node:path';
 import { rehypeHeadingIds } from '@astrojs/markdown-remark';
+import { remarkAnim } from './src/anim/remark.mjs';
 import { remarkMermaid, remarkNoteLinks, remarkPaperLinks, rehypeHeadingAnchors } from './src/lib/remark-plugins.mjs';
 
 // 自定义域名根路径部署：https://learn.thinkloop.dev/（site/public/CNAME）。BASE_PATH、SITE_URL 仅供临时覆盖
@@ -14,7 +15,7 @@ export default defineConfig({
   base,
   trailingSlash: 'always',
   markdown: {
-    remarkPlugins: [remarkMermaid, [remarkNoteLinks, { base, papersDir }], [remarkPaperLinks, { base, papersDir }]],
+    remarkPlugins: [[remarkAnim, { repoRoot: resolve('..') }], remarkMermaid, [remarkNoteLinks, { base, papersDir }], [remarkPaperLinks, { base, papersDir }]],
     // 先生成标题 id，再追加锚点链接
     rehypePlugins: [rehypeHeadingIds, rehypeHeadingAnchors],
   },

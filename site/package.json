@@ -10,7 +10,8 @@
     "build": "astro build && node scripts/pagefind-index.mjs",
     "preview": "astro preview",
     "screenshots": "node scripts/screenshots.mjs",
-    "check": "node scripts/check-site.mjs"
+    "check": "node scripts/check-site.mjs",
+    "test:anim": "node --test src/anim/tests/*.test.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^6.3.11",

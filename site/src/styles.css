@@ -233,3 +233,82 @@ dialog.search-dialog::backdrop { background:rgba(0,0,0,.45); }
 a.unit-gh { font-size:12px; margin-left:2px; color:var(--muted); text-decoration:none; vertical-align:super; }
 a.unit-gh:hover { color:var(--accent); }
 .route .track-papers a { overflow-wrap:anywhere; }
+
+/* ── 动画（```anim）：颜色只用站点变量，暗色模式自动跟随，无需重绘 ── */
+figure.anim, figure.anim-steps-fig { margin:20px 0; padding:12px; border:1px solid var(--line); border-radius:8px; background:var(--bg); max-width:100%; min-width:0; }
+figure.anim:focus-visible, figure.anim-steps-fig:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+figure.anim figcaption, figure.anim-steps-fig figcaption { font-size:14px; color:var(--muted); margin:8px 0 4px; }
+figure.anim-steps-fig { margin-top:-8px; }
+.anim-stage { min-width:0; }
+.anim-stage-empty { display:none; }
+.anim-svg { display:block; width:100%; height:auto; max-width:720px; margin:0 auto; overflow:visible; font-size:12px; }
+.anim-svg text { fill:var(--fg); }
+.anim-svg .t-muted { fill:var(--muted); }
+.anim-svg .t-accent { fill:var(--accent); font-weight:600; }
+.anim-svg .t-small { font-size:10px; }
+.anim-svg .t-big { font-size:14px; font-weight:600; }
+.anim-svg .axis { stroke:var(--fg); stroke-width:1; }
+.anim-svg .grid { stroke:var(--line); stroke-width:1; }
+.anim-svg .ref { stroke:var(--muted); stroke-width:1; stroke-dasharray:4 3; }
+.anim-svg .ref-faint { stroke:var(--line); stroke-width:1; stroke-dasharray:2 3; }
+.anim-svg .l-un { fill:none; stroke:var(--muted); stroke-width:1.5; stroke-dasharray:6 4; }
+.anim-svg .l-clip { fill:none; stroke:var(--line); stroke-width:2; stroke-dasharray:1.5 3; stroke-linecap:round; }
+.anim-svg .l-main { fill:none; stroke:var(--accent); stroke-width:3.5; stroke-linejoin:round; }
+.anim-svg .soft { fill:var(--accent-soft); }
+.anim-svg .acc { fill:var(--accent); }
+.anim-svg .acc-stroke { fill:none; stroke:var(--accent); stroke-width:2; }
+.anim-svg .knob { fill:var(--bg); stroke:var(--accent); stroke-width:3; cursor:grab; }
+.anim-svg .box { fill:var(--bg-soft); stroke:var(--line); }
+.anim-svg .box-on { fill:var(--bg); stroke:var(--accent); stroke-width:2; }
+.anim-svg .cell { fill:var(--accent); }
+.anim-svg .bubble { fill:none; stroke:var(--line); stroke-dasharray:3 2; }
+.anim-svg .hatch-fill { fill:url(#none); }
+.anim-svg .anim-hatch { stroke:var(--bg); stroke-width:2; opacity:.55; }
+.anim-svg .anim-dot { fill:var(--accent); }
+.anim-svg .seg-S { fill:var(--fg); opacity:.28; }
+.anim-svg .seg-U { fill:var(--line); }
+.anim-svg .seg-A { fill:var(--muted); }
+.anim-svg .seg-R { fill:var(--accent-soft); stroke:var(--accent); stroke-width:.5; }
+.anim-svg .seg-P { fill:none; stroke:var(--muted); stroke-dasharray:2 2; }
+.anim-svg .seg-Σ { fill:var(--accent); }
+.anim-svg .seg-F { fill:var(--bg); stroke:var(--accent); stroke-width:1.5; }
+.anim-svg .seg-N { fill:var(--bg); stroke:var(--accent); stroke-width:.5; }
+.anim-svg .warn { stroke:var(--accent); stroke-dasharray:4 3; }
+.anim-svg .limit { stroke:var(--fg); stroke-width:2; }
+.anim-svg .dim { opacity:.25; }
+.anim-svg .pointer { stroke:var(--accent); stroke-width:2; }
+.anim-controls { display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; margin:10px 0 4px; font-size:14px; }
+.anim-nav { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.anim-pos, .anim-counter { color:var(--muted); font-variant-numeric:tabular-nums; }
+.anim-btn { font:inherit; font-size:14px; padding:4px 10px; border:1px solid var(--line); border-radius:6px; background:var(--bg-soft); color:var(--fg); cursor:pointer; min-height:32px; }
+.anim-btn:hover:not(:disabled) { border-color:var(--accent); }
+.anim-btn:disabled { opacity:.45; cursor:default; }
+.anim-btn[aria-pressed="true"] { border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
+.anim-btn:focus-visible, .anim-steps li:focus-visible, .anim-range input:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.anim-seg { display:inline-flex; flex-wrap:wrap; gap:4px; }
+.anim-range { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.anim-range input[type=range] { width:min(220px, 60vw); accent-color:var(--accent); }
+.anim-range output { font-variant-numeric:tabular-nums; min-width:3.5em; }
+.anim-readout { display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:4px 12px; font-size:14px; font-variant-numeric:tabular-nums; width:100%; }
+.anim-readout b { color:var(--accent); font-weight:600; }
+.anim-hint { font-size:13px; color:var(--muted); width:100%; margin:0; }
+.anim-live { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+.anim-notes { font-size:12.5px; color:var(--muted); margin:6px 0 0; padding-left:1.2em; }
+.anim-legend { display:flex; flex-wrap:wrap; gap:4px 12px; font-size:12.5px; color:var(--muted); margin:6px 0 0; padding:0; list-style:none; }
+.anim-legend i { display:inline-block; width:14px; height:10px; margin-right:4px; vertical-align:-1px; border:1px solid var(--line); }
+.anim-table { margin:8px 0 0; }
+.anim-table table { font-size:13px; }
+.anim-table caption { text-align:left; color:var(--muted); font-size:13px; }
+ol.anim-steps { font-size:14px; margin:8px 0 0; padding-left:1.6em; }
+ol.anim-steps li { padding:2px 4px; border-radius:4px; }
+ol.anim-steps li[role="button"] { cursor:pointer; }
+ol.anim-steps li[aria-current="step"] { background:var(--accent-soft); box-shadow:inset 3px 0 0 var(--accent); }
+/* mermaid 分步高亮 */
+pre.mermaid svg.ms-active .ms-dim { opacity:.3; transition:opacity .25s; }
+pre.mermaid svg.ms-active .ms-on { opacity:1; transition:opacity .25s; }
+pre.mermaid svg.ms-active text.ms-on, pre.mermaid svg.ms-active .ms-on text { fill:var(--accent) !important; font-weight:600; }
+pre.mermaid svg.ms-active line.ms-on, pre.mermaid svg.ms-active path.ms-on, pre.mermaid svg.ms-active .ms-on .loopLine, pre.mermaid svg.ms-active .ms-on rect, pre.mermaid svg.ms-active .ms-on polygon, pre.mermaid svg.ms-active g.node.ms-on > :is(rect, polygon, circle, path) { stroke:var(--accent) !important; stroke-width:2px !important; }
+.zoom-stage .ms-dim { opacity:1 !important; }
+@media (prefers-reduced-motion: reduce) { pre.mermaid svg.ms-active .ms-dim, pre.mermaid svg.ms-active .ms-on { transition:none; } }
+.anim-svg .t-onacc { fill:var(--bg); }
+.anim-stack > svg + svg { margin-top:10px; }

@@ -108,6 +108,8 @@ const hasToc = tocList.length > 0;
     // mermaid 按需加载：页面里有图才拉取（脚本必须只有这一个：Astro 不支持条件渲染的 <script>，
     // 写成 {cond && <script>} 时会把错误的脚本挂到页面上）
     if (document.querySelector('pre.mermaid')) import('../lib/client/mermaid').then((m) => m.initMermaid());
+    // 动画（```anim / ```anim-steps）同理按需加载；没有动画的页面不请求任何动画脚本
+    if (document.querySelector('figure.anim, figure[data-anim-steps]')) import('../lib/client/anim').then((m) => m.initAnim());
   </script>
 </body>
 </html>
