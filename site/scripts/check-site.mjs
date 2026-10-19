@@ -63,8 +63,9 @@ for (const rel of pages) {
   const svg = m.filter(Boolean).length;
   if (svg !== m.length || errs.length || (rel.startsWith('notes/') && m.length === 0)) mermaidBad.push(`${rel}: 块 ${m.length} / svg ${svg} ${errs.join(' | ')}`);
   if (rel.startsWith('notes/')) {
-    const t = await page.$eval('article .meta span', (e) => e.textContent);
-    orders.push(+/#(\d+)/.exec(t)[1]);
+    const raw = await page.$eval('article', (e) => e.getAttribute('data-order'));
+    if (raw == null || !/^\d+$/.test(raw)) throw new Error(`笔记 ${rel} 缺少 data-order`);
+    orders.push(Number(raw));
   }
   for (const h of await page.$$eval('a[href], link[rel="icon"][href]', (as) => as.map((a) => a.getAttribute('href')))) {
     if (/^(https?:|mailto:)/.test(h) && !h.startsWith(origin)) continue;

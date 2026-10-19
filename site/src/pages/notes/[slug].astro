@@ -27,7 +27,7 @@ const me = seq[at];
 const parts = d.source_note ? splitSourceNote(d.source_note) : null;
 ---
 <Base title={`${d.title_zh} · 学习笔记`} description={d.summary} ogType="article" headings={headings} readProgress={true}>
-  <article>
+  <article data-order={d.order}>
     <nav class="breadcrumb" aria-label="位置" data-pagefind-ignore>
       <a href={url('/')}>笔记</a><span aria-hidden="true">›</span><a href={url(`/#module-${d.moduleKey}`)}>模块 {d.moduleKey} · {MODULES[d.moduleKey]}</a>
       {me && <a class="crumb-step" href={url(`/path/#step-${me.n}`)} data-route-step={me.n}>阶段 {me.stage} · {stageName(me.stage)} · 第 {me.n} 步</a>}
@@ -35,7 +35,6 @@ const parts = d.source_note ? splitSourceNote(d.source_note) : null;
     <h1>{d.title_zh}</h1>
     {d.title_en && <p class="en">{d.title_en}</p>}
     <div class="meta">
-      <span class="pin-order" aria-hidden="true">#{d.order}</span>
       <span>
         模块 {d.moduleKey} {MODULES[d.moduleKey]}
         {' · '}原文发布：{fmtDate(d.published)}
