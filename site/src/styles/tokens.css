@@ -1,0 +1,4 @@
+/* ── 主题变量：html[data-theme] 由 <head> 内联脚本在首屏前设置；无 JS 时跟随系统 ── */
+:root { --fg:#1f2328; --muted:#656d76; --bg:#fff; --bg-soft:#f6f8fa; --line:#d0d7de; --accent:#b4532a; --accent-soft:#fbeee8; --code:#f6f8fa; --shadow:0 8px 28px rgba(0,0,0,.14); --header-h:56px; color-scheme:light; }
+:root[data-theme="dark"] { --fg:#e6edf3; --muted:#8d96a0; --bg:#0d1117; --bg-soft:#161b22; --line:#30363d; --accent:#e3946f; --accent-soft:#2d1f19; --code:#161b22; --shadow:0 8px 28px rgba(0,0,0,.5); color-scheme:dark; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme]) { --fg:#e6edf3; --muted:#8d96a0; --bg:#0d1117; --bg-soft:#161b22; --line:#30363d; --accent:#e3946f; --accent-soft:#2d1f19; --code:#161b22; color-scheme:dark; } }

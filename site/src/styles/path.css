@@ -1,0 +1,32 @@
+.badge { display:inline-block; font-size:12px; line-height:1.6; border:1px solid var(--line); border-radius:4px; padding:0 6px; margin-right:6px; color:var(--muted); vertical-align:1px; }
+.badge.res { border-color:var(--accent); color:var(--accent); }
+.route li.res { background:var(--code); padding-left:8px; padding-right:8px; border-radius:6px; }
+.route .part { color:var(--muted); font-size:14px; }
+.route li:target { outline:2px solid var(--accent); outline-offset:2px; border-radius:6px; }
+/* 并行支线（原理支线） */
+.track { border-left:3px solid var(--accent); padding-left:12px; }
+.track .route .num { color:var(--muted); }
+.badge.track { border-style:dashed; border-color:var(--accent); color:var(--accent); }
+.track-pointer { margin:10px 0 0; font-size:14px; color:var(--muted); }
+.route li.track-item { overflow-wrap:anywhere; }
+@media (max-width: 600px) { .track { padding-left:8px; } }
+.stage-goal { color:var(--muted); font-size:14px; margin:-4px 0 8px; }
+
+.progress-card { margin:16px 0 8px; padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:var(--bg-soft); }
+.progress-head { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.progress-head .progress-text { color:var(--muted); font-size:14px; }
+.progress-reset { margin-left:auto; font:inherit; font-size:12px; padding:1px 10px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--muted); cursor:pointer; }
+.progress-reset:hover { color:var(--accent); border-color:var(--accent); }
+.progress-bar { height:8px; border-radius:999px; background:var(--line); overflow:hidden; }
+.progress-card .progress-bar { margin:8px 0 6px; }
+.progress-bar > span { display:block; height:100%; width:0; background:var(--accent); border-radius:inherit; transition:width .25s ease; }
+.progress-note { margin:0; font-size:12px; color:var(--muted); }
+.stage-progress { display:flex; align-items:center; gap:10px; margin:0 0 6px; font-size:13px; color:var(--muted); }
+.stage-progress .progress-bar { flex:1; max-width:260px; height:6px; }
+.is-complete > .stage-progress .progress-text::after, .progress-card.is-complete .progress-text::after { content:' · 已完成 ✓'; color:var(--accent); }
+.route .done-box { width:16px; height:16px; margin:0 8px 0 0; vertical-align:-2px; accent-color:var(--accent); cursor:pointer; }
+.route li.is-done > a { color:var(--muted); }
+.route li.is-done > .num { opacity:.6; }
+[data-note-link][data-read]::after { content:'✓'; margin-left:6px; color:var(--accent); font-size:.85em; text-decoration:none; display:inline-block; }
+
+.route .track-papers a { overflow-wrap:anywhere; }

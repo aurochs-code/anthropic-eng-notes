@@ -1,0 +1,13 @@
+.route { list-style:none; padding:0; margin:0; }
+.route li { padding:10px 0; border-bottom:1px dashed var(--line); }
+.route .num { display:inline-block; min-width:2.2em; color:var(--accent); font-weight:700; }
+.route .sum { color:var(--muted); font-size:14px; margin:2px 0 0 2.2em; }
+.route .sum.zh { color:var(--fg); opacity:.85; }
+.route .tags { margin:4px 0 0 2.2em; }
+.route .tags li { font-size:11px; padding:0 8px; border:1px solid var(--line); line-height:1.7; }
+.empty { color:var(--muted); font-size:14px; }
+
+.tag-cloud { list-style:none; padding:0; margin:20px 0; display:flex; flex-wrap:wrap; gap:8px; }
+.tag-cloud a { display:inline-flex; align-items:center; gap:6px; padding:2px 10px; border:1px solid var(--line); border-radius:999px; background:var(--bg-soft); color:var(--fg); text-decoration:none; font-size:14px; }
+.tag-cloud a:hover { border-color:var(--accent); color:var(--accent); }
+.tag-n { font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
