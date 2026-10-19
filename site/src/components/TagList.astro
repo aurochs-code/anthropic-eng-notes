@@ -3,4 +3,4 @@ import { url } from '../lib/notes';
 import { tagSlug } from '../lib/tags';
 const { tags } = Astro.props as { tags: string[] };
 ---
-<ul class="tags">{tags.map((t) => <li><a href={url(`tags/${tagSlug(t)}/`)}>{t}</a></li>)}</ul>
+<ul class="tags">{tags.map((t) => <li><a href={url(`tags/${tagSlug(t)}/`)}>#{t}</a></li>)}</ul>
