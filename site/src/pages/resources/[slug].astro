@@ -8,6 +8,7 @@ import Backlinks from '../../components/Backlinks.astro';
 import { stageName } from '../../data/stages';
 import { getSortedResources, getMainSequence, resSlug } from '../../lib/resources';
 import { getSortedNotes, fmtDate, url } from '../../lib/notes';
+import { splitSourceNote } from '../../lib/remark-plugins.mjs';
 
 export async function getStaticPaths() {
   const list = await getSortedResources();
@@ -23,6 +24,13 @@ const seq = await getMainSequence();
 // 资源可能在主线出现多次：路线翻页取第一次出现的位置
 const at = seq.findIndex((s) => s.item.type === 'resource' && s.item.res.id === res.id);
 const steps = seq.filter((s) => s.item.type === 'resource' && s.item.res.id === res.id).map((s) => s.n);
+const parts = d.source_note ? splitSourceNote(d.source_note) : null;
+const metaParts: string[] = [];
+if (d.stage) metaParts.push(`主阶段：${d.stage} · ${stageName(d.stage)}`);
+if (d.kind) metaParts.push(`类型：${d.kind}`);
+if (d.provider) metaParts.push(d.provider);
+if (d.published) metaParts.push(`发布：${fmtDate(d.published)}`);
+if (d.last_checked) metaParts.push(`核实：${fmtDate(d.last_checked)}`);
 ---
 <Base title={`${d.title_zh} · 资源导读`} description={d.summary} ogType="article" headings={headings} readProgress={true}>
   <article>
@@ -34,35 +42,36 @@ const steps = seq.filter((s) => s.item.type === 'resource' && s.item.res.id === 
     <h1>{d.title_zh}</h1>
     {d.title_en && <p class="en">{d.title_en}</p>}
     <div class="meta">
-      {d.stage && <span>主阶段：{d.stage} · {stageName(d.stage)}</span>}
-      {d.kind && <span>类型：{d.kind}</span>}
-      {d.provider && <span>{d.provider}</span>}
-      {d.published && <span>发布：{fmtDate(d.published)}</span>}
-      {d.last_checked && <span>核实：{fmtDate(d.last_checked)}</span>}
-      {d.source_url && <a href={d.source_url} target="_blank" rel="noopener">原文链接 ↗</a>}
-      {d.source_url_zh && <a href={d.source_url_zh} target="_blank" rel="noopener">中文版 ↗</a>}
+      <span>
+        {metaParts.join(' · ')}
+        {d.source_url && <>{metaParts.length ? ' · ' : ''}<a href={d.source_url} target="_blank" rel="noopener">原文链接 ↗</a></>}
+        {d.source_url_zh && <>{(metaParts.length || d.source_url) ? ' · ' : ''}<a href={d.source_url_zh} target="_blank" rel="noopener">中文版 ↗</a></>}
+      </span>
     </div>
-    <TagList tags={d.tags} />
-    {d.source_note && <div class="note-box">⚠️ {d.source_note}</div>}
-    {(
-      <dl class="facts">
-        <dt>状态</dt><dd>{d.status}{d.optional && '（选读）'}</dd>
-        {d.cost && <><dt>费用</dt><dd>{d.cost}</dd></>}
-        {d.estimated_hours && <><dt>估计投入</dt><dd>约 {d.estimated_hours} 小时（估算）</dd></>}
-        {d.license_note && <><dt>许可</dt><dd>{d.license_note}</dd></>}
-        <dt>路线位置</dt><dd>{d.route.map((e) => e.step ? `第 ${e.step} 步：${e.part}` : d.track === 'theory' ? (e.part.startsWith('原理支线') ? e.part : `原理支线：${e.part}`) : `选读：${e.part.replace(/^选读：/, '')}`).join('；')}（<a href={url('/path/')}>查看路线</a>）</dd>
-      </dl>
-    )}
+    <dl class="facts">
+      <div><dt>状态</dt><dd>{d.status}{d.optional && '（选读）'}</dd></div>
+      {d.cost && <div><dt>费用</dt><dd>{d.cost}</dd></div>}
+      {d.estimated_hours && <div><dt>估计投入</dt><dd>约 {d.estimated_hours} 小时（估算）</dd></div>}
+      {d.license_note && <div><dt>许可</dt><dd>{d.license_note}</dd></div>}
+      <div><dt>路线位置</dt><dd>{d.route.map((e) => e.step ? `第 ${e.step} 步：${e.part}` : d.track === 'theory' ? (e.part.startsWith('原理支线') ? e.part : `原理支线：${e.part}`) : `选读：${e.part.replace(/^选读：/, '')}`).join('；')}（<a href={url('/path/')}>查看路线</a>）</dd></div>
+    </dl>
     {pairs.length > 0 && (
       <p class="meta">搭配笔记：{pairs.map((n, i) => <>{i > 0 && '、'}<a href={url(`notes/${n!.data.slug}/`)}>#{n!.data.order} {n!.data.title_zh}</a></>)}</p>
     )}
+    {parts && (
+      <details class="callout warn">
+        <summary><span class="callout-title">⚠ 原文已更新</span> · {parts.lead}</summary>
+        {parts.rest && <p>{parts.rest}</p>}
+      </details>
+    )}
     <Toc headings={headings} variant="inline" />
     <Content />
+    <TagList tags={d.tags} />
   </article>
   <Backlinks slug={d.slug} />
   <nav class="pager" aria-label="资源翻页" data-pagefind-ignore>
-    {prev ? <a class="prev" href={url(`resources/${resSlug(prev)}/`)}><small>← 上一个资源</small>{prev.data.title_zh}</a> : <span />}
-    {next ? <a class="next" href={url(`resources/${resSlug(next)}/`)}><small>下一个资源 →</small>{next.data.title_zh}</a> : <span />}
+    {prev ? <a class="prev" href={url(`resources/${resSlug(prev)}/`)}><small>← 上一个资源</small><span class="pager-title">{prev.data.title_zh}</span></a> : <span />}
+    {next ? <a class="next" href={url(`resources/${resSlug(next)}/`)}><small>下一个资源 →</small><span class="pager-title">{next.data.title_zh}</span></a> : <span />}
   </nav>
   {at >= 0 && <RoutePager seq={seq} at={at} />}
 </Base>
