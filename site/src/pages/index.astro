@@ -1,31 +1,87 @@
 ---
 import Base from '../layouts/Base.astro';
 import { MODULES } from '../content.config';
+import { STAGES } from '../data/stages';
 import { getSortedNotes, url } from '../lib/notes';
-import TagList from '../components/TagList.astro';
+import { getSortedPapers } from '../lib/papers';
+import { getMainSequence, getSortedResources, progressId, resSlug, type SeqItem } from '../lib/resources';
+import { routePayload, routePayloadJson, START_LABEL, type MainlineInput } from '../lib/client/continue';
+
 const notes = await getSortedNotes();
+const papers = await getSortedPapers();
+const resources = await getSortedResources();
+const seq = await getMainSequence();
+const stages = STAGES.length;
 const groups = Object.entries(MODULES).map(([k, name]) => ({ k, name, items: notes.filter((n) => n.data.moduleKey === k) }));
+
+function mainlineInputs(items: SeqItem[]): MainlineInput[] {
+  return items.map((s) => {
+    if (s.item.type === 'note') {
+      return {
+        n: s.n,
+        pid: progressId(s.item),
+        title: s.item.note.data.title_zh,
+        href: url(`notes/${s.item.note.data.slug}/`),
+      };
+    }
+    const part = s.item.part;
+    return {
+      n: s.n,
+      pid: progressId(s.item),
+      title: part ? `${s.item.res.data.title_zh} · ${part}` : s.item.res.data.title_zh,
+      href: url(`resources/${resSlug(s.item.res)}/`),
+    };
+  });
+}
+
+const payload = routePayload(mainlineInputs(seq), url('/path/'));
 ---
 <Base title="Anthropic 工程博客 · 中文学习笔记" searchable={false}>
-  <h1>笔记目录</h1>
-  <p class="lede">共 26 篇规划，已完成 {notes.length} 篇。按模块 A–F 分组，序号为全站推荐阅读顺序；含外部资源的完整路线见<a href={url("/path/")}>学习路线</a>。</p>
-  {groups.map((g) => (
-    <section class="module">
-      <h2 id={`module-${g.k}`}>模块 {g.k} · {g.name}</h2>
-      {g.items.length === 0 ? <p class="empty">笔记撰写中…</p> : (
-        <ol class="route">
-          {g.items.map((n) => (
-            <li>
-              <span class="num">{String(n.data.order).padStart(2, '0')}</span>
-              <a href={url(`notes/${n.data.slug}/`)} data-note-link={n.data.slug}>{n.data.title_zh}</a>
-              <span class="meta" style="display:inline"> · {n.data.reading_time} 分钟</span>
-              <p class="sum">{n.data.title_en}</p>
-              <p class="sum zh">{n.data.summary}</p>
-              <TagList tags={n.data.tags} />
-            </li>
-          ))}
-        </ol>
-      )}
-    </section>
-  ))}
+  <div class="home">
+    <header class="home-hero">
+      <h1>Anthropic 工程博客 · 中文学习笔记</h1>
+      <p class="home-lead">{notes.length} 篇工程博客精读 + {papers.length} 篇经典论文 + 外部课程导读，按 {stages} 个阶段、{seq.length} 步串成一条学习路线</p>
+      <div class="home-status">
+        <a class="home-continue-btn" href={payload.steps[0].href} data-continue>
+          <span class="home-continue-label">{START_LABEL}</span>
+          <span class="home-continue-title" hidden></span>
+        </a>
+        <div class="home-progress" data-progress-home hidden>
+          <p class="home-progress-text">已完成 <strong data-progress-home-done>0</strong> / <span data-progress-home-total>{payload.steps.length}</span> 步</p>
+          <div class="home-progress-bar" role="progressbar" aria-label="主线已读步数" aria-valuemin="0" aria-valuemax={payload.steps.length} aria-valuenow="0">
+            <span></span>
+          </div>
+        </div>
+      </div>
+    </header>
+    <ul class="home-cards">
+      <li><a class="home-card" href="#modules"><svg class="home-card-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M7 3.5h7l4 4V20.5H7z" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/><path d="M14 3.5V8h4.5M9 12h6M9 16h6" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg><span class="home-card-name">笔记</span><span class="home-card-count">{notes.length}<span class="home-card-unit">篇</span></span><span class="home-card-blurb">按模块阅读工程博客的中文笔记</span></a></li>
+      <li><a class="home-card" href={url('/path/')}><svg class="home-card-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><circle cx="6" cy="6" r="2" fill="none" stroke="currentColor" stroke-width="1.75"/><circle cx="18" cy="12" r="2" fill="none" stroke="currentColor" stroke-width="1.75"/><circle cx="8" cy="18" r="2" fill="none" stroke="currentColor" stroke-width="1.75"/><path d="M8 7.5h5.5L17 11M16.2 13.2 9.5 16.5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg><span class="home-card-name">学习路线</span><span class="home-card-count">{seq.length}<span class="home-card-unit">步</span></span><span class="home-card-blurb">{stages} 个阶段，笔记和外部资源穿插</span></a></li>
+      <li><a class="home-card" href={url('/papers/')}><svg class="home-card-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M6 3.5h9l3 3V20.5H6z" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/><path d="M15 3.5V7h3.5M8.5 12h7M8.5 16h4" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg><span class="home-card-name">论文笔记</span><span class="home-card-count">{papers.length}<span class="home-card-unit">篇</span></span><span class="home-card-blurb">依据原论文写的 30u30 学习笔记</span></a></li>
+      <li><a class="home-card" href={url('/resources/')}><svg class="home-card-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M10 13.5a3.5 3.5 0 0 0 5-5l1.5-1.5a3.5 3.5 0 0 0-5-5L10 3.5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/><path d="M14 10.5a3.5 3.5 0 0 0-5 5L7.5 17a3.5 3.5 0 0 0 5 5l1.5-1.5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg><span class="home-card-name">资源导读</span><span class="home-card-count">{resources.length}<span class="home-card-unit">个</span></span><span class="home-card-blurb">课程、文章与仓库导读</span></a></li>
+    </ul>
+    <div class="home-modules" id="modules">
+      {groups.map((g) => (
+        <section class="module home-module">
+          <h2 id={`module-${g.k}`} class="home-module-title"><span class="home-sr">模块 </span><span class="home-module-k">{g.k}</span><span class="home-module-name">{g.name}</span><span class="home-module-stat"><span class="home-module-total">{g.items.length} 篇</span><span class="home-module-done" data-module-done hidden></span></span></h2>
+          {g.items.length === 0 ? <p class="empty">笔记撰写中…</p> : (
+            <ol class="entry-list">
+              {g.items.map((n) => (
+                <li class="entry entry-note">
+                  <div class="entry-line">
+                    <span class="entry-dot" aria-hidden="true"></span>
+                    <span class="entry-num">{String(n.data.order).padStart(2, '0')}</span>
+                    <a class="entry-title" href={url(`notes/${n.data.slug}/`)} data-note-link={n.data.slug}>{n.data.title_zh}</a>
+                    <span class="entry-time">{n.data.reading_time} 分钟</span>
+                  </div>
+                  <p class="sum zh">{n.data.summary}</p>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
+      ))}
+    </div>
+    <Fragment set:html={`<script type="application/json" id="route-seq">${routePayloadJson(payload)}</script>`} />
+  </div>
 </Base>
