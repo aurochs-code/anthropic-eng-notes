@@ -12,7 +12,13 @@ import { url } from '../lib/notes';
       if (p === pre || p.indexOf(pre + '/') === 0) location.replace((p.slice(pre.length) || '/') + location.search + location.hash);
     })();
   </script>
-  <h1>页面不存在</h1>
-  <p>这个地址没有对应的页面，可能已移动或输错了。</p>
-  <p><a href={url('/')} data-home-link>← 回到首页</a>，或用右上角的搜索查找。</p>
+  <div class="miss">
+    <p class="miss-code">404</p>
+    <h1>页面不存在</h1>
+    <p class="miss-lead">这个地址没有对应的页面，可能已移动或输错了。</p>
+    <div class="miss-actions">
+      <a class="miss-btn" href={url('/')} data-home-link>回到首页</a>
+      <button type="button" class="search-btn miss-btn">打开搜索</button>
+    </div>
+  </div>
 </Base>

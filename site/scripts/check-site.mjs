@@ -63,8 +63,9 @@ for (const rel of pages) {
   const svg = m.filter(Boolean).length;
   if (svg !== m.length || errs.length || (rel.startsWith('notes/') && m.length === 0)) mermaidBad.push(`${rel}: 块 ${m.length} / svg ${svg} ${errs.join(' | ')}`);
   if (rel.startsWith('notes/')) {
-    const t = await page.$eval('article .meta span', (e) => e.textContent);
-    orders.push(+/#(\d+)/.exec(t)[1]);
+    const raw = await page.$eval('article', (e) => e.getAttribute('data-order'));
+    if (raw == null || !/^\d+$/.test(raw)) throw new Error(`笔记 ${rel} 缺少 data-order`);
+    orders.push(Number(raw));
   }
   for (const h of await page.$$eval('a[href], link[rel="icon"][href]', (as) => as.map((a) => a.getAttribute('href')))) {
     if (/^(https?:|mailto:)/.test(h) && !h.startsWith(origin)) continue;
@@ -138,9 +139,10 @@ ok('代码块复制按钮', copyBad.length === 0, `代码块 ${b1Pages.reduce((n
 ok('站内死链', dead.length === 0, `检查 ${internal.size} 个（页面, 链接）对` + (dead.length ? '；死链：\n  ' + dead.join('\n  ') : ''));
 
 const home = readFileSync(join(dist, 'index.html'), 'utf8');
-const mods = [...home.matchAll(/<h2[^>]*>模块 ([A-F])/g)].map((x) => x[1]).join('');
+const mods = [...home.matchAll(/<h2[^>]*\sid="module-([A-F])"/g)].map((x) => x[1]).join('');
+const letters = [...home.matchAll(/<span class="home-module-k">([A-F])<\/span>/g)].map((x) => x[1]).join('');
 const homeSums = (home.match(/<p class="sum zh">/g) ?? []).length;
-ok('首页 A–F 分组', mods === 'ABCDEF' && homeSums === 26, `分组：${mods}；摘要 ${homeSums} 条`);
+ok('首页 A–F 分组', mods === 'ABCDEF' && letters === 'ABCDEF' && homeSums === 26, `分组：${mods}；字母 ${letters}；摘要 ${homeSums} 条`);
 
 const pathHtml = readFileSync(join(dist, 'path/index.html'), 'utf8');
 const stages = [...pathHtml.matchAll(/<h2[^>]*>阶段 (\d)/g)].map((x) => x[1]).join('');

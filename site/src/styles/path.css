@@ -1,0 +1,403 @@
+:root {
+  --path-ok-ink: color-mix(in srgb, var(--ok) 70%, var(--fg));
+}
+
+.badge {
+  display: inline-block;
+  font-size: 12px;
+  line-height: 1.6;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 8px;
+  margin-right: 6px;
+  background: var(--bg-soft);
+  color: var(--muted);
+  vertical-align: 1px;
+}
+.badge.res {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+.badge.track {
+  background: color-mix(in srgb, var(--ok) 14%, transparent);
+  color: var(--path-ok-ink);
+}
+
+.progress-card {
+  margin: 16px 0 8px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+}
+.progress-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 2px;
+}
+.progress-head strong {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.progress-head .progress-text {
+  grid-column: 1;
+  grid-row: 2;
+  font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong", serif;
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+.progress-reset {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  justify-self: end;
+  align-self: center;
+  margin: 0;
+  min-height: 32px;
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+}
+.progress-reset:hover {
+  color: var(--accent-strong);
+  border-color: var(--accent);
+}
+.progress-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+.progress-card .progress-bar {
+  margin: 10px 0 0;
+}
+.progress-bar > span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  border-radius: inherit;
+  transition: width .25s ease;
+}
+.progress-note {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.progress-note summary {
+  cursor: pointer;
+  padding: 4px 0;
+  color: var(--muted);
+}
+.progress-note p {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+.progress-card.is-complete .progress-text::after,
+section.is-complete > .stage-progress .progress-text::after {
+  content: " · 已完成 ✓";
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: normal;
+  line-height: 1.4;
+  color: var(--path-ok-ink);
+  vertical-align: middle;
+}
+
+section.module[data-progress-group] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 16px;
+  row-gap: 8px;
+  align-items: center;
+  margin-top: 2.4em;
+}
+section.module[data-progress-group] > h2 {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  margin: 0;
+  font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong", serif;
+  font-size: var(--fs-xl);
+  font-weight: 600;
+  line-height: 1.3;
+}
+section.module[data-progress-group] > h2 .meta {
+  display: inline;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--muted);
+}
+section.module[data-progress-group] > .stage-goal {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+section.module[data-progress-group] > .stage-progress {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+section.module[data-progress-group] > .stage-progress .progress-bar {
+  width: 200px;
+  flex: none;
+  height: 8px;
+}
+section.module[data-progress-group] > .route {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  min-width: 0;
+}
+section.module[data-progress-group] > .track-pointer {
+  grid-column: 1 / -1;
+  grid-row: 4;
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+section.track {
+  background: var(--bg-soft);
+  border-radius: var(--r-lg);
+  padding: 16px 16px 8px;
+}
+
+section[data-progress-group] > ol.route {
+  --node: 24px;
+  --rail: 2px;
+  --pip: 14px;
+  --row-pad: 8px;
+  --gutter: 12px;
+  --path-leading: 1.85;
+  line-height: var(--path-leading);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+section[data-progress-group] > ol.route > li {
+  position: relative;
+  z-index: 0;
+  margin: 0;
+  padding: var(--row-pad) 0 var(--row-pad) calc(var(--node) + var(--gutter));
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+}
+section[data-progress-group] > ol.route > li::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: calc((var(--node) - var(--rail)) / 2);
+  top: 0;
+  bottom: 0;
+  width: var(--rail);
+  background: var(--line);
+  pointer-events: none;
+}
+section[data-progress-group] > ol.route > li:first-child::after {
+  top: calc(var(--row-pad) + (var(--path-leading) * 1em) / 2 - var(--rail) / 2);
+}
+section[data-progress-group] > ol.route > li:last-child::after {
+  bottom: auto;
+  height: calc(var(--row-pad) + (var(--path-leading) * 1em) / 2 + var(--rail) / 2);
+}
+section[data-progress-group] > ol.route > li:first-child:last-child::after {
+  content: none;
+}
+section.is-complete[data-progress-group] > ol.route > li::after,
+section.track[data-progress-group] > ol.route > li::after {
+  background: var(--ok);
+}
+
+section[data-progress-group] > ol.route > li > input.done-box {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  top: calc(var(--row-pad) + (var(--path-leading) * 1em - var(--node)) / 2);
+  box-sizing: border-box;
+  width: var(--node);
+  height: var(--node);
+  margin: 0;
+  padding: 0;
+  font-size: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 2px solid var(--muted);
+  border-radius: 50%;
+  background: var(--bg);
+  background-image: none;
+  cursor: pointer;
+}
+section.track > ol.route > li > input.done-box {
+  border-color: var(--ok);
+  background: var(--bg-soft);
+}
+section[data-progress-group] > ol.route > li > input.done-box:hover {
+  border-color: var(--fg);
+}
+section[data-progress-group] > ol.route > li > input.done-box:checked,
+section[data-progress-group] > ol.route > li > input.done-box:checked:hover {
+  border-color: var(--ok);
+  background: var(--ok);
+}
+section[data-progress-group] > ol.route > li > input.done-box:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+section[data-progress-group] > ol.route > li.res:not([data-shown-step])::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  left: calc((var(--node) - var(--pip)) / 2);
+  top: calc(var(--row-pad) + (var(--path-leading) * 1em - var(--pip)) / 2);
+  box-sizing: border-box;
+  width: var(--pip);
+  height: var(--pip);
+  border: 1px dashed var(--muted);
+  border-radius: 50%;
+  background: var(--bg);
+  pointer-events: none;
+}
+section[data-progress-group] > ol.route > li.res:not([data-shown-step]),
+section[data-progress-group] > ol.route > li.res:not([data-shown-step]) > a,
+section[data-progress-group] > ol.route > li.res:not([data-shown-step]) > .num {
+  color: var(--muted);
+}
+section[data-progress-group] > ol.route > li.res:not([data-shown-step]) > a:hover {
+  color: var(--fg);
+}
+
+section[data-progress-group] > ol.route > li > .num {
+  min-width: 2.75em;
+  font-variant-numeric: tabular-nums;
+}
+section[data-progress-group]:not([data-track]) > ol.route > li > .num {
+  color: var(--accent-strong);
+}
+section.track > ol.route > li > .num {
+  color: var(--muted);
+}
+section[data-progress-group] > ol.route > li.is-done > a,
+section[data-progress-group] > ol.route > li.is-done > .num,
+section[data-progress-group] > ol.route > li.res:not([data-shown-step]) > .num {
+  color: var(--muted);
+}
+section[data-progress-group] > ol.route > li.is-done > a:hover {
+  color: var(--fg);
+}
+
+section[data-progress-group] .part {
+  color: var(--muted);
+  font-size: 14px;
+}
+section[data-progress-group] > ol.route > li.track-item,
+section[data-progress-group] .track-papers a {
+  overflow-wrap: anywhere;
+}
+
+@keyframes path-step-flash {
+  0% { background-color: var(--accent-soft); }
+  40% { background-color: var(--accent-soft); }
+  100% { background-color: transparent; }
+}
+section[data-progress-group] > ol.route > li:target {
+  animation: path-step-flash 1.2s ease forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  section[data-progress-group] > ol.route > li:target {
+    animation: none;
+    background-color: var(--accent-soft);
+  }
+  .progress-bar > span {
+    transition: none;
+  }
+}
+
+@media (max-width: 600px) {
+  section.module[data-progress-group] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  section.module[data-progress-group] > .stage-goal {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  section.module[data-progress-group] > .stage-progress {
+    grid-column: 1;
+    grid-row: 3;
+    justify-self: start;
+  }
+  section.module[data-progress-group] > .stage-progress .progress-bar {
+    width: min(200px, 100%);
+  }
+  section.module[data-progress-group] > .route {
+    grid-row: 4;
+  }
+  section.module[data-progress-group] > .track-pointer {
+    grid-row: 5;
+  }
+  section.track {
+    padding: 12px 12px 4px;
+  }
+}
+
+@media (forced-colors: active) {
+  section[data-progress-group] > ol.route > li > input.done-box,
+  section.track > ol.route > li > input.done-box {
+    forced-color-adjust: none;
+    border: 2px solid ButtonText;
+    background: Field;
+    background-image: none;
+  }
+  section[data-progress-group] > ol.route > li > input.done-box:hover {
+    border-color: ButtonText;
+  }
+  section[data-progress-group] > ol.route > li > input.done-box:checked,
+  section[data-progress-group] > ol.route > li > input.done-box:checked:hover {
+    border-color: ButtonText;
+    background: ButtonText;
+  }
+  section[data-progress-group] > ol.route > li > input.done-box:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+  section[data-progress-group] > ol.route > li.res:not([data-shown-step])::before {
+    forced-color-adjust: none;
+    border: 1px dashed ButtonText;
+    background: Field;
+  }
+  section[data-progress-group] > ol.route > li::after,
+  section.is-complete[data-progress-group] > ol.route > li::after,
+  section.track[data-progress-group] > ol.route > li::after {
+    forced-color-adjust: none;
+    background: ButtonText;
+  }
+}
+
+[data-note-link][data-read]::after { content:'✓'; margin-left:6px; color:var(--accent-strong); font-size:.85em; text-decoration:none; display:inline-block; }

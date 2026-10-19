@@ -4,18 +4,30 @@ const root = document.documentElement;
 const blocks = [...document.querySelectorAll<HTMLPreElement>('pre.mermaid')];
 for (const b of blocks) b.dataset.src = b.textContent ?? '';
 
+function readMermaidThemeVariables(mode: 'dark' | 'default') {
+  const css = getComputedStyle(document.documentElement);
+  return {
+    darkMode: mode === 'dark',
+    primaryColor: css.getPropertyValue('--bg-soft').trim(),
+    lineColor: css.getPropertyValue('--muted').trim(),
+    primaryTextColor: css.getPropertyValue('--fg').trim(),
+    fontFamily: getComputedStyle(document.body).fontFamily,
+  };
+}
+
 let running: Promise<void> = Promise.resolve();
 function render() {
   running = running.then(async () => {
     root.dataset.mermaid = 'pending';
-    const theme = root.dataset.theme === 'dark' ? 'dark' : 'default';
+    const mode = root.dataset.theme === 'dark' ? 'dark' : 'default';
+    const themeVariables = readMermaidThemeVariables(mode);
     for (const b of blocks) {
       b.removeAttribute('data-processed');
       b.textContent = b.dataset.src ?? '';
     }
-    mermaid.initialize({ startOnLoad: false, theme, securityLevel: 'strict' });
+    mermaid.initialize({ startOnLoad: false, theme: 'base', themeVariables, securityLevel: 'strict' });
     await mermaid.run({ nodes: blocks });
-    root.dataset.mermaidTheme = theme;
+    root.dataset.mermaidTheme = mode;
     root.dataset.mermaid = 'done';
   });
   return running;

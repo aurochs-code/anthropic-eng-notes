@@ -1,19 +1,97 @@
 ---
-// 全局侧栏：学习路线、资源导读、A–F 模块分组的笔记；高亮当前页
 import { MODULES } from '../content.config';
 import { getSortedNotes, url } from '../lib/notes';
 import { getSortedResources, resSlug } from '../lib/resources';
 import { getSortedPapers, dd } from '../lib/papers';
+
+type NoteLink = {
+  kind: 'note';
+  href: string;
+  title: string;
+  current: boolean;
+  num: string;
+  slug: string;
+};
+type PaperLink = {
+  kind: 'paper';
+  href: string;
+  title: string;
+  current: boolean;
+  num: string;
+  slug: string;
+};
+type ResourceLink = {
+  kind: 'resource';
+  href: string;
+  title: string;
+  current: boolean;
+};
+type SideLink = NoteLink | PaperLink | ResourceLink;
+type SideGroup =
+  | { kind: 'module'; key: string; label: string; open: boolean; links: NoteLink[] }
+  | { kind: 'papers'; label: string; open: boolean; links: PaperLink[] }
+  | { kind: 'resources'; label: string; open: boolean; links: ResourceLink[] };
+
 const here = Astro.url.pathname;
 const notes = await getSortedNotes();
 const resources = await getSortedResources();
 const papers = await getSortedPapers();
 const inPapers = here.startsWith(url('/papers/'));
-const cur = (p: string) => (here === url(p) ? 'page' : undefined);
-const groups = Object.entries(MODULES).map(([k, name]) => ({ k, name, items: notes.filter((n) => n.data.moduleKey === k) }));
 const inRes = here.startsWith(url('/resources/'));
+const cur = (p: string) => (here === url(p) ? 'page' : undefined);
 const curNote = notes.find((n) => here === url(`notes/${n.data.slug}/`));
-// 笔记页只展开当前模块，其余页面全部展开
+const groups: SideGroup[] = Object.entries(MODULES).map(([k, name]) => ({
+  kind: 'module' as const,
+  key: k,
+  label: `${k} · ${name}`,
+  open: !curNote || curNote.data.moduleKey === k,
+  links: notes.filter((n) => n.data.moduleKey === k).map((n): NoteLink => ({
+    kind: 'note',
+    href: url(`notes/${n.data.slug}/`),
+    title: n.data.title_zh,
+    current: cur(`notes/${n.data.slug}/`) === 'page',
+    num: String(n.data.order).padStart(2, '0'),
+    slug: n.data.slug,
+  })),
+}));
+if (papers.length) {
+  groups.push({
+    kind: 'papers',
+    label: `论文笔记（${papers.length}）`,
+    open: inPapers,
+    links: papers.map((p): PaperLink => ({
+      kind: 'paper',
+      href: url(`papers/${p.data.slug}/`),
+      title: p.data.title_zh,
+      current: cur(`papers/${p.data.slug}/`) === 'page',
+      num: `D${dd(p.data.day)}`,
+      slug: p.data.slug,
+    })),
+  });
+}
+if (resources.length) {
+  groups.push({
+    kind: 'resources',
+    label: `资源导读（${resources.length}）`,
+    open: inRes,
+    links: resources.map((r): ResourceLink => ({
+      kind: 'resource',
+      href: url(`resources/${resSlug(r)}/`),
+      title: r.data.title_zh,
+      current: cur(`resources/${resSlug(r)}/`) === 'page',
+    })),
+  });
+}
+function groupLinks(g: SideGroup): SideLink[] {
+  switch (g.kind) {
+    case 'module':
+      return g.links;
+    case 'papers':
+      return g.links;
+    case 'resources':
+      return g.links;
+  }
+}
 ---
 <nav class="sidebar-nav" aria-label="全站导航" data-pagefind-ignore>
   <ul class="side-top">
@@ -24,33 +102,13 @@ const curNote = notes.find((n) => here === url(`notes/${n.data.slug}/`));
     <li><a href={url('/tags/')} aria-current={here.startsWith(url('/tags/')) ? 'page' : undefined}>标签</a></li>
   </ul>
   {groups.map((g) => (
-    <details class="side-group" open={!curNote || curNote.data.moduleKey === g.k} data-module={g.k}>
-      <summary>{g.k} · {g.name}</summary>
+    <details class="side-group" open={g.open} data-module={g.kind === 'module' ? g.key : undefined} data-papers={g.kind === 'papers' ? '' : undefined}>
+      <summary>{g.label}<span class="side-count" data-side-count></span></summary>
       <ul>
-        {g.items.map((n) => (
-          <li><a href={url(`notes/${n.data.slug}/`)} aria-current={cur(`notes/${n.data.slug}/`)} data-note-link={n.data.slug}><span class="side-num">{String(n.data.order).padStart(2, '0')}</span>{n.data.title_zh}</a></li>
+        {groupLinks(g).map((link) => (
+          <li><a href={link.href} title={link.title} aria-current={link.current ? 'page' : undefined} data-note-link={link.kind === 'note' ? link.slug : undefined} data-paper-link={link.kind === 'paper' ? link.slug : undefined}>{link.kind === 'resource' ? null : <span class="side-num">{link.num}</span>}{link.title}</a></li>
         ))}
       </ul>
     </details>
   ))}
-  {papers.length > 0 && (
-    <details class="side-group" open={inPapers} data-papers>
-      <summary>论文笔记（{papers.length}）</summary>
-      <ul>
-        {papers.map((p) => (
-          <li><a href={url(`papers/${p.data.slug}/`)} aria-current={cur(`papers/${p.data.slug}/`)} data-paper-link={p.data.slug}><span class="side-num">D{dd(p.data.day)}</span>{p.data.title_zh}</a></li>
-        ))}
-      </ul>
-    </details>
-  )}
-  {resources.length > 0 && (
-    <details class="side-group" open={inRes}>
-      <summary>资源导读（{resources.length}）</summary>
-      <ul>
-        {resources.map((r) => (
-          <li><a href={url(`resources/${resSlug(r)}/`)} aria-current={cur(`resources/${resSlug(r)}/`)}>{r.data.title_zh}</a></li>
-        ))}
-      </ul>
-    </details>
-  )}
 </nav>

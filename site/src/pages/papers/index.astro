@@ -1,6 +1,5 @@
 ---
 import Base from '../../layouts/Base.astro';
-import TagList from '../../components/TagList.astro';
 import { getPaperGroups, getSortedPapers, dd, unitOf } from '../../lib/papers';
 import { url } from '../../lib/notes';
 const papers = await getSortedPapers();
@@ -8,20 +7,22 @@ const groups = await getPaperGroups();
 ---
 <Base title="论文笔记 · 学习笔记" description="30u30 书单经典 AI 论文的中文学习笔记（依据原论文撰写，非翻译），按原理支线 P1–P6 与补完分组、按 Day 排序。" searchable={false}>
   <h1>论文笔记</h1>
-  <p class="en">30u30 书单 30 篇论文，已写 {papers.length} 篇。依据原论文撰写，不翻译、不改编 30u30 的讲解；按<a href={url('/path/#track-theory')}>原理支线</a>的段落分组，组内按 Day 排序。</p>
+  <p class="lede">30u30 书单 30 篇论文，已写 {papers.length} 篇。依据原论文撰写，不翻译、不改编 30u30 的讲解；按<a href={url('/path/#track-theory')}>原理支线</a>的段落分组，组内按 Day 排序。</p>
   {papers.length === 0 && <p class="empty">论文笔记撰写中…</p>}
   {groups.map((g) => (
     <section class="module" data-paper-segment={g.key}>
-      <h2 id={`seg-${g.key}`}>{g.key === '补完' ? '补完' : `${g.key} · ${g.name}`}<span class="meta" style="display:inline;font-weight:400"> （{g.items.length} 篇）</span></h2>
-      <ol class="route">
+      <h2 id={`seg-${g.key}`}>{g.key === '补完' ? '补完' : `${g.key} · ${g.name}`}<span class="entry-section-count">（{g.items.length} 篇）</span></h2>
+      <ol class="entry-list">
         {g.items.map((p) => (
-          <li data-paper-day={p.data.day}>
-            <span class="num">D{dd(p.data.day)}</span>
-            <a href={url(`papers/${p.data.slug}/`)} data-paper-link={p.data.slug}>{p.data.title_zh}</a>
-            <span class="meta" style="display:inline"> · {p.data.reading_time} 分钟 · <a href={unitOf(p).url} target="_blank" rel="noopener">30u30 单元 ↗</a></span>
-            <p class="sum">{p.data.title_en}{p.data.venue && ` · ${p.data.venue}`}</p>
-            <p class="sum zh">{p.data.summary}</p>
-            <TagList tags={p.data.tags} />
+          <li class="entry" data-paper-day={p.data.day}>
+            <div class="entry-line">
+              <span class="entry-num">D{dd(p.data.day)}</span>
+              <a class="entry-title" href={url(`papers/${p.data.slug}/`)} data-paper-link={p.data.slug}>{p.data.title_zh}</a>
+              <span class="entry-time">{p.data.reading_time} 分钟</span>
+              <a class="entry-ext" href={unitOf(p).url} target="_blank" rel="noopener" aria-label="30u30 单元，在新标签页打开"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M14 6h4v4M18 6l-8 8" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 13v5H6V8h5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+            </div>
+            <p class="entry-en en">{p.data.title_en}{p.data.venue ? ` · ${p.data.venue}` : ''}</p>
+            <p class="entry-sum">{p.data.summary}</p>
           </li>
         ))}
       </ol>

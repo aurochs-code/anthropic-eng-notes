@@ -1,11 +1,20 @@
 // 学习进度：localStorage['progress:v1'] = { [id]: 完成时间戳 }，id 规则见 lib/resources.ts progressId。
 // 路线页勾选框、各阶段完成度、笔记页“标记为已读”、侧栏/列表里的已读标记；多标签页之间通过 storage 事件同步。
+import {
+  homeView,
+  moduleReadText,
+  parseProgressJson,
+  parseRoutePayload,
+  sideCountText,
+  type ProgressMap,
+} from './continue';
+
 const KEY = 'progress:v1';
-type Store = Record<string, number>;
-function read(): Store {
-  try { const v = JSON.parse(localStorage.getItem(KEY) ?? '{}'); return v && typeof v === 'object' ? v : {}; } catch { return {}; }
+function read(): ProgressMap {
+  try { return parseProgressJson(localStorage.getItem(KEY)); }
+  catch { return Object.create(null); }
 }
-function write(s: Store) {
+function write(s: ProgressMap) {
   try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {}
 }
 export function setDone(id: string, done: boolean) {
@@ -46,6 +55,63 @@ function render() {
   }
   // 侧栏 / 列表里的笔记链接
   for (const a of document.querySelectorAll<HTMLElement>('[data-note-link]')) a.toggleAttribute('data-read', !!s[`n:${a.dataset.noteLink}`]);
+  paintContinue(s);
+  paintModuleReads(s);
+  paintSideCounts(s);
+}
+
+function noteSlugs(root: ParentNode | null): string[] {
+  if (!root) return [];
+  const slugs: string[] = [];
+  for (const el of root.querySelectorAll<HTMLElement>('[data-note-link]')) {
+    const slug = el.getAttribute('data-note-link');
+    if (slug) slugs.push(slug);
+  }
+  return slugs;
+}
+
+function paintContinue(s: ProgressMap) {
+  const btn = document.querySelector<HTMLAnchorElement>('a[data-continue]');
+  const host = document.getElementById('route-seq');
+  if (!btn || !host) return;
+  const payload = parseRoutePayload(host.textContent);
+  if (!payload) return;
+  const view = homeView(payload, s);
+  btn.href = view.href;
+  const label = btn.querySelector('.home-continue-label');
+  if (label) label.textContent = view.label;
+  const title = btn.querySelector<HTMLElement>('.home-continue-title');
+  if (title) {
+    title.hidden = view.title === null;
+    title.textContent = view.title ?? '';
+  }
+  const root = document.querySelector<HTMLElement>('[data-progress-home]');
+  if (!root) return;
+  root.hidden = view.barHidden;
+  const doneEl = root.querySelector('[data-progress-home-done]');
+  const totalEl = root.querySelector('[data-progress-home-total]');
+  if (doneEl) doneEl.textContent = String(view.done);
+  if (totalEl) totalEl.textContent = String(view.total);
+  const bar = root.querySelector<HTMLElement>('.home-progress-bar');
+  if (!bar) return;
+  bar.setAttribute('aria-valuemax', String(view.total));
+  bar.setAttribute('aria-valuenow', String(view.done));
+  const fill = bar.querySelector('span');
+  if (fill) fill.style.width = view.width;
+}
+
+function paintModuleReads(s: ProgressMap) {
+  for (const slot of document.querySelectorAll<HTMLElement>('[data-module-done]')) {
+    const text = moduleReadText(noteSlugs(slot.closest('section')), s);
+    slot.hidden = text === null;
+    slot.textContent = text ?? '';
+  }
+}
+
+function paintSideCounts(s: ProgressMap) {
+  for (const slot of document.querySelectorAll<HTMLElement>('[data-side-count]')) {
+    slot.textContent = sideCountText(noteSlugs(slot.closest('details')), s);
+  }
 }
 
 export function initProgress() {

@@ -11,6 +11,7 @@
     "preview": "astro preview",
     "screenshots": "node scripts/screenshots.mjs",
     "check": "node scripts/check-site.mjs",
+    "test": "node --experimental-strip-types --test src/lib/client/continue.test.ts src/anim/tests/*.test.mjs",
     "test:anim": "node --test src/anim/tests/*.test.mjs"
   },
   "dependencies": {

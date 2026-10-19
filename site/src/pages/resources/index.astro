@@ -10,24 +10,29 @@ const groups = [
 ---
 <Base title="资源导读 · 学习笔记" description="Anthropic 笔记之外的外部课程、文章与仓库导读，按学习阶段分组。" searchable={false}>
   <h1>资源导读</h1>
-  <p class="en">Anthropic 笔记之外的外部课程与文章导读，按主阶段分组；它们在<a href={url('/path/')}>学习路线</a>里穿插出现。</p>
+  <p class="lede">Anthropic 笔记之外的外部课程与文章导读，按主阶段分组；它们在<a href={url('/path/')}>学习路线</a>里穿插出现。</p>
   {resources.length === 0 && <p class="empty">资源导读撰写中…</p>}
   {groups.map((g) => (
     <section class="module">
       <h2>{g.title}</h2>
-      <ol class="route">
+      <ul class="res-grid">
         {g.items.map((r) => (
           <li>
-            <span class="badge">{r.data.kind}</span>
-            <a href={url(`resources/${resSlug(r)}/`)}>{r.data.title_zh}</a>
-            <span class="meta" style="display:inline"> · {r.data.provider}{r.data.estimated_hours && ` · 约 ${r.data.estimated_hours} 小时（估算）`}</span>
-            {r.data.track === 'theory' && <span class="badge track">原理支线</span>}
-            {r.data.optional && <span class="badge">选读</span>}
-            {r.data.status !== 'active' && <span class="badge">{r.data.status}</span>}
-            {<p class="sum" style="margin-left:0">{r.data.summary}</p>}
+            <a class="res-card" href={url(`resources/${resSlug(r)}/`)}>
+              <span class="res-card-top">
+                <span class="res-kind">{r.data.kind}</span>
+                {r.data.track === 'theory' && <span class="res-flag">原理支线</span>}
+                {r.data.optional && <span class="res-flag">选读</span>}
+                {r.data.status === 'archived' && <span class="res-status">已归档</span>}
+                {r.data.status === 'dated' && <span class="res-status">可能过时</span>}
+              </span>
+              <span class="entry-title">{r.data.title_zh}</span>
+              <span class="entry-meta">{r.data.provider}{r.data.estimated_hours ? ` · 约 ${r.data.estimated_hours} 小时` : ''}</span>
+              <span class="entry-sum">{r.data.summary}</span>
+            </a>
           </li>
         ))}
-      </ol>
+      </ul>
     </section>
   ))}
 </Base>

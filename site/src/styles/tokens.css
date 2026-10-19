@@ -1,0 +1,84 @@
+/* ── 主题变量：html[data-theme] 由 <head> 内联脚本在首屏前设置；无 JS 时跟随系统 ── */
+:root {
+  --fg: #1f1e1b;
+  --muted: #6b665c;
+  --bg: #faf9f5;
+  --bg-soft: #f2efe6;
+  --surface: #ffffff;
+  --line: #e4dfd2;
+  --line-strong: #cfc8b8;
+  --accent: #c15f3c;
+  --accent-strong: #a94d2c;
+  --accent-soft: #f6e6dc;
+  --code: #f0ece2;
+  --ok: #4f7a4a;
+  --warn-bg: #fbf1dc;
+  --warn-line: #d9a441;
+  --shadow: 0 8px 28px rgb(60 50 30 / .14);
+  --shadow-sm: 0 1px 2px rgb(60 50 30 / .06), 0 1px 1px rgb(60 50 30 / .04);
+  --header-h: 60px;
+  --fs-xs: 12px;
+  --fs-sm: 14px;
+  --fs-base: 17px;
+  --fs-lg: 20px;
+  --fs-xl: 26px;
+  --fs-2xl: 34px;
+  --fs-hero: 44px;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-12: 48px;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+  color-scheme: light;
+}
+/* 无 JS 且系统为亮色时，:root:not([data-theme]) 也会命中下面这条，所以亮色媒体查询要把亮色变量写回去。 */
+:is(:root[data-theme="dark"], :root:not([data-theme])) {
+  --fg: #ece8de;
+  --muted: #a39d90;
+  --bg: #1a1915;
+  --bg-soft: #24221d;
+  --surface: #2a2823;
+  --line: #3a372f;
+  --line-strong: #4a463c;
+  --accent: #e08a63;
+  --accent-strong: #eda07c;
+  --accent-soft: #3a2a21;
+  --code: #211f1a;
+  --ok: #8fb987;
+  --warn-bg: #33291a;
+  --warn-line: #c89a45;
+  --shadow: 0 8px 28px rgb(0 0 0 / .35);
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --fg: #1f1e1b;
+    --muted: #6b665c;
+    --bg: #faf9f5;
+    --bg-soft: #f2efe6;
+    --surface: #ffffff;
+    --line: #e4dfd2;
+    --line-strong: #cfc8b8;
+    --accent: #c15f3c;
+    --accent-strong: #a94d2c;
+    --accent-soft: #f6e6dc;
+    --code: #f0ece2;
+    --ok: #4f7a4a;
+    --warn-bg: #fbf1dc;
+    --warn-line: #d9a441;
+    --shadow: 0 8px 28px rgb(60 50 30 / .14);
+    color-scheme: light;
+  }
+}
+@media (max-width: 767px) {
+  :root {
+    --fs-base: 16px;
+    --fs-2xl: 28px;
+    --fs-hero: 32px;
+  }
+}
