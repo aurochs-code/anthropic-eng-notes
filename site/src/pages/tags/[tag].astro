@@ -1,9 +1,9 @@
 ---
 import Base from '../../layouts/Base.astro';
-import TagList from '../../components/TagList.astro';
 import { getTags } from '../../lib/tags';
 import { url } from '../../lib/notes';
 import { resSlug } from '../../lib/resources';
+import { dd } from '../../lib/papers';
 import { MODULES } from '../../content.config';
 
 export async function getStaticPaths() {
@@ -19,14 +19,17 @@ const { t } = Astro.props;
   {t.notes.length > 0 && (
     <section class="module" data-tag-notes={t.notes.length}>
       <h2>笔记（{t.notes.length}）</h2>
-      <ol class="route">
+      <ol class="entry-list">
         {t.notes.map((n) => (
-          <li>
-            <span class="num">{String(n.data.order).padStart(2, '0')}</span>
-            <a href={url(`notes/${n.data.slug}/`)} data-note-link={n.data.slug}>{n.data.title_zh}</a>
-            <span class="meta" style="display:inline"> · 模块 {n.data.moduleKey} {MODULES[n.data.moduleKey]} · {n.data.reading_time} 分钟</span>
-            <p class="sum zh">{n.data.summary}</p>
-            <TagList tags={n.data.tags} />
+          <li class="entry entry-note">
+            <div class="entry-line">
+              <span class="entry-dot" aria-hidden="true"></span>
+              <span class="entry-num">{String(n.data.order).padStart(2, '0')}</span>
+              <a class="entry-title" href={url(`notes/${n.data.slug}/`)} data-note-link={n.data.slug}>{n.data.title_zh}</a>
+              <span class="entry-time">{n.data.reading_time} 分钟</span>
+            </div>
+            <p class="entry-meta">模块 {n.data.moduleKey} {MODULES[n.data.moduleKey]}</p>
+            <p class="entry-sum">{n.data.summary}</p>
           </li>
         ))}
       </ol>
@@ -35,14 +38,15 @@ const { t } = Astro.props;
   {t.papers.length > 0 && (
     <section class="module" data-tag-papers={t.papers.length}>
       <h2>论文笔记（{t.papers.length}）</h2>
-      <ol class="route">
+      <ol class="entry-list">
         {t.papers.map((p) => (
-          <li>
-            <span class="num">D{String(p.data.day).padStart(2, '0')}</span>
-            <a href={url(`papers/${p.data.slug}/`)} data-paper-link={p.data.slug}>{p.data.title_zh}</a>
-            <span class="meta" style="display:inline"> · {p.data.segment} · {p.data.reading_time} 分钟</span>
-            <p class="sum zh">{p.data.summary}</p>
-            <TagList tags={p.data.tags} />
+          <li class="entry">
+            <div class="entry-line">
+              <span class="entry-num">D{dd(p.data.day)}</span>
+              <a class="entry-title" href={url(`papers/${p.data.slug}/`)} data-paper-link={p.data.slug}>{p.data.title_zh}</a>
+            </div>
+            <p class="entry-meta">{p.data.segment}</p>
+            <p class="entry-sum">{p.data.summary}</p>
           </li>
         ))}
       </ol>
@@ -51,12 +55,14 @@ const { t } = Astro.props;
   {t.resources.length > 0 && (
     <section class="module" data-tag-resources={t.resources.length}>
       <h2>资源导读（{t.resources.length}）</h2>
-      <ol class="route">
+      <ol class="entry-list">
         {t.resources.map((r) => (
-          <li>
-            <span class="badge res">资源</span>
-            <a href={url(`resources/${resSlug(r)}/`)}>{r.data.title_zh}</a>
-            <p class="sum zh" style="margin-left:0">{r.data.summary}</p>
+          <li class="entry entry-res">
+            <div class="entry-line">
+              <span class="res-kind">资源</span>
+              <a class="entry-title" href={url(`resources/${resSlug(r)}/`)}>{r.data.title_zh}</a>
+            </div>
+            <p class="entry-sum">{r.data.summary}</p>
           </li>
         ))}
       </ol>

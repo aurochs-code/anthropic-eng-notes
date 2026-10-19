@@ -3,13 +3,30 @@ import Base from '../../layouts/Base.astro';
 import { getTags } from '../../lib/tags';
 import { url } from '../../lib/notes';
 const tags = await getTags();
+const counts = tags.map((t) => t.notes.length + t.resources.length + t.papers.length);
+
+function tagSizes(counts: readonly number[]): readonly (14 | 16 | 19)[] {
+  const uniq = [...new Set(counts)].sort((a, b) => a - b);
+  const sizeOf = new Map<number, 14 | 16 | 19>();
+  if (uniq.length <= 1) for (const c of uniq) sizeOf.set(c, 16);
+  else if (uniq.length === 2) {
+    sizeOf.set(uniq[0] ?? 0, 14);
+    sizeOf.set(uniq[1] ?? 0, 19);
+  } else for (let i = 0; i < uniq.length; i++) {
+    const t = i / (uniq.length - 1);
+    sizeOf.set(uniq[i] ?? 0, t >= 2 / 3 ? 19 : t >= 1 / 3 ? 16 : 14);
+  }
+  return counts.map((c) => sizeOf.get(c) ?? 14);
+}
+
+const sizes = tagSizes(counts);
 ---
 <Base title="标签 · 学习笔记" description={`按标签浏览笔记、论文笔记与资源导读，共 ${tags.length} 个标签。`} searchable={false}>
   <h1>标签</h1>
   <p class="lede">共 {tags.length} 个标签，按使用次数排列；数字为笔记 + 资源 + 论文笔记数。</p>
   <ul class="tag-cloud" data-tag-count={tags.length}>
-    {tags.map((t) => (
-      <li><a href={url(`tags/${t.slug}/`)}>{t.tag}<span class="tag-n">{t.notes.length + t.resources.length + t.papers.length}</span></a></li>
+    {tags.map((t, i) => (
+      <li><a data-tag-size={sizes[i]} href={url(`tags/${t.slug}/`)}>{t.tag}<span class="tag-n">{counts[i]}</span></a></li>
     ))}
   </ul>
 </Base>
