@@ -31,15 +31,18 @@ const total = stages.reduce((n, s) => n + counted(s), 0);
   <div class="progress-card" data-progress-group="all" data-progress-total={total}>
     <div class="progress-head">
       <strong>我的进度</strong>
-      <span class="progress-text"><span class="progress-done">0</span> / {total} 步</span>
+      <span class="progress-text"><span class="progress-done">0</span> / {total}</span>
       <button type="button" class="progress-reset" hidden>清除进度</button>
     </div>
     <div class="progress-bar" role="progressbar" aria-label="主线完成度" aria-valuemin="0" aria-valuemax={total} aria-valuenow="0"><span></span></div>
-    <p class="progress-note">勾选每一步记录进度，读完笔记也可以在笔记页底部“标记为已读”。进度只保存在本机浏览器（localStorage），换设备或清除浏览器数据后不保留。</p>
+    <details class="progress-note">
+      <summary>进度只保存在本机浏览器</summary>
+      <p>勾选每一步记录进度。读完笔记也可以在笔记页底部“标记为已读”。进度保存在本机浏览器的 localStorage 里，换设备或清除浏览器数据后不保留。</p>
+    </details>
   </div>
   {stages.map((s) => (
     <section class="module" data-progress-group={`stage-${s.n}`} data-progress-total={counted(s)}>
-      <h2 id={`stage-${s.n}`}>阶段 {s.n} · {s.name}<span class="meta" style="display:inline;font-weight:400"> （笔记 {s.from}–{s.to}）</span></h2>
+      <h2 id={`stage-${s.n}`}>阶段 {s.n} · {s.name}<span class="meta"> （笔记 {s.from}–{s.to}）</span></h2>
       <p class="stage-goal">{s.goal}</p>
       <div class="stage-progress"><div class="progress-bar" role="progressbar" aria-label={`阶段 ${s.n} 完成度`} aria-valuemin="0" aria-valuemax={counted(s)} aria-valuenow="0"><span></span></div><span class="progress-text"><span class="progress-done">0</span> / {counted(s)}</span></div>
       <ol class="route">
@@ -68,7 +71,7 @@ const total = stages.reduce((n, s) => n + counted(s), 0);
   ))}
   {tracks.map((t) => (
     <section class={`module track track-${t.key}`} id={`track-${t.key}`} data-track={t.key} data-track-items={t.items.length} data-progress-group={`track-${t.key}`} data-progress-total={t.items.length}>
-      <h2>{t.name}<span class="meta" style="display:inline;font-weight:400"> （并行 · {t.items.length} 条）</span></h2>
+      <h2>{t.name}<span class="meta"> （并行 · {t.items.length} 条）</span></h2>
       <p class="stage-goal track-note">{trackNote(t)}。支线条目不计入主线编号与步数，可按自己的节奏穿插阅读。</p>
       <div class="stage-progress"><div class="progress-bar" role="progressbar" aria-label={`${t.name}完成度`} aria-valuemin="0" aria-valuemax={t.items.length} aria-valuenow="0"><span></span></div><span class="progress-text"><span class="progress-done">0</span> / {t.items.length}</span></div>
       <ol class="route">
