@@ -1,6 +1,6 @@
 .route { list-style:none; padding:0; margin:0; }
 .route li { padding:10px 0; border-bottom:1px dashed var(--line); }
-.route .num { display:inline-block; min-width:2.2em; color:var(--accent); font-weight:700; }
+.route .num { display:inline-block; min-width:2.2em; color:var(--accent-strong); font-weight:700; }
 .route .sum { color:var(--muted); font-size:14px; margin:2px 0 0 2.2em; }
 .route .sum.zh { color:var(--fg); opacity:.85; }
 .route .tags { margin:4px 0 0 2.2em; }
@@ -21,7 +21,7 @@
 .entry-res { --entry-indent:0px; }
 .entry:hover { background:var(--bg-soft); }
 .entry-line { display:flex; align-items:center; gap:10px; min-width:0; }
-.entry-dot { flex:none; width:6px; height:6px; box-sizing:border-box; border:1.5px solid var(--line-strong); border-radius:50%; background:transparent; }
+.entry-dot { flex:none; width:6px; height:6px; box-sizing:border-box; border:1.5px solid var(--muted); border-radius:50%; background:transparent; }
 .entry:has(a[data-note-link][data-read]) .entry-dot { background:var(--ok); border-color:var(--ok); }
 .entry-num { flex:none; width:3.2em; color:var(--muted); font-weight:500; font-variant-numeric:tabular-nums; }
 a.entry-title { flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:17px; font-weight:500; color:var(--fg); text-decoration:none; }
