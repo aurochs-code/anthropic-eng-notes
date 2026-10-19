@@ -14,6 +14,7 @@ const desc = description.replace(/\s+/g, ' ').trim();
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
 const tocList = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
 const hasToc = tocList.length > 0;
+const buildDate = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai' }).format(new Date());
 ---
 <!doctype html>
 <html lang="zh-CN">
@@ -49,11 +50,14 @@ const hasToc = tocList.length > 0;
 <body class={hasToc ? 'has-toc' : undefined}>
   <a class="skip-link" href="#main">跳到正文</a>
   {readProgress && <div class="read-progress" role="progressbar" aria-label="阅读进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>}
-  <header class="site">
+  <header class="site" data-drawer-live>
     <button type="button" class="icon-btn menu-btn" aria-controls="sidebar" aria-expanded="false" aria-label="打开导航菜单">
       <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     </button>
-    <a class="brand" href={url('/')}><span class="brand-long">Anthropic 工程博客 · 中文学习笔记</span><span class="brand-short">Anthropic 工程笔记</span></a>
+    <a class="brand" href={url('/')}>
+      <img class="brand-logo" src={url('/favicon.svg')} width="28" height="28" alt="" />
+      <span class="brand-long">Anthropic 工程博客 · 中文学习笔记</span><span class="brand-short">Anthropic 工程笔记</span>
+    </a>
     <nav class="top" aria-label="主导航">
       {[['/', '笔记'], ['/path/', '学习路线'], ['/papers/', '论文'], ['/resources/', '资源'], ['/tags/', '标签']].map(([p, label]) => (
         <a href={url(p)} aria-current={Astro.url.pathname === url(p) || (p === '/papers/' && Astro.url.pathname.startsWith(url('/papers/'))) ? 'page' : undefined}>{label}</a>
@@ -85,11 +89,14 @@ const hasToc = tocList.length > 0;
     <aside id="sidebar" class="sidebar" aria-label="导航侧栏">
       <Sidebar />
     </aside>
-    <div class="sidebar-backdrop" hidden></div>
+    <div class="sidebar-backdrop" data-drawer-live hidden></div>
     <main id="main" data-pagefind-body={searchable ? '' : undefined}><slot /></main>
     {hasToc && <aside class="toc-col"><Toc headings={headings} variant="side" /></aside>}
+    <footer class="site">
+      <p class="foot-copy">学习笔记，非翻译；原文版权归 Anthropic 所有。</p>
+      <p class="foot-meta"><a href="https://github.com/aurochs-code/anthropic-eng-notes">GitHub 仓库</a> · 最近更新 <time datetime={buildDate}>{buildDate}</time></p>
+    </footer>
   </div>
-  <footer class="site">学习笔记，非翻译；原文版权归 Anthropic 所有。</footer>
   {hasToc && (
     <>
       <button type="button" class="toc-fab" aria-haspopup="dialog" aria-controls="toc-drawer">本页目录</button>
@@ -104,9 +111,89 @@ const hasToc = tocList.length > 0;
     import { initChrome } from '../lib/client/chrome';
     import { initSearch } from '../lib/client/search';
     import { initProgress } from '../lib/client/progress';
+
+    function trapDrawer(): void {
+      const side = document.getElementById('sidebar');
+      if (!side) return;
+      const madeInert = new Set<HTMLElement>();
+      const covered = (): HTMLElement[] => {
+        const out: HTMLElement[] = [];
+        for (let node: HTMLElement | null = side; node && node !== document.body; node = node.parentElement) {
+          const parent = node.parentElement;
+          if (!parent) break;
+          for (const sib of parent.children) {
+            if (sib !== node && sib instanceof HTMLElement && !sib.matches('[data-drawer-live], dialog')) out.push(sib);
+          }
+        }
+        return out;
+      };
+      const focusInside = (): void => {
+        if (side.contains(document.activeElement)) return;
+        for (const a of side.querySelectorAll('a')) {
+          a.focus();
+          if (document.activeElement === a) return;
+        }
+      };
+      const sync = (): void => {
+        if (document.body.classList.contains('sidebar-open')) {
+          for (const el of covered()) {
+            if (!el.inert) {
+              el.inert = true;
+              madeInert.add(el);
+            }
+          }
+          focusInside();
+        } else {
+          for (const el of madeInert) el.inert = false;
+          madeInert.clear();
+        }
+      };
+      new MutationObserver(sync).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+      sync();
+    }
+
+    function tabbable(root: ParentNode): HTMLElement[] {
+      const sel = 'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), summary';
+      return [...root.querySelectorAll<HTMLElement>(sel)].filter((el) => {
+        if (el.closest('[hidden], [inert]')) return false;
+        const closed = el.closest('details:not([open])');
+        if (closed && !el.closest('summary')) return false;
+        return el.getClientRects().length > 0;
+      });
+    }
+
+    // Chromium 在模态框和抽屉的 Tab 循环末尾会先落到 body。在边上截住，焦点留在控件里。
+    function trapTabEdges(): void {
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Tab' || e.altKey || e.ctrlKey || e.metaKey) return;
+        const modal = document.querySelector('dialog:modal');
+        const menu = document.querySelector<HTMLElement>('.menu-btn');
+        const drawer = document.body.classList.contains('sidebar-open') && !!menu && getComputedStyle(menu).display !== 'none';
+        let items: HTMLElement[] = [];
+        if (modal) items = tabbable(modal);
+        else if (drawer) {
+          const header = document.querySelector('header.site');
+          const side = document.getElementById('sidebar');
+          items = [...(header ? tabbable(header) : []), ...(side ? tabbable(side) : [])];
+        } else return;
+        if (items.length === 0) return;
+        const index = items.indexOf(document.activeElement as HTMLElement);
+        if (e.shiftKey) {
+          if (index > 0) return;
+          e.preventDefault();
+          items[items.length - 1].focus();
+        } else if (index === -1 || index === items.length - 1) {
+          e.preventDefault();
+          items[0].focus();
+        }
+      }, true);
+    }
+
     initChrome();
     initSearch();
     initProgress();
+    trapDrawer();
+    trapTabEdges();
     document.documentElement.dataset.js = 'ready'; // 供检查脚本确认每页都跑起了交互脚本
     // mermaid 按需加载：页面里有图才拉取（脚本必须只有这一个：Astro 不支持条件渲染的 <script>，
     // 写成 {cond && <script>} 时会把错误的脚本挂到页面上）
