@@ -115,8 +115,7 @@ const buildDate = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai' }
     function trapDrawer(): void {
       const side = document.getElementById('sidebar');
       if (!side) return;
-      // 被遮罩盖住的节点每次从 DOM 现算。关闭时只清这只 Set 里自己设过的 inert。
-      const owned = new Set<HTMLElement>();
+      const madeInert = new Set<HTMLElement>();
       const covered = (): HTMLElement[] => {
         const out: HTMLElement[] = [];
         for (let node: HTMLElement | null = side; node && node !== document.body; node = node.parentElement) {
@@ -140,13 +139,13 @@ const buildDate = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai' }
           for (const el of covered()) {
             if (!el.inert) {
               el.inert = true;
-              owned.add(el);
+              madeInert.add(el);
             }
           }
           focusInside();
         } else {
-          for (const el of owned) el.inert = false;
-          owned.clear();
+          for (const el of madeInert) el.inert = false;
+          madeInert.clear();
         }
       };
       new MutationObserver(sync).observe(document.body, { attributes: true, attributeFilter: ['class'] });

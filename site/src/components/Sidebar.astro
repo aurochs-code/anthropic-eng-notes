@@ -40,7 +40,6 @@ const inPapers = here.startsWith(url('/papers/'));
 const inRes = here.startsWith(url('/resources/'));
 const cur = (p: string) => (here === url(p) ? 'page' : undefined);
 const curNote = notes.find((n) => here === url(`notes/${n.data.slug}/`));
-// 笔记页只展开当前模块，其余页面全部展开
 const groups: SideGroup[] = Object.entries(MODULES).map(([k, name]) => ({
   kind: 'module' as const,
   key: k,

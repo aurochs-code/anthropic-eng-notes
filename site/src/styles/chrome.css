@@ -1,5 +1,4 @@
 /* ── 顶栏 ── */
-/* tokens.css 仍是 56px，这一行才是生效值 */
 html:root { --header-h: 60px; }
 header.site { position:sticky; top:0; z-index:40; height:var(--header-h); display:flex; align-items:center; gap:12px; padding:0 16px; background:color-mix(in srgb, var(--bg) 85%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--line); font-weight:600; }
 header.site a { color:var(--fg); text-decoration:none; }
