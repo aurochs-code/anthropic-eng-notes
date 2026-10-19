@@ -1,7 +1,14 @@
-import { visit } from 'unist-util-visit';
+import { visit, SKIP } from 'unist-util-visit';
 import { readPapers, UNIT_URL_RE, dayOfUnit, PAPER_SLUG_RE } from './paper-rules.mjs';
 
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+export function splitSourceNote(text) {
+  const trimmed = text.trim();
+  const cut = trimmed.indexOf('。');
+  if (cut === -1) return { lead: trimmed, rest: '' };
+  return { lead: trimmed.slice(0, cut + 1), rest: trimmed.slice(cut + 1).trim() };
+}
 
 /** ```mermaid 代码块 → <pre class="mermaid">（绕过语法高亮，交给客户端 mermaid 渲染） */
 export function remarkMermaid() {
@@ -9,6 +16,17 @@ export function remarkMermaid() {
     visit(tree, 'code', (node, index, parent) => {
       if (node.lang !== 'mermaid' || !parent) return;
       parent.children[index] = { type: 'html', value: `<pre class="mermaid" data-pagefind-ignore>${esc(node.value)}</pre>` };
+    });
+    visit(tree, (node) => {
+      if (node.type === 'code') return SKIP;
+      if (node.type !== 'blockquote') return;
+      const para = node.children[0];
+      if (!para || para.type !== 'paragraph') return;
+      const text = para.children[0];
+      if (!text || text.type !== 'text' || !/^\u26A0\uFE0F?/.test(text.value.trimStart())) return;
+      if (!node.data) node.data = {};
+      if (!node.data.hProperties) node.data.hProperties = {};
+      node.data.hProperties.className = ['callout', 'warn'];
     });
   };
 }
