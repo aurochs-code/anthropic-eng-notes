@@ -8,7 +8,7 @@ const groups = await getPaperGroups();
 ---
 <Base title="论文笔记 · 学习笔记" description="30u30 书单经典 AI 论文的中文学习笔记（依据原论文撰写，非翻译），按原理支线 P1–P6 与补完分组、按 Day 排序。" searchable={false}>
   <h1>论文笔记</h1>
-  <p class="en">30u30 书单 30 篇论文，已写 {papers.length} 篇。依据原论文撰写，不翻译、不改编 30u30 的讲解；按<a href={url('/path/#track-theory')}>原理支线</a>的段落分组，组内按 Day 排序。</p>
+  <p class="lede">30u30 书单 30 篇论文，已写 {papers.length} 篇。依据原论文撰写，不翻译、不改编 30u30 的讲解；按<a href={url('/path/#track-theory')}>原理支线</a>的段落分组，组内按 Day 排序。</p>
   {papers.length === 0 && <p class="empty">论文笔记撰写中…</p>}
   {groups.map((g) => (
     <section class="module" data-paper-segment={g.key}>

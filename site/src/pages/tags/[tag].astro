@@ -15,7 +15,7 @@ const { t } = Astro.props;
 <Base title={`标签：${t.tag} · 学习笔记`} description={`标签「${t.tag}」下的 ${t.notes.length} 篇笔记、${t.papers.length} 篇论文笔记、${t.resources.length} 个资源导读。`} searchable={false}>
   <nav class="breadcrumb" aria-label="位置"><a href={url('/tags/')}>标签</a><span aria-hidden="true">›</span><span>{t.tag}</span></nav>
   <h1>标签：{t.tag}</h1>
-  <p class="en">{t.notes.length} 篇笔记 · {t.papers.length} 篇论文笔记 · {t.resources.length} 个资源导读</p>
+  <p class="lede">{t.notes.length} 篇笔记 · {t.papers.length} 篇论文笔记 · {t.resources.length} 个资源导读</p>
   {t.notes.length > 0 && (
     <section class="module" data-tag-notes={t.notes.length}>
       <h2>笔记（{t.notes.length}）</h2>
