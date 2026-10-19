@@ -400,4 +400,4 @@ section[data-progress-group] > ol.route > li:target {
   }
 }
 
-[data-note-link][data-read]::after { content:'✓'; margin-left:6px; color:var(--accent); font-size:.85em; text-decoration:none; display:inline-block; }
+[data-note-link][data-read]::after { content:'✓'; margin-left:6px; color:var(--accent-strong); font-size:.85em; text-decoration:none; display:inline-block; }

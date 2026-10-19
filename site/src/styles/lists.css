@@ -1,6 +1,6 @@
 .route { list-style:none; padding:0; margin:0; }
 .route li { padding:10px 0; border-bottom:1px dashed var(--line); }
-.route .num { display:inline-block; min-width:2.2em; color:var(--accent); font-weight:700; }
+.route .num { display:inline-block; min-width:2.2em; color:var(--accent-strong); font-weight:700; }
 .route .sum { color:var(--muted); font-size:14px; margin:2px 0 0 2.2em; }
 .route .sum.zh { color:var(--fg); opacity:.85; }
 .route .tags { margin:4px 0 0 2.2em; }
