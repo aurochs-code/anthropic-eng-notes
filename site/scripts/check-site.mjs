@@ -138,9 +138,10 @@ ok('代码块复制按钮', copyBad.length === 0, `代码块 ${b1Pages.reduce((n
 ok('站内死链', dead.length === 0, `检查 ${internal.size} 个（页面, 链接）对` + (dead.length ? '；死链：\n  ' + dead.join('\n  ') : ''));
 
 const home = readFileSync(join(dist, 'index.html'), 'utf8');
-const mods = [...home.matchAll(/<h2[^>]*>模块 ([A-F])/g)].map((x) => x[1]).join('');
+const mods = [...home.matchAll(/<h2[^>]*\sid="module-([A-F])"/g)].map((x) => x[1]).join('');
+const letters = [...home.matchAll(/<span class="home-module-k">([A-F])<\/span>/g)].map((x) => x[1]).join('');
 const homeSums = (home.match(/<p class="sum zh">/g) ?? []).length;
-ok('首页 A–F 分组', mods === 'ABCDEF' && homeSums === 26, `分组：${mods}；摘要 ${homeSums} 条`);
+ok('首页 A–F 分组', mods === 'ABCDEF' && letters === 'ABCDEF' && homeSums === 26, `分组：${mods}；字母 ${letters}；摘要 ${homeSums} 条`);
 
 const pathHtml = readFileSync(join(dist, 'path/index.html'), 'utf8');
 const stages = [...pathHtml.matchAll(/<h2[^>]*>阶段 (\d)/g)].map((x) => x[1]).join('');
