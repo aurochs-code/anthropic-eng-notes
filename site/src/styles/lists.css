@@ -54,7 +54,7 @@ a.res-card:hover { color:var(--fg); border-color:var(--accent); }
 .miss h1 { margin-top:12px; }
 .miss-lead { margin:8px 0 20px; color:var(--muted); }
 .miss-actions { display:flex; justify-content:center; flex-wrap:wrap; gap:12px; }
-a.miss-btn { display:inline-flex; align-items:center; justify-content:center; min-height:40px; padding:8px 16px; border:1px solid var(--accent); border-radius:var(--r-md); background:var(--accent); color:#fff; font-size:15px; font-weight:600; text-decoration:none; }
+a.miss-btn { display:inline-flex; align-items:center; justify-content:center; min-height:40px; padding:8px 16px; border:1px solid var(--btn-fill, var(--accent-strong)); border-radius:var(--r-md); background:var(--btn-fill, var(--accent-strong)); color:#fff; font-size:15px; font-weight:600; text-decoration:none; }
 a.miss-btn:hover { color:#fff; }
 .miss .search-btn { width:auto; min-width:8em; height:auto; padding:8px 16px; border:1px solid var(--line-strong); border-radius:var(--r-md); background:var(--surface); color:var(--fg); font-size:15px; font-weight:600; }
 .miss .search-btn:hover { border-color:var(--accent); color:var(--fg); }
