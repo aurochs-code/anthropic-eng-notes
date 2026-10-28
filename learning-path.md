@@ -1,8 +1,8 @@
 # 智能体工程学习路线 · 大纲（审阅稿）
 
-> 状态：8 个资源的大纲**已确认**，导读页已写入 `resources/`。**2026-10-18 更新**：新增第 9 个资源 30u30，作为并行的“原理支线”，30 篇全部推荐（第 2.9 节，用户已确认；导读页 `resources/r-30u30.md` 已写）；第 3 节步号已同步成站点学习路线页上的 36 步编号。
-> 范围：现有 26 篇 Anthropic 工程博客笔记（`notes/`），加上 9 个外部资源，合成一条四阶段主线（入门 → 体系 → 实战 → 跟进前沿）和一条并行的原理支线。
-> 核实时间：8 个资源为 2026-10-17，30u30 为 2026-10-18（均为北京时间）。8 个资源都逐一打开核对过课程目录或文章结构，核对方法和发现见第 1 节。下文对资源内容的描述都是笔者转述，不是原文翻译。
+> 状态：8 个资源的大纲**已确认**，导读页已写入 `resources/`。**2026-10-18 更新**：新增第 9 个资源 30u30，作为并行的“原理支线”，30 篇全部推荐（第 2.9 节，用户已确认；导读页 `resources/r-30u30.md` 已写）；第 3 节步号已同步成站点学习路线页上的 36 步编号。**2026-10-28 更新**：新增第 10 个资源斯坦福 CS329Z（选读，第 2.10 节；导读页 `resources/r-cs329z.md`），不占主线步号。
+> 范围：现有 26 篇 Anthropic 工程博客笔记（`notes/`），加上 10 个外部资源，合成一条四阶段主线（入门 → 体系 → 实战 → 跟进前沿）和一条并行的原理支线。
+> 核实时间：8 个资源为 2026-10-17，30u30 为 2026-10-18，CS329Z 为 2026-10-28（均为北京时间）。资源都逐一打开核对过课程目录或文章结构，核对方法和发现见第 1 节。下文对资源内容的描述都是笔者转述，不是原文翻译。
 
 ---
 
@@ -11,7 +11,7 @@
 | 阶段 | 目标 | Anthropic 笔记（order） | 外部资源（主阶段） | 估计投入（笔者估算） |
 |---|---|---|---|---|
 | 一 · 入门 | 建立“LLM + 工具循环”的直觉，能调 API、写提示、定义工具，能用 Claude Code 干活 | 1–4 | Hugging Face Agents Course（Unit 0–1）；选读：Anthropic 官方课程（已归档） | 2–3 周 |
-| 二 · 体系 | 建立完整概念框架：规划、记忆、工具、检索、MCP、评测、多智能体 | 5–16 | Lilian Weng《LLM Powered Autonomous Agents》（2023）、Chip Huyen《Agents》、HF Unit 2；选读：Anthropic 提示评测课、DLAI Agentic AI | 4–6 周 |
+| 二 · 体系 | 建立完整概念框架：规划、记忆、工具、检索、MCP、评测、多智能体 | 5–16 | Lilian Weng《LLM Powered Autonomous Agents》（2023）、Chip Huyen《Agents》、HF Unit 2；选读：Anthropic 提示评测课、DLAI Agentic AI、斯坦福 CS329Z | 4–6 周 |
 | 三 · 实战 | 面向生产：长任务 harness、可控的控制流、安全隔离、评测闭环、完整项目 | 17–23 | 12-Factor Agents、DeepLearning.AI 短课程（精选）、OpenAI Cookbook（agents / evals 主题）；HF Unit 3–4 作为结业项目 | 4–6 周 |
 | 四 · 跟进前沿 | 理解规模化后的可靠性与基础设施问题，建立持续跟进的信息源 | 24–26 | Simon Willison 的博客；持续关注 DLAI 新课、Cookbook 新示例、Anthropic 工程博客 | 长期 |
 | 支线 · 原理（并行，可选） | 理解智能体底下的模型：预测下一个 token、注意力与 Transformer、外部记忆、规模定律、RLHF | 与主线笔记按主题搭配（第 2.9 节） | 30u30（30 篇经典论文的讲解 + 从零实现 + 练习），30 篇全推 | 全部 30 篇约 5–8 个月（每周 5–6 小时）或 3–4 个月（每周约 10 小时），均为笔者估算；仓库口号“30 天” |
@@ -71,10 +71,11 @@ flowchart LR
 | OpenAI Cookbook | 打开 cookbook.openai.com（**现已重定向到 `developers.openai.com/cookbook`**），列出主题页（agents / evals / guardrails / codex 等），逐个打开下文推荐示例核对标题；GitHub 仓库是 MIT 许可，2026-10-17 仍有推送 | agents 主题页列出了 32 个示例（可能有分页，未逐页翻看）。另外看到：一个示例说明 **OpenAI 正在逐步关闭 Evals 产品，推荐改用 Promptfoo**；还有一篇《从 Claude Agent SDK 迁移到 OpenAI Agents SDK》，属于厂商视角的内容。guardrails 主题页没解析到示例 |
 | 30u30（2026-10-18 核实） | 读取仓库 README、`ilya_30_papers.md`、`QUICKSTART.md`、`LICENSE`、`requirements.txt`；用 GitHub API 取完整文件树和提交记录；逐篇读取 30 个 `README.md` 的时长与前置要求，并检查每篇 `implementation.py` 导入了哪些库；打开配套网站首页；另用网络搜索核对“Ilya 书单”的来源 | 30 篇分 6 个单元，每篇都有讲解 README、ELI5 笔记、速查表、实现代码、notebook、练习（多数 5 道）和答案。⚠️ **授权是 CC BY-NC-ND 4.0**（`LICENSE` 和 README 都这样写；GitHub API 识别为 Other）。⚠️ **不全是 NumPy**：约 18 篇的实现用到 PyTorch。⚠️ **书单来源**：广为流传的“Ilya 给 Carmack 的书单”只有 27 项、从未经本人确认；30u30 在此基础上加了 Dropout、PPO、RLHF 三篇，但仓库没有标明这一点。最后推送是 2026-02-19（北京时间），README 列的 Bonus 论文目录尚不存在 |
 | Simon Willison 博客 | 打开首页、Guides 页，几个关键标签页，以及两篇代表性文章 | 几乎每天更新。有一份 16 章的 **Agentic Engineering Patterns** 指南（编码智能体实践）。标签规模（2026-10-17）：coding-agents 259、prompt-injection 163、ai-agents 111、lethal-trifecta 30、agent-definitions 19。代表作：2025-06-16《The lethal trifecta for AI agents》、2025-09-18 关于“agent”定义的文章。首页有赞助内容，引用时需要注意区分 |
+| CS329Z（2026-10-28 核实） | 打开 [cs329z.stanford.edu](https://cs329z.stanford.edu/) 首页，按周次课表与 Deadlines 表核对结构与阅读清单标题 | 2025 秋学期课程「Engineering AI Agents」。公开站有完整课表、多数讲次的 Slides 链接与阅读清单；作业/项目节点写在 Deadlines。⚠️ 课表标注 tentative；讲座录像与旁听政策首页未写清。⚠️ **未查到**官方中文版。设为选读、`optional: true`，不占 36 步主线 |
 
 ---
 
-## 2. 九个资源逐个说明
+## 2. 十个资源逐个说明
 
 > 每个资源按五项写：是什么 / 放在哪个阶段、为什么 / 建议看哪些部分 / 搭配哪几篇笔记 / 注意事项。笔记一律用现有 slug。第 2.9 节 30u30 是 2026-10-18 新增的原理支线，写法略有不同。
 
@@ -249,6 +250,15 @@ flowchart LR
   - 项目讲解和代码由个人维护，正确性没有逐篇核对，建议对照原论文阅读（原论文链接见仓库 `ilya_30_papers.md`）。
 
 ---
+
+### 2.10 斯坦福 CS329Z · Engineering AI Agents（2026-10-28 新增，选读）
+
+- **是什么**：[Stanford CS329Z](https://cs329z.stanford.edu/)（Engineering AI Agents）。授课教师 Diyi Yang、Michael Ryan、John Yang。课程定位：从单体大模型转向复合 AI 系统（检索、工具、优化器等多组件），再讲到自主智能体；先从零搭 RAG / 工具 / 智能体循环，再用 DSPy、LangGraph 等框架抽象，配合两次作业与季度项目。
+- **结构（笔者按 2026-10-28 首页概括）**：Week 1 导论与智能体解剖 → Week 2 LLM 建造视角与上下文工程、RAG → Week 3 工具/MCP 与框架编排 → Week 4 设计模式与记忆 → Week 5 多智能体与优化 → Week 6 Terminal-Bench 嘉宾与数据 → Week 7–8 数据质量、评测四元组、LLM-as-judge、安全 → Week 9–11 编码智能体、主动式智能体与开放问题。
+- **放在哪个阶段**：主阶段偏**体系**，并跨入门末与实战；导读页设为 **`optional: true` 选读**，不占 1–36 步号。理由：学期强度高，公开材料更适合按主题跳读，与 Anthropic 笔记对照，而不是替换 HF 课程或 12-Factor 主线。
+- **搭配笔记**：`building-effective-agents`、`effective-context-engineering-for-ai-agents`、`contextual-retrieval`、`writing-tools-for-agents`、`code-execution-with-mcp`、`multi-agent-research-system`、`demystifying-evals-for-ai-agents`、`effective-harnesses-for-long-running-agents`、`equipping-agents-for-the-real-world-with-agent-skills`。
+- **注意事项**：幻灯片随堂发布；作业与学分通常需学籍。本站只写导读并外链，不复制幻灯片或阅读材料原文。详细结构见 `resources/r-cs329z.md`。
+
 
 ## 3. 完整学习路线（26 篇笔记 + 9 个资源）
 
