@@ -1,5 +1,5 @@
 ---
-import Base from '../layouts/Base.astro';
+import Base, { SITE_NAME } from '../layouts/Base.astro';
 import { MODULES } from '../content.config';
 import { STAGES } from '../data/stages';
 import { getSortedNotes, url } from '../lib/notes';
@@ -36,10 +36,10 @@ function mainlineInputs(items: SeqItem[]): MainlineInput[] {
 
 const payload = routePayload(mainlineInputs(seq), url('/path/'));
 ---
-<Base title="Anthropic 工程博客 · 中文学习笔记" searchable={false}>
+<Base title={SITE_NAME} searchable={false}>
   <div class="home">
     <header class="home-hero">
-      <h1>Anthropic 工程博客 · 中文学习笔记</h1>
+      <h1>{SITE_NAME}</h1>
       <p class="home-lead">{notes.length} 篇工程博客精读 + {papers.length} 篇经典论文 + 外部课程导读，按 {stages} 个阶段、{seq.length} 步串成一条学习路线</p>
       <div class="home-status">
         <a class="home-continue-btn" href={payload.steps[0].href} data-continue>

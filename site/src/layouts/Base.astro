@@ -3,6 +3,7 @@ import '../styles.css';
 import { url } from '../lib/notes';
 import Sidebar from '../components/Sidebar.astro';
 import Toc, { type Heading } from '../components/Toc.astro';
+export const SITE_NAME = 'HXH工程博客';
 const SITE_DESC = 'Anthropic 工程博客 26 篇文章的中文学习笔记（非翻译），附外部资源导读与 4 阶段学习路线。';
 // searchable=false：不进搜索索引（首页、资源列表只是摘要汇总，会挤占真正的笔记结果）
 // readProgress：页顶阅读进度条（笔记 / 资源页）
@@ -45,7 +46,7 @@ const buildDate = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai' }
   <meta property="og:description" content={desc} />
   <meta property="og:url" content={canonical} />
   <meta property="og:locale" content="zh_CN" />
-  <meta property="og:site_name" content="Anthropic 工程博客 · 中文学习笔记" />
+  <meta property="og:site_name" content={SITE_NAME} />
 </head>
 <body class={hasToc ? 'has-toc' : undefined}>
   <a class="skip-link" href="#main">跳到正文</a>
@@ -56,7 +57,7 @@ const buildDate = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai' }
     </button>
     <a class="brand" href={url('/')}>
       <img class="brand-logo" src={url('/favicon.svg')} width="28" height="28" alt="" />
-      <span class="brand-long">Anthropic 工程博客 · 中文学习笔记</span><span class="brand-short">Anthropic 工程笔记</span>
+      <span class="brand-long">{SITE_NAME}</span><span class="brand-short">{SITE_NAME}</span>
     </a>
     <nav class="top" aria-label="主导航">
       {[['/', '笔记'], ['/path/', '学习路线'], ['/papers/', '论文'], ['/resources/', '资源'], ['/tags/', '标签']].map(([p, label]) => (
